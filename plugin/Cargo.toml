@@ -1,0 +1,18 @@
+[package]
+name = "plugin"
+version = "0.1.0-alpha.0"
+authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wslplugins-sys = { path = "../wslplugins-sys"}
+wslplugins-rs = { path = "../wslplugins-rs" }
+chrono = "^0.*"
+[dependencies.windows]
+version = "0.58"
+features = [
+    "Win32_Foundation",
+]
