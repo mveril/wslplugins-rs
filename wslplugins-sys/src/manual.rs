@@ -52,7 +52,7 @@ mod tests {
             ExecuteBinaryInDistribution: None,
         };
 
-        assert_eq!(require_version(1, 0, 0, &api), S_OK);
+        assert_eq!(unsafe { (require_version(1, 0, 0, &api)) }, S_OK);
     }
 
     #[test]
@@ -69,7 +69,10 @@ mod tests {
             ExecuteBinaryInDistribution: None,
         };
 
-        assert_eq!(require_version(1, 0, 0, &api), WSL_E_PLUGIN_REQUIRES_UPDATE);
+        assert_eq!(
+            unsafe { require_version(1, 0, 0, &api) },
+            WSL_E_PLUGIN_REQUIRES_UPDATE
+        );
     }
 
     #[test]
@@ -86,7 +89,10 @@ mod tests {
             ExecuteBinaryInDistribution: None,
         };
 
-        assert_eq!(require_version(1, 1, 0, &api), WSL_E_PLUGIN_REQUIRES_UPDATE);
+        assert_eq!(
+            unsafe { require_version(1, 1, 0, &api) },
+            WSL_E_PLUGIN_REQUIRES_UPDATE
+        );
     }
 
     #[test]
