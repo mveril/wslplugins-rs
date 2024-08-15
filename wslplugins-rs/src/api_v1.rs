@@ -54,15 +54,15 @@ impl ApiV1 {
         let c_args: Vec<CString> = args.iter().map(|&arg| cstring_from_str(arg)).collect();
         let mut args_ptrs: Vec<PCSTR> = c_args.iter().map(|arg| PCSTR::from_raw(arg.as_ptr() as *const u8)).chain(Some(PCSTR::null())).collect();
         let args_ptr = args_ptrs.as_mut_ptr();
-        let mut uninit_socket = MaybeUninit::<WinSocket>::uninit();
+        let mut socket = MaybeUninit::<WinSocket>::uninit();
         let stream = unsafe {
             (*self.0).ExecuteBinary.unwrap_unchecked()(
                 session.id(), 
                 PCSTR::from_raw(c_path.as_ptr()), 
                 args_ptr,
-                uninit_socket.as_mut_ptr()
+                socket.as_mut_ptr()
             ).ok()?;
-            let socket = uninit_socket.assume_init();
+            let socket = socket.assume_init();
             TcpStream::from_raw_socket(socket.0 as SOCKET)
         };
         Ok(stream)
@@ -85,10 +85,10 @@ impl ApiV1 {
         let c_args: Vec<CString> = args.iter().map(|&arg| cstring_from_str(arg)).collect();
         let mut args_ptrs: Vec<PCSTR> = c_args.iter().map(|arg| PCSTR::from_raw(arg.as_ptr() as *const u8)).chain(Some(PCSTR::null())).collect();
         let args_ptr = args_ptrs.as_mut_ptr();
-        let mut uninit_socket = MaybeUninit::<WinSocket>::uninit();
+        let mut socket = MaybeUninit::<WinSocket>::uninit();
         let stream = unsafe {
-            (*self.0).ExecuteBinaryInDistribution.unwrap_unchecked()(session.id(), &distribution_id, path_ptr, args_ptr, uninit_socket.as_mut_ptr()).ok()?;
-            let socket = uninit_socket.assume_init();
+            (*self.0).ExecuteBinaryInDistribution.unwrap_unchecked()(session.id(), &distribution_id, path_ptr, args_ptr, socket.as_mut_ptr()).ok()?;
+            let socket = socket.assume_init();
             TcpStream::from_raw_socket(socket.0 as SOCKET)
         };
         Ok(stream)
