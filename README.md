@@ -2,6 +2,9 @@
 # WSLPlugins-rs
 
 WSLPlugins-rs is a project aiming to provide a Rust interface for creating WSL (Windows Subsystem for Linux) plugins. This approach is inspired by [Microsoft's C sample for WSL plugins](https://github.com/microsoft/wsl-plugin-sample), aiming to leverage Rust's safety and performance features and allowing easy building of WSL plugins using idiomatic Rust.
+
+Please note: As this project is in an early stage of development, the API surface is subject to change at any time.
+
 The current state is experimental, and macros will be developed to simplify the plugin development experience by avoiding manual writing of any unsafe code.
 
 ## Features
@@ -59,7 +62,7 @@ Ensure you have the following requirements installed:
 
 This section provides developers with all the necessary information to build, deploy, and test their WSL plugins using Rust, ensuring they follow best security practices and system maintenance.
 
-## Todo
+## To do
 - Bug fixes.
 - Add proc macro in order to generate what we have in the lib.rs file using a code like
 ``` rust
@@ -68,6 +71,10 @@ impl WSLPluginV1 for Plugin {
  ...
 }
 ``` 
+
+## known issue.
+⚠️ At this time the plugin not working.
+For more information visit [the related discution on the WSL repo](https://github.com/microsoft/WSL/discussions/11914)
 
 ## Contributing
 
