@@ -1,14 +1,14 @@
-extern crate reqwest;
-extern crate zip;
 extern crate bindgen;
+extern crate reqwest;
 extern crate semver;
+extern crate zip;
 
+use semver::Version;
 use std::env;
 use std::fs::File;
 use std::io::{self, Write};
 use std::path::PathBuf;
 use zip::ZipArchive;
-use semver::Version;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let version_str = env!("CARGO_PKG_VERSION");
@@ -23,14 +23,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let out_dir = env::var("OUT_DIR")?;
     let header_path = PathBuf::from(&out_dir).join("WslPluginApi.h");
-    
+
     // Download the nuget package if it not exist.
     if !header_path.exists() {
         let nuget_version = build_metadata.as_str();
         let url = format!("https://api.nuget.org/v3-flatcontainer/microsoft.wsl.pluginapi/{}/microsoft.wsl.pluginapi.{}.nupkg", nuget_version, nuget_version);
         let response = reqwest::blocking::get(&url)?;
         if response.status().is_success() {
-            let nupkg_path = PathBuf::from(&out_dir).join(format!("microsoft.wsl.pluginapi.{}.nupkg", nuget_version));
+            let nupkg_path = PathBuf::from(&out_dir)
+                .join(format!("microsoft.wsl.pluginapi.{}.nupkg", nuget_version));
             let mut file = File::create(&nupkg_path)?;
             let content = response.bytes()?;
             file.write_all(&content)?;

@@ -2,10 +2,10 @@ extern crate wslplugins_sys;
 
 #[cfg(feature = "bitflags")]
 use bitflags::bitflags;
-#[cfg(feature = "flagset")]
-use flagset::FlagSet;
 #[cfg(feature = "enumflags2")]
 use enumflags2::BitFlags;
+#[cfg(feature = "flagset")]
+use flagset::FlagSet;
 
 // Define flags with bitflags
 #[cfg(feature = "bitflags")]
@@ -23,7 +23,8 @@ bitflags! {
 #[repr(i32)]
 pub enum WSLUserConfiguration {
     CustomKernel = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel,
-    CustomKernelCommandLine = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernelCommandLine
+    CustomKernelCommandLine =
+        wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernelCommandLine,
 }
 
 // Define flags with enumflags2
@@ -32,7 +33,8 @@ pub enum WSLUserConfiguration {
 #[repr(i32)]
 pub enum WSLUserConfiguration {
     CustomKernel = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel,
-    CustomKernelCommandLine = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernelCommandLine
+    CustomKernelCommandLine =
+        wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernelCommandLine,
 }
 
 // Manual validation of active features

@@ -1,9 +1,12 @@
 use std::ffi::{CString, OsStr};
 use std::os::windows::ffi::OsStrExt;
 
-
 pub fn encode_wide_null_terminated(input: &OsStr) -> Vec<u16> {
-    input.encode_wide().filter(|&c| c != 0).chain(Some(0)).collect()
+    input
+        .encode_wide()
+        .filter(|&c| c != 0)
+        .chain(Some(0))
+        .collect()
 }
 
 pub fn cstring_from_str(input: &str) -> CString {

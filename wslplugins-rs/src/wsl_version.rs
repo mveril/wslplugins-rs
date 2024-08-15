@@ -1,11 +1,11 @@
-extern crate wslplugins_sys;
 #[cfg(feature = "semver")]
 extern crate semver;
-use std::fmt;
-#[cfg(feature = "semver")]
-use std::error::Error;
+extern crate wslplugins_sys;
 #[cfg(feature = "semver")]
 use semver::Version;
+#[cfg(feature = "semver")]
+use std::error::Error;
+use std::fmt;
 
 #[derive(Eq)]
 pub struct WSLVersion(*const wslplugins_sys::WSLVersion);
@@ -54,9 +54,10 @@ impl WSLVersion {
 
 impl PartialEq for WSLVersion {
     fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0 || (
-            self.major() == other.major() && self.minor() == other.minor() && self.revision() == other.revision()
-        )
+        self.0 == other.0
+            || (self.major() == other.major()
+                && self.minor() == other.minor()
+                && self.revision() == other.revision())
     }
 }
 
@@ -99,7 +100,9 @@ impl fmt::Display for WSLVersionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             WSLVersionError::PreReleaseNotEmpty => write!(f, "Pre-release field is not empty"),
-            WSLVersionError::BuildMetadataNotEmpty => write!(f, "Build metadata field is not empty"),
+            WSLVersionError::BuildMetadataNotEmpty => {
+                write!(f, "Build metadata field is not empty")
+            }
         }
     }
 }
@@ -107,9 +110,9 @@ impl fmt::Display for WSLVersionError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wslplugins_sys::WSLVersion as NativeWSLVersion;
     #[cfg(feature = "semver")]
     use semver::Version;
+    use wslplugins_sys::WSLVersion as NativeWSLVersion;
 
     #[test]
     fn test_from_raw() {
@@ -155,9 +158,12 @@ mod tests {
             Revision: 0,
         };
 
-        let wsl_version1 = WSLVersion::from_raw(&version1 as *const _ as *const wslplugins_sys::WSLVersion);
-        let wsl_version2 = WSLVersion::from_raw(&version2 as *const _ as *const wslplugins_sys::WSLVersion);
-        let wsl_version3 = WSLVersion::from_raw(&version3 as *const _ as *const wslplugins_sys::WSLVersion);
+        let wsl_version1 =
+            WSLVersion::from_raw(&version1 as *const _ as *const wslplugins_sys::WSLVersion);
+        let wsl_version2 =
+            WSLVersion::from_raw(&version2 as *const _ as *const wslplugins_sys::WSLVersion);
+        let wsl_version3 =
+            WSLVersion::from_raw(&version3 as *const _ as *const wslplugins_sys::WSLVersion);
 
         assert!(wsl_version1 < wsl_version2);
         assert!(wsl_version2 < wsl_version3);
@@ -171,7 +177,10 @@ mod tests {
             Minor: 2,
             Revision: 3,
         };
-        let debug_str = format!("{:?}", WSLVersion::from_raw(&version as *const _ as *const wslplugins_sys::WSLVersion));
+        let debug_str = format!(
+            "{:?}",
+            WSLVersion::from_raw(&version as *const _ as *const wslplugins_sys::WSLVersion)
+        );
         assert_eq!(debug_str, "WSLVersion { Major: 1, Minor: 2, Revision: 3 }");
     }
 
@@ -182,8 +191,10 @@ mod tests {
             Minor: 2,
             Revision: 3,
         };
-        let version1 = WSLVersion::from_raw(&native_version as *const _ as *const wslplugins_sys::WSLVersion);
-        let version2 = WSLVersion::from_raw(&native_version as *const _ as *const wslplugins_sys::WSLVersion);
+        let version1 =
+            WSLVersion::from_raw(&native_version as *const _ as *const wslplugins_sys::WSLVersion);
+        let version2 =
+            WSLVersion::from_raw(&native_version as *const _ as *const wslplugins_sys::WSLVersion);
         assert_eq!(version1, version2);
     }
 
@@ -194,15 +205,26 @@ mod tests {
             Minor: 2,
             Revision: 3,
         };
-        let version1 = WSLVersion::from_raw(&native_version as *const _ as *const wslplugins_sys::WSLVersion);
-        let version2 = WSLVersion::from_raw(&native_version as *const _ as *const wslplugins_sys::WSLVersion);
-        assert_eq!(version1.partial_cmp(&version2), Some(std::cmp::Ordering::Equal));
+        let version1 =
+            WSLVersion::from_raw(&native_version as *const _ as *const wslplugins_sys::WSLVersion);
+        let version2 =
+            WSLVersion::from_raw(&native_version as *const _ as *const wslplugins_sys::WSLVersion);
+        assert_eq!(
+            version1.partial_cmp(&version2),
+            Some(std::cmp::Ordering::Equal)
+        );
     }
 
     #[cfg(feature = "semver")]
     #[test]
     fn test_display_wslversionerror() {
-        assert_eq!(format!("{}", WSLVersionError::PreReleaseNotEmpty), "Pre-release field is not empty");
-        assert_eq!(format!("{}", WSLVersionError::BuildMetadataNotEmpty), "Build metadata field is not empty");
+        assert_eq!(
+            format!("{}", WSLVersionError::PreReleaseNotEmpty),
+            "Pre-release field is not empty"
+        );
+        assert_eq!(
+            format!("{}", WSLVersionError::BuildMetadataNotEmpty),
+            "Build metadata field is not empty"
+        );
     }
 }

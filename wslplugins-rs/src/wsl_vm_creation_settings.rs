@@ -10,25 +10,20 @@ impl WSLVmCreationSettings {
 
     #[cfg(feature = "bitflags")]
     pub fn custom_configuration_flags(&self) -> WSLUserConfiguration {
-        unsafe {
-            WSLUserConfiguration::from_bits_truncate((*self.0).CustomConfigurationFlags)
-        }
+        unsafe { WSLUserConfiguration::from_bits_truncate((*self.0).CustomConfigurationFlags) }
     }
 
     #[cfg(feature = "flagset")]
     pub fn custom_configuration_flags(&self) -> WSLUserConfiguration {
         unsafe {
-            WSLUserConfiguration::from_bits_retain((*self.0).CustomConfigurationFlags)
-                .unwrap()
+            WSLUserConfiguration::from_bits_retain((*self.0).CustomConfigurationFlags).unwrap()
         }
     }
 
     #[cfg(feature = "enumflags2")]
     pub fn custom_configuration_flags(&self) -> WSLUserConfiguration {
         unsafe {
-            WSLUserConfiguration::from_bits_truncate(
-                (*self.0).CustomConfigurationFlags as u8,
-            )
+            WSLUserConfiguration::from_bits_truncate((*self.0).CustomConfigurationFlags as u8)
         }
     }
 }

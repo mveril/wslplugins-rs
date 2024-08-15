@@ -1,7 +1,11 @@
-use std::{fs::OpenOptions, io::{BufWriter, Write, Read}, cell::RefCell};
 use chrono::Local;
-use wslplugins_rs::*;
+use std::{
+    cell::RefCell,
+    fs::OpenOptions,
+    io::{BufWriter, Read, Write},
+};
 use windows::core::Result;
+use wslplugins_rs::*;
 
 pub(crate) struct Plugin {
     api: ApiV1,
@@ -10,13 +14,11 @@ pub(crate) struct Plugin {
 
 impl Plugin {
     fn log_message(&self, message: &str) {
-        let log_entry = format!(
-            "{} {}\n",
-            Local::now().format("%Y-%m-%d %H:%M:%S"),
-            message
-        );
+        let log_entry = format!("{} {}\n", Local::now().format("%Y-%m-%d %H:%M:%S"), message);
         let mut log_file = self.log_file.borrow_mut();
-        log_file.write_all(log_entry.as_bytes()).expect("Unable to write to log file");
+        log_file
+            .write_all(log_entry.as_bytes())
+            .expect("Unable to write to log file");
         let _ = log_file.flush();
     }
 
@@ -40,8 +42,15 @@ impl WSLPluginV1 for Plugin {
         Ok(Plugin::new(api))
     }
 
-    fn on_vm_started(&self, session: &WSLSessionInformation, user_settings: &WSLVmCreationSettings) -> Result<()> {
-        self.log_message(&format!("User configuration {:?}", user_settings.custom_configuration_flags()));
+    fn on_vm_started(
+        &self,
+        session: &WSLSessionInformation,
+        user_settings: &WSLVmCreationSettings,
+    ) -> Result<()> {
+        self.log_message(&format!(
+            "User configuration {:?}",
+            user_settings.custom_configuration_flags()
+        ));
 
         let args = vec!["/bin/cat", "/proc/version"];
         let result = self.api.execute_binary(session, args[0], &args);
@@ -53,13 +62,19 @@ impl WSLPluginV1 for Plugin {
                 } else {
                     self.log_message("No version found");
                 }
-            },
-            Err(err) => self.log_message(&format!("Error on {}: {}", stringify!(on_vm_started), err)),
+            }
+            Err(err) => {
+                self.log_message(&format!("Error on {}: {}", stringify!(on_vm_started), err))
+            }
         };
         Ok(())
     }
 
-    fn on_distribution_started(&self, session: &WSLSessionInformation, distribution: &DistributionInformation) -> Result<()> {
+    fn on_distribution_started(
+        &self,
+        session: &WSLSessionInformation,
+        distribution: &DistributionInformation,
+    ) -> Result<()> {
         self.log_message(&format!(
             "Distribution started. Sessionid= {:}, Id={:?} Name={:}, Package={}, PidNs={}, InitPid={}",
             session.id(),
@@ -77,7 +92,11 @@ impl WSLPluginV1 for Plugin {
         Ok(())
     }
 
-    fn on_distribution_stopping(&self, session: &WSLSessionInformation, distribution: &DistributionInformation) -> Result<()> {
+    fn on_distribution_stopping(
+        &self,
+        session: &WSLSessionInformation,
+        distribution: &DistributionInformation,
+    ) -> Result<()> {
         self.log_message(&format!(
             "Distribution Stopping. SessionId={}, Id={:?} name={}, package={}, PidNs={}, InitPid={}",
             session.id(),

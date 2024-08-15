@@ -8,7 +8,9 @@ pub struct WSLSessionInformation(*const wslplugins_sys::WSLSessionInformation);
 
 impl hash::Hash for WSLSessionInformation {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
-        unsafe { (*self.0).SessionId.hash(state); }
+        unsafe {
+            (*self.0).SessionId.hash(state);
+        }
     }
 }
 
@@ -19,7 +21,6 @@ impl PartialEq for WSLSessionInformation {
 }
 
 impl WSLSessionInformation {
-  
     // Getter for id
     pub fn id(&self) -> u32 {
         unsafe { (*self.0).SessionId }
