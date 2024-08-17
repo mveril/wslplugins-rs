@@ -100,7 +100,7 @@ fn create_plugin(
 
 // Plugin entry point
 #[no_mangle]
-pub extern "C" fn WSLPLUGINAPI_ENTRYPOINTV1(
+pub extern "C" fn WSLPluginAPIV1_EntryPoint(
     api: *const WSLPluginAPIV1,
     hooks: *mut WSLPluginHooksV1,
 ) -> HRESULT {
