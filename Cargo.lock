@@ -414,6 +414,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9fc0510504f03c51ada170672ac806f1f105a88aa97a5281117e1ddc3368e51a"
 
 [[package]]
+name = "fern"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9f0c14694cbd524c8720dd69b0e3179344f04ebb5f90f2e4a440c6ea3b2f1ee"
+dependencies = [
+ "log",
+]
+
+[[package]]
 name = "flagset"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -842,6 +851,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 
 [[package]]
+name = "log-instrument"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a53bea7f726045518db151b1c9372b0d5f2a477a572b4865298c45a904565827"
+dependencies = [
+ "log",
+ "log-instrument-macros",
+]
+
+[[package]]
+name = "log-instrument-macros"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64860ae60b51788d332351feb17aca069f3e7e8a8fcd9235d5537e6fb48dc23c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "lzma-rs"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1050,6 +1080,9 @@ name = "plugin"
 version = "0.1.0-alpha.0"
 dependencies = [
  "chrono",
+ "fern",
+ "log",
+ "log-instrument",
  "windows",
  "wslplugins-rs",
  "wslplugins-sys",
