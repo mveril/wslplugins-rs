@@ -1,4 +1,3 @@
-
 # WSLPlugins-rs
 
 WSLPlugins-rs is a project aiming to provide a Rust interface for creating WSL (Windows Subsystem for Linux) plugins. This approach is inspired by [Microsoft's C sample for WSL plugins](https://github.com/microsoft/wsl-plugin-sample), aiming to leverage Rust's safety and performance features and allowing easy building of WSL plugins using idiomatic Rust.
@@ -21,13 +20,17 @@ Ensure you have the following requirements installed:
 - PowerShell (for running signin script)
 
 ## Usage
+
 ### Installation and Configuration
 
 #### Building and Signing the Plugin
+
 1. **Open a Visual Studio Developer Command Prompt as Administrator**:
+
    - This is necessary to ensure proper privileges when building and signing the plugin.
 
 2. **Build the Plugin**:
+
    - Navigate to your project directory using `cd path\to\wsl-plugin-rs`.
    - Execute the build command to create the plugin DLL in Debug or Release mode. Use `cargo build --release` for an optimized version.
 
@@ -39,7 +42,9 @@ Ensure you have the following requirements installed:
    - Ensure the path to the DLL is correct and that the `sign-plugin.ps1` script is properly configured to handle Rust DLLs.
 
 #### Registering and Loading the Plugin with WSL
+
 4. **Register the Plugin with WSL**:
+
    - Use the following command to add the plugin to the Windows registry, allowing WSL to recognize it:
      ```cmd
      reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss\Plugins" /v wsl-plugin-rs /d path\to\wsl-plugin-rs\target\release\plugin.dll /t reg_sz
@@ -54,7 +59,9 @@ Ensure you have the following requirements installed:
      ```
 
 #### Verification and Troubleshooting
+
 6. **Verify Plugin Functionality**:
+
    - Once the plugin is loaded, open the file `C:\wsl-plugin-demo.txt` to check the plugin output. Ensure that the plugin is correctly writing to this file during its operation.
 
 7. **Troubleshooting**:
@@ -63,18 +70,16 @@ Ensure you have the following requirements installed:
 This section provides developers with all the necessary information to build, deploy, and test their WSL plugins using Rust, ensuring they follow best security practices and system maintenance.
 
 ## To do
+
 - Bug fixes.
 - Add proc macro in order to generate what we have in the lib.rs file using a code like
-``` rust
+
+```rust
 #[wsl_plugin]
 impl WSLPluginV1 for Plugin {
  ...
 }
-``` 
-
-## known issue.
-⚠️ At this time the plugin not working.
-For more information visit [the related discution on the WSL repo](https://github.com/microsoft/WSL/discussions/11914)
+```
 
 ## Contributing
 
@@ -94,4 +99,5 @@ WSLPlugins-rs is released under the MIT License. For more information, please ch
 For support or to contact the developers, please open an issue on the GitHub project page.
 
 ### Additional Information
+
 - **Development Notes**: More information on plugin development and system architecture will be added as the project evolves.
