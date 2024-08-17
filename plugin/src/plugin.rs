@@ -2,7 +2,7 @@ use chrono::Local;
 use std::{
     cell::RefCell,
     fs::OpenOptions,
-    io::{BufWriter, Read, Write},
+    io::{self, BufWriter, Read, Write},
 };
 use windows::core::Result;
 use wslplugins_rs::*;
@@ -13,33 +13,30 @@ pub(crate) struct Plugin {
 }
 
 impl Plugin {
-    fn log_message(&self, message: &str) {
-        let log_entry = format!("{} {}\n", Local::now().format("%Y-%m-%d %H:%M:%S"), message);
+    fn log_message(&self, message: &str) -> io::Result<()> {
         let mut log_file = self.log_file.borrow_mut();
-        log_file
-            .write_all(log_entry.as_bytes())
-            .expect("Unable to write to log file");
-        let _ = log_file.flush();
-    }
-
-    fn new(api: ApiV1) -> Self {
-        let log_file_path = "C:\\wsl-plugin.log";
-        let file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(log_file_path)
-            .expect("Unable to open log file");
-
-        let log_file = RefCell::new(BufWriter::new(file));
-        let plugin = Plugin { api, log_file };
-        plugin.log_message("Plugin created");
-        plugin
+        log_file.write_fmt(format_args!(
+            "{} {}\n",
+            Local::now().format("%Y-%m-%d %H:%M:%S"),
+            message
+        ))?;
+        log_file.flush()?;
+        Ok(())
     }
 }
 
 impl WSLPluginV1 for Plugin {
     fn try_new(api: ApiV1) -> Result<Self> {
-        Ok(Plugin::new(api))
+        let log_file_path = "C:\\wsl-plugin.log";
+        let file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(log_file_path)?;
+
+        let log_file = RefCell::new(BufWriter::new(file));
+        let plugin = Plugin { api, log_file };
+        plugin.log_message("Plugin created")?;
+        Ok(plugin)
     }
 
     fn on_vm_started(
@@ -50,7 +47,7 @@ impl WSLPluginV1 for Plugin {
         self.log_message(&format!(
             "User configuration {:?}",
             user_settings.custom_configuration_flags()
-        ));
+        ))?;
 
         let args = vec!["/bin/cat", "/proc/version"];
         let result = self.api.execute_binary(session, args[0], &args);
@@ -58,13 +55,13 @@ impl WSLPluginV1 for Plugin {
             Ok(mut stream) => {
                 let mut buf = String::new();
                 if stream.read_to_string(&mut buf).is_ok_and(|size| size != 0) {
-                    self.log_message(&format!("Kernel version info: {}", buf.trim()));
+                    self.log_message(&format!("Kernel version info: {}", buf.trim()))?;
                 } else {
-                    self.log_message("No version found");
+                    self.log_message("No version found")?;
                 }
             }
             Err(err) => {
-                self.log_message(&format!("Error on {}: {}", stringify!(on_vm_started), err))
+                self.log_message(&format!("Error on {}: {}", stringify!(on_vm_started), err))?
             }
         };
         Ok(())
@@ -83,12 +80,12 @@ impl WSLPluginV1 for Plugin {
             distribution.package_family_name().unwrap_or_default().to_string_lossy(),
             distribution.pid_namespace(),
             distribution.init_pid()
-        ));
+        ))?;
         Ok(())
     }
 
     fn on_vm_stopping(&self, session: &WSLSessionInformation) -> Result<()> {
-        self.log_message(&format!("VM Stopping. SessionId={:?}", session.id()));
+        self.log_message(&format!("VM Stopping. SessionId={:?}", session.id()))?;
         Ok(())
     }
 
@@ -105,7 +102,7 @@ impl WSLPluginV1 for Plugin {
             distribution.package_family_name().unwrap_or_default().to_string_lossy(),
             distribution.pid_namespace(),
             distribution.init_pid()
-        ));
+        ))?;
         Ok(())
     }
 }
