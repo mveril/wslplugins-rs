@@ -5,8 +5,8 @@ use std::{env, io::Read};
 use windows::{core::Result, Win32::Foundation::E_FAIL};
 use wslplugins_rs::*;
 
-pub(crate) struct Plugin {
-    api: ApiV1,
+pub(crate) struct Plugin<'a> {
+    api: ApiV1<'a>,
 }
 
 fn setup_logging() -> Result<()> {
@@ -36,8 +36,8 @@ fn setup_logging() -> Result<()> {
         .map_err(|_| E_FAIL.into())
 }
 
-impl WSLPluginV1 for Plugin {
-    fn try_new(api: ApiV1) -> Result<Self> {
+impl<'a> WSLPluginV1<'a> for Plugin<'a> {
+    fn try_new(api: ApiV1<'a>) -> Result<Self> {
         setup_logging()?;
         let plugin = Plugin { api };
         info!("Plugin created");

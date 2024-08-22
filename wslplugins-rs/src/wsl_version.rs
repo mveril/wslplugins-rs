@@ -5,12 +5,11 @@ extern crate wslplugins_sys;
 use semver::Version;
 #[cfg(feature = "semver")]
 use std::error::Error;
-use std::fmt;
+use std::{fmt, ptr};
 
-#[derive(Eq)]
-pub struct WSLVersion(*const wslplugins_sys::WSLVersion);
+pub struct WSLVersion<'a>(&'a wslplugins_sys::WSLVersion);
 
-impl std::hash::Hash for WSLVersion {
+impl std::hash::Hash for WSLVersion<'_> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.major().hash(state);
         self.minor().hash(state);
@@ -18,7 +17,7 @@ impl std::hash::Hash for WSLVersion {
     }
 }
 
-impl fmt::Debug for WSLVersion {
+impl fmt::Debug for WSLVersion<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(stringify!(WSLVersion))
             .field("Major", &self.major())
@@ -28,42 +27,46 @@ impl fmt::Debug for WSLVersion {
     }
 }
 
-impl fmt::Display for WSLVersion {
+impl fmt::Display for WSLVersion<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}.{}.{}", self.major(), self.minor(), self.revision())
     }
 }
 
-impl WSLVersion {
-    pub fn from_raw(native_version: *const wslplugins_sys::WSLVersion) -> Self {
-        WSLVersion(native_version)
-    }
-
-    pub fn major(&self) -> u32 {
-        unsafe { (*self.0).Major }
-    }
-
-    pub fn minor(&self) -> u32 {
-        unsafe { (*self.0).Minor }
-    }
-
-    pub fn revision(&self) -> u32 {
-        unsafe { (*self.0).Revision }
+impl<'a> From<&'a wslplugins_sys::WSLVersion> for WSLVersion<'a> {
+    fn from(value: &'a wslplugins_sys::WSLVersion) -> Self {
+        Self(value)
     }
 }
 
-impl PartialEq for WSLVersion {
+impl WSLVersion<'_> {
+    pub fn major(&self) -> u32 {
+        self.0.Major
+    }
+
+    pub fn minor(&self) -> u32 {
+        self.0.Minor
+    }
+
+    pub fn revision(&self) -> u32 {
+        self.0.Revision
+    }
+}
+
+impl PartialEq for WSLVersion<'_> {
     fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
+        ptr::eq(self.0, other.0)
             || (self.major() == other.major()
                 && self.minor() == other.minor()
                 && self.revision() == other.revision())
     }
 }
 
-impl Ord for WSLVersion {
+impl Eq for WSLVersion<'_> {}
+
+impl Ord for WSLVersion<'_> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        if self.0 == other.0 {
+        if ptr::eq(self.0, other.0) {
             std::cmp::Ordering::Equal
         } else {
             self.major()
@@ -74,7 +77,7 @@ impl Ord for WSLVersion {
     }
 }
 
-impl PartialOrd for WSLVersion {
+impl PartialOrd for WSLVersion<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
@@ -86,7 +89,7 @@ impl From<WSLVersion> for Version {
         Version::new(version.major(), version.minor(), version.revision())
     }
 }
-
+#[cfg(feature = "semver")]
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum WSLVersionError {
     PreReleaseNotEmpty,
@@ -96,6 +99,7 @@ pub enum WSLVersionError {
 #[cfg(feature = "semver")]
 impl Error for WSLVersionError {}
 
+#[cfg(feature = "semver")]
 impl fmt::Display for WSLVersionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -121,7 +125,7 @@ mod tests {
             Minor: 2,
             Revision: 3,
         };
-        let version = WSLVersion::from_raw(&native_version as *const wslplugins_sys::WSLVersion);
+        let version = WSLVersion::from(&native_version);
         assert_eq!(version.major(), 1);
         assert_eq!(version.minor(), 2);
         assert_eq!(version.revision(), 3);
@@ -135,7 +139,7 @@ mod tests {
             Minor: 2,
             Revision: 3,
         };
-        let version = WSLVersion::from_raw(&native_version as *const wslplugins_sys::WSLVersion);
+        let version = WSLVersion::from(&native_version);
         let semver_version: Version = version.into();
         assert_eq!(semver_version, Version::new(1, 2, 3));
     }
@@ -158,12 +162,9 @@ mod tests {
             Revision: 0,
         };
 
-        let wsl_version1 =
-            WSLVersion::from_raw(&version1 as *const _ as *const wslplugins_sys::WSLVersion);
-        let wsl_version2 =
-            WSLVersion::from_raw(&version2 as *const _ as *const wslplugins_sys::WSLVersion);
-        let wsl_version3 =
-            WSLVersion::from_raw(&version3 as *const _ as *const wslplugins_sys::WSLVersion);
+        let wsl_version1 = WSLVersion::from(&version1);
+        let wsl_version2 = WSLVersion::from(&version2);
+        let wsl_version3 = WSLVersion::from(&version3);
 
         assert!(wsl_version1 < wsl_version2);
         assert!(wsl_version2 < wsl_version3);
@@ -177,10 +178,7 @@ mod tests {
             Minor: 2,
             Revision: 3,
         };
-        let debug_str = format!(
-            "{:?}",
-            WSLVersion::from_raw(&version as *const _ as *const wslplugins_sys::WSLVersion)
-        );
+        let debug_str = format!("{:?}", WSLVersion::from(&version));
         assert_eq!(debug_str, "WSLVersion { Major: 1, Minor: 2, Revision: 3 }");
     }
 
@@ -191,10 +189,8 @@ mod tests {
             Minor: 2,
             Revision: 3,
         };
-        let version1 =
-            WSLVersion::from_raw(&native_version as *const _ as *const wslplugins_sys::WSLVersion);
-        let version2 =
-            WSLVersion::from_raw(&native_version as *const _ as *const wslplugins_sys::WSLVersion);
+        let version1 = WSLVersion::from(&native_version);
+        let version2 = WSLVersion::from(&native_version);
         assert_eq!(version1, version2);
     }
 
@@ -205,10 +201,8 @@ mod tests {
             Minor: 2,
             Revision: 3,
         };
-        let version1 =
-            WSLVersion::from_raw(&native_version as *const _ as *const wslplugins_sys::WSLVersion);
-        let version2 =
-            WSLVersion::from_raw(&native_version as *const _ as *const wslplugins_sys::WSLVersion);
+        let version1 = WSLVersion::from(&native_version);
+        let version2 = WSLVersion::from(&native_version);
         assert_eq!(
             version1.partial_cmp(&version2),
             Some(std::cmp::Ordering::Equal)

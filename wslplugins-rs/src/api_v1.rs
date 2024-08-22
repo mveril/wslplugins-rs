@@ -18,18 +18,17 @@ use windows::{
     core::{Result, GUID, PCSTR, PCWSTR},
     Win32::Foundation::BOOL,
 };
-pub struct ApiV1(*const wslplugins_sys::WSLPluginAPIV1);
+pub struct ApiV1<'a>(&'a wslplugins_sys::WSLPluginAPIV1);
 
-impl ApiV1 {
-    pub fn from_raw(value: *const wslplugins_sys::WSLPluginAPIV1) -> Self {
+impl<'a> From<&'a wslplugins_sys::WSLPluginAPIV1> for ApiV1<'a> {
+    fn from(value: &'a wslplugins_sys::WSLPluginAPIV1) -> Self {
         Self(value)
     }
+}
 
+impl<'a> ApiV1<'a> {
     pub fn version(&self) -> WSLVersion {
-        unsafe {
-            let ver_ptr = &(*self.0).Version as *const wslplugins_sys::WSLVersion;
-            WSLVersion::from_raw(ver_ptr)
-        }
+        WSLVersion::from(&self.0.Version)
     }
     /// Create plan9 mount between Windows & Linux
     pub fn mount_folder<WP: AsRef<Path>, UP: AsRef<Utf8UnixPath>>(

@@ -1,29 +1,29 @@
 use crate::wsl_user_configuration::WSLUserConfiguration;
 use wslplugins_sys;
 
-pub struct WSLVmCreationSettings(*const wslplugins_sys::WSLVmCreationSettings);
+pub struct WSLVmCreationSettings<'a>(&'a wslplugins_sys::WSLVmCreationSettings);
 
-impl WSLVmCreationSettings {
-    pub fn from_raw(value: *const wslplugins_sys::WSLVmCreationSettings) -> Self {
+impl<'a> From<&'a wslplugins_sys::WSLVmCreationSettings> for WSLVmCreationSettings<'a> {
+    fn from(value: &'a wslplugins_sys::WSLVmCreationSettings) -> Self {
         WSLVmCreationSettings(value)
     }
+}
+
+impl WSLVmCreationSettings<'_> {
+    
 
     #[cfg(feature = "bitflags")]
     pub fn custom_configuration_flags(&self) -> WSLUserConfiguration {
-        unsafe { WSLUserConfiguration::from_bits_truncate((*self.0).CustomConfigurationFlags) }
+        WSLUserConfiguration::from_bits_truncate(self.0.CustomConfigurationFlags)
     }
 
     #[cfg(feature = "flagset")]
     pub fn custom_configuration_flags(&self) -> WSLUserConfiguration {
-        unsafe {
-            WSLUserConfiguration::from_bits_retain((*self.0).CustomConfigurationFlags).unwrap()
-        }
+            WSLUserConfiguration::from_bits_retain(self.0.CustomConfigurationFlags).unwrap()
     }
 
     #[cfg(feature = "enumflags2")]
     pub fn custom_configuration_flags(&self) -> WSLUserConfiguration {
-        unsafe {
-            WSLUserConfiguration::from_bits_truncate((*self.0).CustomConfigurationFlags as u8)
-        }
+            WSLUserConfiguration::from_bits_truncate(self.0.CustomConfigurationFlags as u8)
     }
 }

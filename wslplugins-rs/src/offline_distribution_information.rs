@@ -3,26 +3,28 @@ use crate::core_distribution_information::CoreDistributionInformation;
 use std::{ffi::OsString, os::windows::ffi::OsStringExt};
 use windows::core::GUID;
 
-pub struct OfflineDistributionInformation(*const wslplugins_sys::WslOfflineDistributionInformation);
+pub struct OfflineDistributionInformation<'a>(
+    &'a wslplugins_sys::WslOfflineDistributionInformation,
+);
 
-impl OfflineDistributionInformation {
-    pub fn from_raw(ptr: *const wslplugins_sys::WslOfflineDistributionInformation) -> Self {
+impl<'a> OfflineDistributionInformation<'a> {
+    pub fn from(ptr: &'a wslplugins_sys::WslOfflineDistributionInformation) -> Self {
         Self(ptr)
     }
 }
 
-impl CoreDistributionInformation for OfflineDistributionInformation {
+impl<'a> CoreDistributionInformation for OfflineDistributionInformation<'a> {
     fn id(&self) -> &GUID {
-        unsafe { &(*self.0).Id }
+        &self.0.Id
     }
 
     fn name(&self) -> OsString {
-        unsafe { OsString::from_wide((*self.0).Name.as_wide()) }
+        unsafe { OsString::from_wide(self.0.Name.as_wide()) }
     }
 
     fn package_family_name(&self) -> Option<OsString> {
         unsafe {
-            let ptr = (*self.0).PackageFamilyName;
+            let ptr = self.0.PackageFamilyName;
             if ptr.is_null() || ptr.is_empty() {
                 None
             } else {
