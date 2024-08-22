@@ -4,6 +4,7 @@ use crate::{
     utils::{cstring_from_str, encode_wide_null_terminated},
     wsl_version::WSLVersion,
 };
+use log_instrument::instrument;
 use std::ffi::{CString, OsStr, OsString};
 use std::iter::once;
 use std::mem::MaybeUninit;
@@ -27,10 +28,12 @@ impl<'a> From<&'a wslplugins_sys::WSLPluginAPIV1> for ApiV1<'a> {
 }
 
 impl<'a> ApiV1<'a> {
+    #[instrument]
     pub fn version(&self) -> WSLVersion {
         WSLVersion::from(&self.0.Version)
     }
     /// Create plan9 mount between Windows & Linux
+    #[instrument]
     pub fn mount_folder<WP: AsRef<Path>, UP: AsRef<Utf8UnixPath>>(
         &self,
         session: &WSLSessionInformation,
@@ -46,7 +49,6 @@ impl<'a> ApiV1<'a> {
                 .as_os_str(),
         );
         let encoded_name = encode_wide_null_terminated(name);
-
         let result = unsafe {
             (*self.0).MountFolder.unwrap_unchecked()(
                 session.id(),
@@ -60,6 +62,7 @@ impl<'a> ApiV1<'a> {
     }
 
     /// Execute a program in the root namespace.
+    #[instrument]
     pub fn execute_binary<P: AsRef<Utf8UnixPath>>(
         &self,
         session: &WSLSessionInformation,
@@ -96,7 +99,8 @@ impl<'a> ApiV1<'a> {
         Ok(stream)
     }
 
-    // Set the error message to display to the user if the VM or distribution creation fails.
+    /// Set the error message to display to the user if the VM or distribution creation fails.
+    #[instrument]
     pub fn plugin_error(&self, error: &OsStr) -> Result<()> {
         let error_vec = encode_wide_null_terminated(error);
         unsafe {
@@ -105,6 +109,7 @@ impl<'a> ApiV1<'a> {
     }
     /// Execute a program in a user distribution
     /// Introduced in 2.1.2
+    #[instrument]
     pub fn execute_binary_in_distribution<P: AsRef<Utf8UnixPath>>(
         &self,
         session: &WSLSessionInformation,

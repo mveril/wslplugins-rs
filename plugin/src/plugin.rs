@@ -1,8 +1,12 @@
 use chrono::Local;
 use fern::{log_file, Dispatch};
 use log::{info, warn, LevelFilter};
+use log_instrument::instrument;
 use std::{env, io::Read};
-use windows::{core::Result, Win32::Foundation::E_FAIL};
+use windows::{
+    core::{Error, Result},
+    Win32::Foundation::E_FAIL,
+};
 use wslplugins_rs::*;
 
 pub(crate) struct Plugin<'a> {
@@ -33,7 +37,9 @@ fn setup_logging() -> Result<()> {
         .level(log_level)
         .chain(log_file(log_path)?)
         .apply()
-        .map_err(|_| E_FAIL.into())
+        .map_err(|_| Error::from(E_FAIL))?;
+    info!("Logging configured: {:}", log_level);
+    Ok(())
 }
 
 impl<'a> WSLPluginV1<'a> for Plugin<'a> {
@@ -44,6 +50,7 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
         Ok(plugin)
     }
 
+    #[instrument]
     fn on_vm_started(
         &self,
         session: &WSLSessionInformation,
@@ -76,6 +83,7 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
         Ok(())
     }
 
+    #[instrument]
     fn on_distribution_started(
         &self,
         session: &WSLSessionInformation,
@@ -93,11 +101,13 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
         Ok(())
     }
 
+    #[instrument]
     fn on_vm_stopping(&self, session: &WSLSessionInformation) -> Result<()> {
         info!("VM Stopping. SessionId={:?}", session.id());
         Ok(())
     }
 
+    #[instrument]
     fn on_distribution_stopping(
         &self,
         session: &WSLSessionInformation,

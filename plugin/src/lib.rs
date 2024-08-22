@@ -1,5 +1,7 @@
 mod plugin;
 use crate::plugin::Plugin;
+use log::{debug, error};
+use log_instrument::instrument;
 use std::cell::OnceCell;
 use windows::core::{Error, HRESULT};
 use windows::Win32::Foundation::E_ABORT;
@@ -20,6 +22,7 @@ const MAJOR: u32 = 1;
 const MINOR: u32 = 0;
 const REVISION: u32 = 5;
 
+#[instrument]
 #[no_mangle]
 pub extern "C" fn on_vm_started(
     session: *const WSLSessionInformation,
@@ -38,6 +41,7 @@ pub extern "C" fn on_vm_started(
     })
 }
 
+#[instrument]
 #[no_mangle]
 pub extern "C" fn on_vm_stopping(session: *const WSLSessionInformation) -> HRESULT {
     let session_ptr = unsafe { &*session };
@@ -49,7 +53,7 @@ pub extern "C" fn on_vm_stopping(session: *const WSLSessionInformation) -> HRESU
     })
 }
 
-// Gestion des événements de la distribution
+#[instrument]
 #[no_mangle]
 pub extern "C" fn on_distro_started(
     session: *const WSLSessionInformation,
@@ -67,7 +71,7 @@ pub extern "C" fn on_distro_started(
             .into()
     })
 }
-
+#[instrument]
 #[no_mangle]
 pub extern "C" fn on_distro_stopping(
     session: *const WSLSessionInformation,
@@ -94,14 +98,40 @@ fn create_plugin(
         wslplugins_sys::require_version(MAJOR, MINOR, REVISION, api).ok()?;
     }
     let plugin = Plugin::try_new(ApiV1::from(api))?;
-    hooks.OnVMStarted = Some(on_vm_started);
-    hooks.OnVMStopping = Some(on_vm_stopping);
-    hooks.OnDistributionStarted = Some(on_distro_started);
-    hooks.OnDistributionStopping = Some(on_distro_stopping);
-    if PLUGIN.with(|cell| cell.set(plugin)).is_err() {
-        return Err(Error::from(E_ABORT));
-    }
+    set_hooks(hooks);
+    PLUGIN.with(|cell| cell.set(plugin)).map_err(|_| {
+        error!("Plugin not set !");
+        Error::from(E_ABORT)
+    })?;
     Ok(())
+}
+
+#[instrument]
+fn set_hooks(hooks: &mut WSLPluginHooksV1) {
+    hooks.OnVMStarted = Some(on_vm_started);
+    debug!(
+        "{:} defined on {:?}",
+        stringify!(hook_ptr.OnVMStarted),
+        hooks.OnVMStarted
+    );
+    hooks.OnVMStopping = Some(on_vm_stopping);
+    debug!(
+        "{:} defined on {:?}",
+        stringify!(hook_ptr.OnVMStopping),
+        hooks.OnVMStopping
+    );
+    hooks.OnDistributionStarted = Some(on_distro_started);
+    debug!(
+        "{:} defined on {:?}",
+        stringify!(hook_ptr.OnDistributionStarted),
+        hooks.OnDistributionStarted
+    );
+    hooks.OnDistributionStopping = Some(on_distro_stopping);
+    debug!(
+        "{:} defined on {:?}",
+        stringify!(hook_ptr.OnDistributionStopping),
+        hooks.OnDistributionStopping
+    );
 }
 
 // Plugin entry point

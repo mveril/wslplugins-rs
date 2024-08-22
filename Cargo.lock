@@ -2071,6 +2071,8 @@ dependencies = [
  "bitflags 2.6.0",
  "enumflags2",
  "flagset",
+ "log",
+ "log-instrument",
  "semver",
  "typed-path",
  "windows",
