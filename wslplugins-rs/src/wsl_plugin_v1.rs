@@ -8,7 +8,7 @@ use std::marker::Sized;
 use windows::core::Result;
 
 /// Trait defining synchronous notifications sent to the plugin.
-pub trait WSLPluginV1<'a>: Sized {
+pub trait WSLPluginV1<'a>: Sized + Sync {
     fn try_new(api: ApiV1<'a>) -> Result<Self>;
 
     /// Called when the VM has started.
