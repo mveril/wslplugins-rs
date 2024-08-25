@@ -113,7 +113,7 @@ impl<'a> ApiV1<'a> {
     pub fn execute_binary_in_distribution<P: AsRef<Utf8UnixPath>>(
         &self,
         session: &WSLSessionInformation,
-        distribution_id: GUID,
+        distribution_id: &GUID,
         path: P,
         args: &[&str],
     ) -> Result<TcpStream> {
@@ -135,9 +135,9 @@ impl<'a> ApiV1<'a> {
         let args_ptr = args_ptrs.as_mut_ptr();
         let mut socket = MaybeUninit::<WinSocket>::uninit();
         let stream = unsafe {
-            (*self.0).ExecuteBinaryInDistribution.unwrap_unchecked()(
+            self.0.ExecuteBinaryInDistribution.unwrap_unchecked()(
                 session.id(),
-                &distribution_id,
+                distribution_id,
                 path_ptr,
                 args_ptr,
                 socket.as_mut_ptr(),
