@@ -1,10 +1,11 @@
 use chrono::Local;
+use etc_os_release::OsRelease;
 use fern::{log_file, Dispatch};
 use log::{info, warn, LevelFilter};
 use log_instrument::instrument;
 use std::{env, io::Read};
 use windows::{
-    core::{Error, Result},
+    core::{Error, Result, GUID},
     Win32::Foundation::E_FAIL,
 };
 use wslplugins_rs::*;
@@ -61,9 +62,8 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
             user_settings.custom_configuration_flags()
         );
 
-        let args = vec!["/bin/cat", "/proc/version"];
-        let result = self.api.execute_binary(session, args[0], &args);
-        match result {
+        let ver_args = ["/bin/cat", "/proc/version"];
+        match self.api.execute_binary(session, &ver_args[0], &ver_args) {
             Ok(mut stream) => {
                 let mut buf = String::new();
                 if stream.read_to_string(&mut buf).is_ok_and(|size| size != 0) {
@@ -80,6 +80,25 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
                 )
             }
         };
+        let ver_args = ["/bin/cat", "/proc/version"];
+        match self.api.execute_binary(session, &ver_args[0], &ver_args) {
+            Ok(mut stream) => {
+                let mut buf = String::new();
+                if stream.read_to_string(&mut buf).is_ok_and(|size| size != 0) {
+                    info!("Kernel version info: {}", buf.trim());
+                } else {
+                    warn!("No version found");
+                }
+            }
+            Err(err) => {
+                warn!(
+                    "Error on binary execution {}: {}",
+                    stringify!(on_vm_started),
+                    err
+                )
+            }
+        };
+        self.log_os_release(session, None);
         Ok(())
     }
 
@@ -98,6 +117,7 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
             distribution.pid_namespace(),
             distribution.init_pid()
         );
+        self.log_os_release(session, Some(distribution.id()));
         Ok(())
     }
 
@@ -123,5 +143,33 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
             distribution.init_pid()
         );
         Ok(())
+    }
+}
+
+impl Plugin<'_> {
+    fn log_os_release(&self, session: &WSLSessionInformation, distro_id: Option<&GUID>) {
+        let args: [&str; 2] = ["/bin/cat", "/etc/os-release"];
+        let tcp_stream = match distro_id {
+            Some(dist_id) => self
+                .api
+                .execute_binary_in_distribution(session, dist_id, &args[0], &args),
+            None => self.api.execute_binary(session, &args[0], &args),
+        };
+        let result = tcp_stream;
+        match result {
+            Ok(stream) => match OsRelease::from_reader(stream) {
+                Ok(release) => {
+                    if let Some(version) = release.version() {
+                        info!("{}: ({})", release.name(), version)
+                    } else {
+                        info!("{}", release.name())
+                    }
+                }
+                Err(err) => warn!("{}", err),
+            },
+            Err(err) => {
+                warn!("Error on binary execution: {}", err)
+            }
+        };
     }
 }

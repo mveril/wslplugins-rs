@@ -14,6 +14,7 @@ chrono = "^0.*"
 log ="0.4"
 log-instrument="0.3"
 fern="0.6"
+etc-os-release = "0.1.0"
 [dependencies.windows]
 version = "0.58"
 features = [

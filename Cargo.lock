@@ -408,6 +408,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "etc-os-release"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3ab3b560ce06f55db2a56928ad3e051680eb1995feb21c855619e08cb7f0a2b"
+dependencies = [
+ "indexmap",
+ "thiserror",
+]
+
+[[package]]
 name = "fastrand"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1080,6 +1090,7 @@ name = "plugin"
 version = "0.1.0-alpha.0"
 dependencies = [
  "chrono",
+ "etc-os-release",
  "fern",
  "log",
  "log-instrument",
