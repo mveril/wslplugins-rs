@@ -3,12 +3,29 @@ extern crate reqwest;
 extern crate semver;
 extern crate zip;
 
+use bindgen::callbacks::{ParseCallbacks, TypeKind};
 use semver::Version;
 use std::env;
 use std::fs::File;
 use std::io::{self, Write};
 use std::path::PathBuf;
 use zip::ZipArchive;
+
+#[derive(Debug)]
+struct BindgenCallback;
+
+impl ParseCallbacks for BindgenCallback {
+    fn add_derives(&self, _info: &bindgen::callbacks::DeriveInfo<'_>) -> Vec<String> {
+        if _info.kind == TypeKind::Struct && _info.name == "WSLVersion" {
+            ["Eq", "PartialEq", "Ord", "PartialOrd", "Hash"]
+                .iter()
+                .map(|d| d.to_string())
+                .collect::<Vec<_>>()
+        } else {
+            vec![]
+        }
+    }
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let version_str = env!("CARGO_PKG_VERSION");
@@ -66,6 +83,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .allowlist_item("Wsl.*")
         .clang_arg("-fparse-all-comments")
         .allowlist_recursively(false)
+        .parse_callbacks(Box::new(BindgenCallback))
         .generate_comments(true)
         .generate()
         .expect("Unable to generate wslplugins_sys");

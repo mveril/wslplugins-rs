@@ -7,15 +7,8 @@ use semver::Version;
 use std::error::Error;
 use std::{fmt, ptr};
 
+#[derive(Hash)]
 pub struct WSLVersion<'a>(&'a wslplugins_sys::WSLVersion);
-
-impl std::hash::Hash for WSLVersion<'_> {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.major().hash(state);
-        self.minor().hash(state);
-        self.revision().hash(state);
-    }
-}
 
 impl fmt::Debug for WSLVersion<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -55,10 +48,7 @@ impl WSLVersion<'_> {
 
 impl PartialEq for WSLVersion<'_> {
     fn eq(&self, other: &Self) -> bool {
-        ptr::eq(self.0, other.0)
-            || (self.major() == other.major()
-                && self.minor() == other.minor()
-                && self.revision() == other.revision())
+        ptr::eq(self.0, other.0) || self.0.eq(other.0)
     }
 }
 
@@ -69,10 +59,7 @@ impl Ord for WSLVersion<'_> {
         if ptr::eq(self.0, other.0) {
             std::cmp::Ordering::Equal
         } else {
-            self.major()
-                .cmp(&other.major())
-                .then_with(|| self.minor().cmp(&other.minor()))
-                .then_with(|| self.revision().cmp(&other.revision()))
+            self.0.cmp(other.0)
         }
     }
 }
