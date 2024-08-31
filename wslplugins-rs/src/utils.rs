@@ -1,5 +1,7 @@
 use std::ffi::{CString, OsStr};
 use std::os::windows::ffi::OsStrExt;
+use wslplugins_sys::WSLPluginAPIV1;
+use crate::{ApiV1, WSLPluginV1};
 
 pub fn encode_wide_null_terminated(input: &OsStr) -> Vec<u16> {
     input
@@ -12,6 +14,20 @@ pub fn encode_wide_null_terminated(input: &OsStr) -> Vec<u16> {
 pub fn cstring_from_str(input: &str) -> CString {
     let filtered_input: Vec<u8> = input.bytes().filter(|&c| c != 0).collect();
     unsafe { CString::from_vec_unchecked(filtered_input) }
+}
+
+pub fn create_plugin_with_required_version<'a, T: WSLPluginV1<'a>>(
+    api: &'a WSLPluginAPIV1,
+    required_major: u32,
+    required_minor: u32,
+    required_revision: u32,
+) -> windows::core::Result<T> {
+    unsafe {
+        wslplugins_sys::require_version(required_major, required_minor, required_revision, api)
+            .ok()?;
+    }
+    let plugin = T::try_new(ApiV1::from(api))?;
+    Ok(plugin)
 }
 
 #[cfg(test)]

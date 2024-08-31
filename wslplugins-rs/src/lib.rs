@@ -13,6 +13,7 @@ extern crate wslplugins_sys;
 pub use api_v1::ApiV1;
 pub use core_distribution_information::CoreDistributionInformation;
 pub use distribution_information::DistributionInformation;
+pub use utils::create_plugin_with_required_version;
 pub use wsl_plugin_v1::WSLPluginV1;
 pub use wsl_session_information::WSLSessionInformation;
 pub use wsl_version::WSLVersion;

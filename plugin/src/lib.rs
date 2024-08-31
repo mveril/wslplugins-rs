@@ -5,7 +5,7 @@ use log_instrument::instrument;
 use std::sync::OnceLock;
 use windows::core::{Error, HRESULT};
 use windows::Win32::Foundation::E_ABORT;
-use wslplugins_rs::{ApiV1, WSLPluginV1};
+use wslplugins_rs::{create_plugin_with_required_version, WSLPluginV1};
 use wslplugins_rs::{
     DistributionInformation as DistributionInformationWrapper,
     WSLSessionInformation as WSLSessionInformationWrapper,
@@ -89,10 +89,7 @@ fn create_plugin(
     api: &'static WSLPluginAPIV1,
     hooks: &mut WSLPluginHooksV1,
 ) -> windows::core::Result<()> {
-    unsafe {
-        wslplugins_sys::require_version(MAJOR, MINOR, REVISION, api).ok()?;
-    }
-    let plugin = Plugin::try_new(ApiV1::from(api))?;
+    let plugin: Plugin<'static> = create_plugin_with_required_version(api, MAJOR, MINOR, REVISION)?;
     set_hooks(hooks);
     PLUGIN.set(plugin).map_err(|_| {
         error!("Plugin not set !");
