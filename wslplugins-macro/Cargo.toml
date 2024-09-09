@@ -1,0 +1,13 @@
+[package]
+name = "wslplugins-macro"
+version = "0.1.0-alpha.0"
+authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]
+edition = "2021"
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "*"
+quote = "*"
+proc-macro2 = "*"
+wslplugins-macro-core = { path = "../wslplugins-macro-core" }

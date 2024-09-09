@@ -12,7 +12,25 @@ use std::path::PathBuf;
 use zip::ZipArchive;
 
 #[derive(Debug)]
-struct BindgenCallback;
+struct BindgenCallback {
+    generate_hooks_fields_name: bool,
+}
+
+impl Default for BindgenCallback {
+    fn default() -> Self {
+        Self {
+            generate_hooks_fields_name: false,
+        }
+    }
+}
+
+impl BindgenCallback {
+    fn new(generate_hooks_fields_names: bool) -> Self {
+        BindgenCallback {
+            generate_hooks_fields_name: generate_hooks_fields_names,
+        }
+    }
+}
 
 impl ParseCallbacks for BindgenCallback {
     fn add_derives(&self, _info: &bindgen::callbacks::DeriveInfo<'_>) -> Vec<String> {
@@ -21,6 +39,11 @@ impl ParseCallbacks for BindgenCallback {
                 .iter()
                 .map(|d| d.to_string())
                 .collect::<Vec<_>>()
+        } else if _info.kind == TypeKind::Struct
+            && _info.name.contains("PluginHooks")
+            && self.generate_hooks_fields_name
+        {
+            vec!["FieldNamesAsSlice".to_string()]
         } else {
             vec![]
         }
@@ -68,7 +91,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Use bindgen to generate the binding.
     println!("Generating wslplugins_sys...");
-    let wslplugins_sys = bindgen::Builder::default()
+    let hooks_fields_name_feature = std::env::var("CARGO_FEATURE_HOOKS_FIELD_NAMES").is_ok();
+    let mut builder = bindgen::Builder::default()
         .header(header_path.to_str().unwrap())
         .raw_line("use windows::core::*;")
         .raw_line("use windows::Win32::Foundation::*;")
@@ -76,14 +100,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .raw_line("use windows::Win32::Networking::WinSock::SOCKET;")
         .raw_line("type LPCWSTR = PCWSTR;")
         .raw_line("type LPCSTR = PCSTR;")
-        .raw_line("type DWORD = u32;")
+        .raw_line("type DWORD = u32;");
+    if hooks_fields_name_feature {
+        builder = builder.raw_line("use struct_field_names_as_array::FieldNamesAsSlice;");
+    };
+    let wslplugins_sys = builder
         .derive_debug(true)
         .derive_copy(true)
         .allowlist_item("WSL.*")
         .allowlist_item("Wsl.*")
         .clang_arg("-fparse-all-comments")
         .allowlist_recursively(false)
-        .parse_callbacks(Box::new(BindgenCallback))
+        .parse_callbacks(Box::new(BindgenCallback::new(hooks_fields_name_feature)))
         .generate_comments(true)
         .generate()
         .expect("Unable to generate wslplugins_sys");

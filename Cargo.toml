@@ -1,6 +1,10 @@
 [workspace]
 resolver = "2"
 members = [
-    "wslplugins-sys", "plugin",
-    "wslplugins-rs"
+    "wslplugins-sys",
+    "plugin",
+    "wslplugins-rs",
+    "wslplugins-macro",
+    "wslplugins-macro-core",
+    "wslplugins-macro-tests",
 ]

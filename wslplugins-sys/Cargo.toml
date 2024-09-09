@@ -3,6 +3,8 @@ name = "wslplugins-sys"
 version = "0.1.0-alpha.0+2.1.3"
 authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]
 edition = "2021"
+[features]
+hooks-field-names=["struct-field-names-as-array"]
 
 [build-dependencies]
 bindgen = "0.69"
@@ -12,6 +14,7 @@ semver = "^1.0"
 
 [dependencies]
 libc = "0.2"
+struct-field-names-as-array={version = "*", features = ["derive"], optional = true}
 [dependencies.windows]
 version = "0.58"
 features = [

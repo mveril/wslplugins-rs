@@ -1,144 +1,175 @@
-mod plugin;
-use crate::plugin::Plugin;
-use log::{debug, error};
+use chrono::Local;
+use etc_os_release::OsRelease;
+use fern::{log_file, Dispatch};
+use log::{info, warn, LevelFilter};
 use log_instrument::instrument;
-use std::sync::OnceLock;
-use windows::core::{Error, HRESULT};
-use windows::Win32::Foundation::E_ABORT;
-use wslplugins_rs::{create_plugin_with_required_version, WSLPluginV1};
-use wslplugins_rs::{
-    DistributionInformation as DistributionInformationWrapper,
-    WSLSessionInformation as WSLSessionInformationWrapper,
-    WSLVmCreationSettings as WSLVmCreationSettingsWrapper,
+use std::{env, io::Read};
+use windows::{
+    core::{Error, Result, GUID},
+    Win32::Foundation::E_FAIL,
 };
-use wslplugins_sys::*;
+use wslplugins_rs::*;
 
-// Even if WSLService call the plugins synchroniously call of WSL can be on different thread so we need to handle multithreading
-static PLUGIN: OnceLock<Plugin<'static>> = OnceLock::new();
-
-const MAJOR: u32 = 1;
-const MINOR: u32 = 0;
-const REVISION: u32 = 5;
-
-#[instrument]
-#[no_mangle]
-pub extern "C" fn on_vm_started(
-    session: *const WSLSessionInformation,
-    settings: *const WSLVmCreationSettings,
-) -> HRESULT {
-    let session_ptr = unsafe { &*session };
-    let settings_ptr = unsafe { &*settings };
-    PLUGIN
-        .get()
-        .unwrap()
-        .on_vm_started(
-            &WSLSessionInformationWrapper::from(session_ptr),
-            &WSLVmCreationSettingsWrapper::from(settings_ptr),
-        )
-        .into()
+pub(crate) struct Plugin<'a> {
+    api: ApiV1<'a>,
 }
 
-#[instrument]
-#[no_mangle]
-pub extern "C" fn on_vm_stopping(session: *const WSLSessionInformation) -> HRESULT {
-    let session_ptr = unsafe { &*session };
-    PLUGIN
-        .get()
-        .unwrap()
-        .on_vm_stopping(&WSLSessionInformationWrapper::from(session_ptr))
-        .into()
-}
-
-#[instrument]
-#[no_mangle]
-pub extern "C" fn on_distro_started(
-    session: *const WSLSessionInformation,
-    distribution: *const WSLDistributionInformation,
-) -> HRESULT {
-    let session_ptr = unsafe { &*session };
-    let distribution_ptr = unsafe { &*distribution };
-    PLUGIN
-        .get()
-        .unwrap()
-        .on_distribution_started(
-            &WSLSessionInformationWrapper::from(session_ptr),
-            &DistributionInformationWrapper::from(distribution_ptr),
-        )
-        .into()
-}
-
-#[instrument]
-#[no_mangle]
-pub extern "C" fn on_distro_stopping(
-    session: *const WSLSessionInformation,
-    distribution: *const WSLDistributionInformation,
-) -> HRESULT {
-    let session_ptr = unsafe { &*session };
-    let distribution_ptr = unsafe { &*distribution };
-    PLUGIN
-        .get()
-        .unwrap()
-        .on_distribution_stopping(
-            &WSLSessionInformationWrapper::from(session_ptr),
-            &DistributionInformationWrapper::from(distribution_ptr),
-        )
-        .into()
-}
-
-fn create_plugin(
-    api: &'static WSLPluginAPIV1,
-    hooks: &mut WSLPluginHooksV1,
-) -> windows::core::Result<()> {
-    let plugin: Plugin<'static> = create_plugin_with_required_version(api, MAJOR, MINOR, REVISION)?;
-    set_hooks(hooks);
-    PLUGIN.set(plugin).map_err(|_| {
-        error!("Plugin not set !");
-        Error::from(E_ABORT)
-    })?;
-    Ok(())
-}
-
-#[instrument]
-fn set_hooks(hooks: &mut WSLPluginHooksV1) {
-    hooks.OnVMStarted = Some(on_vm_started);
-    debug!(
-        "{:} defined on {:?}",
-        stringify!(hook_ptr.OnVMStarted),
-        hooks.OnVMStarted
-    );
-    hooks.OnVMStopping = Some(on_vm_stopping);
-    debug!(
-        "{:} defined on {:?}",
-        stringify!(hook_ptr.OnVMStopping),
-        hooks.OnVMStopping
-    );
-    hooks.OnDistributionStarted = Some(on_distro_started);
-    debug!(
-        "{:} defined on {:?}",
-        stringify!(hook_ptr.OnDistributionStarted),
-        hooks.OnDistributionStarted
-    );
-    hooks.OnDistributionStopping = Some(on_distro_stopping);
-    debug!(
-        "{:} defined on {:?}",
-        stringify!(hook_ptr.OnDistributionStopping),
-        hooks.OnDistributionStopping
-    );
-}
-
-// Plugin entry point
-#[no_mangle]
-pub extern "C" fn WSLPluginAPIV1_EntryPoint(
-    api: *const WSLPluginAPIV1,
-    hooks: *mut WSLPluginHooksV1,
-) -> HRESULT {
-    let api_ref: &'static WSLPluginAPIV1;
-    let hooks_ref: &mut WSLPluginHooksV1;
-
-    unsafe {
-        api_ref = &*api;
-        hooks_ref = &mut *hooks;
+fn setup_logging() -> Result<()> {
+    let log_level = match env::var("RUST_WSL_LOGLEVEL")
+        .ok()
+        .and_then(|val| val.parse().ok())
+    {
+        Some(level) => level,
+        None => LevelFilter::Info,
     };
 
-    create_plugin(api_ref, hooks_ref).into()
+    let log_path =
+        env::var("RUST_WSL_LOG_PATH").unwrap_or_else(|_| "C:\\wsl-plugin.log".to_string());
+
+    Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{} [{}] {}",
+                Local::now().format("%Y-%m-%d %H:%M:%S"),
+                record.level(),
+                message
+            ))
+        })
+        .level(log_level)
+        .chain(log_file(log_path)?)
+        .apply()
+        .map_err(|_| Error::from(E_FAIL))?;
+    info!("Logging configured: {:}", log_level);
+    Ok(())
+}
+#[wsl_plugin_v1(1, 0, 5)]
+impl<'a> WSLPluginV1<'a> for Plugin<'a> {
+    fn try_new(api: ApiV1<'a>) -> Result<Self> {
+        setup_logging()?;
+        let plugin = Plugin { api };
+        info!("Plugin created");
+        Ok(plugin)
+    }
+
+    #[instrument]
+    fn on_vm_started(
+        &self,
+        session: &WSLSessionInformation,
+        user_settings: &WSLVmCreationSettings,
+    ) -> Result<()> {
+        info!(
+            "User configuration {:?}",
+            user_settings.custom_configuration_flags()
+        );
+
+        let ver_args = ["/bin/cat", "/proc/version"];
+        match self.api.execute_binary(session, &ver_args[0], &ver_args) {
+            Ok(mut stream) => {
+                let mut buf = String::new();
+                if stream.read_to_string(&mut buf).is_ok_and(|size| size != 0) {
+                    info!("Kernel version info: {}", buf.trim());
+                } else {
+                    warn!("No version found");
+                }
+            }
+            Err(err) => {
+                warn!(
+                    "Error on binary execution {}: {}",
+                    stringify!(on_vm_started),
+                    err
+                )
+            }
+        };
+        let ver_args = ["/bin/cat", "/proc/version"];
+        match self.api.execute_binary(session, &ver_args[0], &ver_args) {
+            Ok(mut stream) => {
+                let mut buf = String::new();
+                if stream.read_to_string(&mut buf).is_ok_and(|size| size != 0) {
+                    info!("Kernel version info: {}", buf.trim());
+                } else {
+                    warn!("No version found");
+                }
+            }
+            Err(err) => {
+                warn!(
+                    "Error on binary execution {}: {}",
+                    stringify!(on_vm_started),
+                    err
+                )
+            }
+        };
+        self.log_os_release(session, None);
+        Ok(())
+    }
+
+    #[instrument]
+    fn on_distribution_started(
+        &self,
+        session: &WSLSessionInformation,
+        distribution: &DistributionInformation,
+    ) -> Result<()> {
+        info!(
+            "Distribution started. Sessionid= {:}, Id={:?} Name={:}, Package={}, PidNs={}, InitPid={}",
+            session.id(),
+            distribution.id(),
+            distribution.name().to_string_lossy(),
+            distribution.package_family_name().unwrap_or_default().to_string_lossy(),
+            distribution.pid_namespace(),
+            distribution.init_pid()
+        );
+        self.log_os_release(session, Some(distribution.id()));
+        Ok(())
+    }
+
+    #[instrument]
+    fn on_vm_stopping(&self, session: &WSLSessionInformation) -> Result<()> {
+        info!("VM Stopping. SessionId={:?}", session.id());
+        Ok(())
+    }
+
+    #[instrument]
+    fn on_distribution_stopping(
+        &self,
+        session: &WSLSessionInformation,
+        distribution: &DistributionInformation,
+    ) -> Result<()> {
+        info!(
+            "Distribution Stopping. SessionId={}, Id={:?} name={}, package={}, PidNs={}, InitPid={}",
+            session.id(),
+            distribution.id(),
+            distribution.name().to_string_lossy(),
+            distribution.package_family_name().unwrap_or_default().to_string_lossy(),
+            distribution.pid_namespace(),
+            distribution.init_pid()
+        );
+        Ok(())
+    }
+}
+
+impl Plugin<'_> {
+    fn log_os_release(&self, session: &WSLSessionInformation, distro_id: Option<&GUID>) {
+        let args: [&str; 2] = ["/bin/cat", "/etc/os-release"];
+        let tcp_stream = match distro_id {
+            Some(dist_id) => self
+                .api
+                .execute_binary_in_distribution(session, dist_id, &args[0], &args),
+            None => self.api.execute_binary(session, &args[0], &args),
+        };
+        let result = tcp_stream;
+        match result {
+            Ok(stream) => match OsRelease::from_reader(stream) {
+                Ok(release) => {
+                    if let Some(version) = release.version() {
+                        info!("{}: ({})", release.name(), version)
+                    } else {
+                        info!("{}", release.name())
+                    }
+                }
+                Err(err) => warn!("{}", err),
+            },
+            Err(err) => {
+                warn!("Error on binary execution: {}", err)
+            }
+        };
+    }
 }

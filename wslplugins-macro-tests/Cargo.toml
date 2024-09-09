@@ -1,19 +1,15 @@
 [package]
-name = "plugin"
+name = "wslplugins-macro-tests"
 version = "0.1.0-alpha.0"
 authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib"]
-
 [dependencies]
 wslplugins-rs = { path = "../wslplugins-rs", features = ["macro"] }
-chrono = "^0.*"
-log = "0.4"
-log-instrument = "0.3"
-fern = "0.6"
-etc-os-release = "0.1.0"
+wslplugins-sys = { path = "../wslplugins-sys" }
 [dependencies.windows]
 version = "0.58"
 features = ["Win32_Foundation"]
+
+[dev-dependencies]
+trybuild = "1.0.99"

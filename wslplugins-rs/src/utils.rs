@@ -1,7 +1,7 @@
+use crate::{ApiV1, WSLPluginV1};
 use std::ffi::{CString, OsStr};
 use std::os::windows::ffi::OsStrExt;
 use wslplugins_sys::WSLPluginAPIV1;
-use crate::{ApiV1, WSLPluginV1};
 
 pub fn encode_wide_null_terminated(input: &OsStr) -> Vec<u16> {
     input

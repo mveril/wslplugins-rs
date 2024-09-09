@@ -1,0 +1,19 @@
+[package]
+name = "wslplugins-macro-core"
+version = "0.1.0-alpha.0"
+authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]
+edition = "2021"
+
+[dependencies]
+syn = { version = "*", features = ["full", "extra-traits"] }
+quote = "*"
+"proc-macro2" = "*"
+heck = "0.5"
+strum = { version = "0.26.3", features = ["derive"] }
+
+[build-dependencies]
+wslplugins-sys = { path = "../wslplugins-sys", features = [
+  "hooks-field-names",
+] }
+quote = "*"
+struct-field-names-as-array = "*"
