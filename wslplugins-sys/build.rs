@@ -1,15 +1,14 @@
 extern crate bindgen;
-extern crate reqwest;
 extern crate semver;
-extern crate zip;
 
 use bindgen::callbacks::{ParseCallbacks, TypeKind};
 use semver::Version;
 use std::env;
-use std::fs::File;
-use std::io::{self, Write};
-use std::path::PathBuf;
-use zip::ZipArchive;
+use std::path::{Path, PathBuf};
+use std::process::{Command, ExitStatus};
+
+const WSL_PACKAGE_NAME: &str = "Microsoft.WSL.PluginApi";
+const LOCAL_NUGET_PATH: &str = "nuget_packages"; // Local folder to store NuGet packages
 
 #[derive(Debug)]
 struct BindgenCallback {
@@ -35,24 +34,58 @@ impl BindgenCallback {
 impl ParseCallbacks for BindgenCallback {
     fn add_derives(&self, _info: &bindgen::callbacks::DeriveInfo<'_>) -> Vec<String> {
         if _info.kind == TypeKind::Struct && _info.name == "WSLVersion" {
-            ["Eq", "PartialEq", "Ord", "PartialOrd", "Hash"]
-                .iter()
-                .map(|d| d.to_string())
-                .collect::<Vec<_>>()
+            vec![
+                "Eq".into(),
+                "PartialEq".into(),
+                "Ord".into(),
+                "PartialOrd".into(),
+                "Hash".into(),
+            ]
         } else if _info.kind == TypeKind::Struct
             && _info.name.contains("PluginHooks")
             && self.generate_hooks_fields_name
         {
-            vec!["FieldNamesAsSlice".to_string()]
+            vec!["FieldNamesAsSlice".into()]
         } else {
             vec![]
         }
     }
 }
 
+// Function to ensure the NuGet package is installed in the local folder
+fn ensure_package_installed(
+    package_name: &str,
+    package_version: &str,
+    output_dir: &str,
+) -> Result<ExitStatus, Box<dyn std::error::Error>> {
+    // Run the NuGet install command with -NonInteractive to avoid prompts
+    let status = Command::new("nuget")
+        .args(&[
+            "install",
+            package_name,
+            "-Version",
+            package_version,
+            "-OutputDirectory",
+            output_dir,        // Local folder to install the NuGet package
+            "-NonInteractive", // Ensures the command runs without user interaction
+        ])
+        .status()
+        .expect("Failed to execute nuget install command");
+
+    if !status.success() {
+        return Err(format!(
+            "NuGet install command failed with status: {:?}",
+            status.code()
+        )
+        .into());
+    }
+    Ok(status)
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Extract the version of the package from the Cargo metadata
     let version_str = env!("CARGO_PKG_VERSION");
-    let version = Version::parse(version_str).expect("Unable to parse version");
+    let version = Version::parse(version_str).expect("Unable to parse the Cargo package version");
     let build_metadata = &version.build;
 
     println!("cargo:rerun-if-changed=build.rs");
@@ -61,39 +94,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("cargo:build-metadata={}", build_metadata);
     }
 
-    let out_dir = env::var("OUT_DIR")?;
-    let header_path = PathBuf::from(&out_dir).join("WslPluginApi.h");
+    let package_version = build_metadata.to_string();
 
-    // Download the nuget package if it not exist.
-    if !header_path.exists() {
-        let nuget_version = build_metadata.as_str();
-        let url = format!("https://api.nuget.org/v3-flatcontainer/microsoft.wsl.pluginapi/{}/microsoft.wsl.pluginapi.{}.nupkg", nuget_version, nuget_version);
-        let response = reqwest::blocking::get(&url)?;
-        if response.status().is_success() {
-            let nupkg_path = PathBuf::from(&out_dir)
-                .join(format!("microsoft.wsl.pluginapi.{}.nupkg", nuget_version));
-            let mut file = File::create(&nupkg_path)?;
-            let content = response.bytes()?;
-            file.write_all(&content)?;
-            println!("Package downloaded successfully.");
+    // Ensure the NuGet package is installed in the specified local directory
+    ensure_package_installed(WSL_PACKAGE_NAME, &package_version, LOCAL_NUGET_PATH)?;
 
-            // Extract header file.
-            let mut archive = ZipArchive::new(File::open(&nupkg_path)?)?;
-            let mut file = archive.by_name("build/native/include/WslPluginApi.h")?;
-            let mut outfile = File::create(&header_path)?;
-            io::copy(&mut file, &mut outfile)?;
-            println!("Header file extracted.");
-        } else {
-            println!("Failed to download the package.");
-            std::process::exit(1);
-        }
+    // Construct the full path to the installed package in the local directory
+    let package_path =
+        Path::new(LOCAL_NUGET_PATH).join(format!("{:}.{:}", WSL_PACKAGE_NAME, package_version));
+
+    // Construct the path to the header file
+    let header_file_path = package_path
+        .join("build")
+        .join("native")
+        .join("include")
+        .join("WslPluginApi.h");
+
+    // Check if the header file exists
+    if !header_file_path.exists() {
+        return Err(format!("Header file does not exist: {:?}", header_file_path).into());
     }
 
-    // Use bindgen to generate the binding.
-    println!("Generating wslplugins_sys...");
-    let hooks_fields_name_feature = std::env::var("CARGO_FEATURE_HOOKS_FIELD_NAMES").is_ok();
+    println!("Using header file from: {:?}", header_file_path);
+
+    // Use bindgen to generate Rust bindings from the header file
+    let hooks_fields_name_feature = env::var("CARGO_FEATURE_HOOKS_FIELD_NAMES").is_ok();
     let mut builder = bindgen::Builder::default()
-        .header(header_path.to_str().unwrap())
+        .header(header_file_path.to_str().unwrap())
         .raw_line("use windows::core::*;")
         .raw_line("use windows::Win32::Foundation::*;")
         .raw_line("use windows::Win32::Security::*;")
@@ -101,9 +128,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .raw_line("type LPCWSTR = PCWSTR;")
         .raw_line("type LPCSTR = PCSTR;")
         .raw_line("type DWORD = u32;");
+
     if hooks_fields_name_feature {
         builder = builder.raw_line("use struct_field_names_as_array::FieldNamesAsSlice;");
-    };
+    }
+
     let wslplugins_sys = builder
         .derive_debug(true)
         .derive_copy(true)
@@ -116,7 +145,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .generate()
         .expect("Unable to generate wslplugins_sys");
 
-    let wslplugins_sys_out_path = PathBuf::from(&out_dir).join("wslplugins_sys.rs");
+    // Write the generated bindings to the OUT_DIR
+    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let wslplugins_sys_out_path = out_dir.join("wslplugins_sys.rs");
     wslplugins_sys
         .write_to_file(wslplugins_sys_out_path)
         .expect("Couldn't write wslplugins_sys!");

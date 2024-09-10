@@ -18,6 +18,7 @@ Ensure you have the following requirements installed:
 - Rust (latest stable version)
 - Cargo (Rust's package manager)
 - PowerShell (for running signin script)
+- nuget.exe (for download [https://www.nuget.org/packages/Microsoft.WSL.PluginApi](https://www.nuget.org/packages/Microsoft.WSL.PluginApi))
 
 ## Usage
 
