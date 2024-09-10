@@ -15,13 +15,10 @@ pub(crate) struct Plugin<'a> {
 }
 
 fn setup_logging() -> Result<()> {
-    let log_level = match env::var("RUST_WSL_LOGLEVEL")
+    let log_level = env::var("RUST_WSL_LOGLEVEL")
         .ok()
         .and_then(|val| val.parse().ok())
-    {
-        Some(level) => level,
-        None => LevelFilter::Info,
-    };
+        .unwrap_or(LevelFilter::Info);
 
     let log_path =
         env::var("RUST_WSL_LOG_PATH").unwrap_or_else(|_| "C:\\wsl-plugin.log".to_string());
