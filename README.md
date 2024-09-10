@@ -22,6 +22,29 @@ Ensure you have the following requirements installed:
 
 ## Usage
 
+- Create a struct that will host the plugin
+
+```rust
+pub(crate) struct Plugin<'a> {
+    api: ApiV1<'a>,
+}
+```
+
+- implement the plugin infrastructure and add the macro attribute to the implementation
+
+```rust
+#[wsl_plugin_v1(1, 0, 5)]
+impl<'a> WSLPluginV1<'a> for Plugin<'a> {
+    fn try_new(api: ApiV1<'a>) -> Result<Self> {
+        setup_logging()?;
+        let plugin = Plugin { api };
+        info!("Plugin created");
+        Ok(plugin)
+    }
+    ...
+}
+```
+
 ### Installation and Configuration
 
 #### Building and Signing the Plugin
@@ -72,15 +95,9 @@ This section provides developers with all the necessary information to build, de
 
 ## To do
 
+- Improve the interface to be more idiomatic rust.
 - Bug fixes.
-- Add proc macro in order to generate what we have in the lib.rs file using a code like
-
-```rust
-#[wsl_plugin]
-impl WSLPluginV1 for Plugin {
- ...
-}
-```
+- publish the crate.
 
 ## Contributing
 
