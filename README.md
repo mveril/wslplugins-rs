@@ -17,12 +17,22 @@ Ensure you have the following requirements installed:
 
 - Rust (latest stable version)
 - Cargo (Rust's package manager)
-- PowerShell (for running signin script)
-- nuget.exe (for download [https://www.nuget.org/packages/Microsoft.WSL.PluginApi](https://www.nuget.org/packages/Microsoft.WSL.PluginApi))
+- PowerShell (for running signing scripts)
+- OpenSSL (used in the signing process) [Download OpenSSL](https://slproweb.com/products/Win32OpenSSL.html)
+- **SignTool.exe** from the Windows SDK (for signing the plugin) [Download Windows SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk/)
+- nuget.exe (for downloading [Microsoft's WSL Plugin API](https://www.nuget.org/packages/Microsoft.WSL.PluginApi))
+
+### Important Notes
+
+To sign the plugin correctly, ensure that:
+
+- **`SignTool.exe`** is accessible. It is available through the **Windows SDK**, which you can install separately or access via the **Visual Studio Developer Command Prompt**.
+- **OpenSSL** is installed and properly configured in your `$PATH`.
+- The script uses **administrator privileges** to register the certificate and trust it on the local machine, so ensure the script is run in **Administrator mode**.
 
 ## Usage
 
-- Create a struct that will host the plugin
+- Create a struct that will host the plugin:
 
 ```rust
 pub(crate) struct Plugin<'a> {
@@ -30,7 +40,7 @@ pub(crate) struct Plugin<'a> {
 }
 ```
 
-- implement the plugin infrastructure and add the macro attribute to the implementation
+- Implement the plugin infrastructure and add the macro attribute to the implementation:
 
 ```rust
 #[wsl_plugin_v1(1, 0, 5)]
@@ -49,9 +59,9 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
 
 #### Building and Signing the Plugin
 
-1. **Open a Visual Studio Developer Command Prompt as Administrator**:
+1. **Ensure Required Tools are Installed**:
 
-   - This is necessary to ensure proper privileges when building and signing the plugin.
+   - Install **OpenSSL** and ensure **SignTool.exe** from the **Windows SDK** is in your `$PATH`. If you are unsure about this, you can use the **Visual Studio Developer Command Prompt**, which pre-configures access to `SignTool.exe`.
 
 2. **Build the Plugin**:
 
@@ -59,21 +69,30 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
    - Execute the build command to create the plugin DLL in Debug or Release mode. Use `cargo build --release` for an optimized version.
 
 3. **Sign the Plugin**:
+
    - After building, sign the plugin to confirm its integrity and origin. Use PowerShell to run the signing script:
-     ```powershell
-     .\sign-plugin.ps1 -PluginPath .\target\release\plugin.dll -Trust
-     ```
-   - Ensure the path to the DLL is correct and that the `sign-plugin.ps1` script is properly configured to handle Rust DLLs.
+
+   ```powershell
+     .\sign-plugin.ps1 -PluginPath .	arget
+   elease\plugin.dll -Trust
+   ```
+
+- Ensure the path to the DLL is correct and that the `sign-plugin.ps1` script is properly configured to handle Rust DLLs.
+
+**Note**: It is recommended to run this script in the **Visual Studio Developer Command Prompt** to ensure proper access to `SignTool.exe` and administrative rights for signing operations.
 
 #### Registering and Loading the Plugin with WSL
 
 4. **Register the Plugin with WSL**:
 
    - Use the following command to add the plugin to the Windows registry, allowing WSL to recognize it:
-     ```cmd
-     reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss\Plugins" /v wsl-plugin-rs /d path\to\wsl-plugin-rs\target\release\plugin.dll /t reg_sz
-     ```
-   - Replace `path\to\wsl-plugin-rs\target\release\plugin.dll` with the exact path of the signed DLL.
+
+   ```cmd
+     reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss\Plugins" /v wsl-plugin-rs /d path	o\wsl-plugin-rs	arget
+   elease\plugin.dll /t reg_sz
+   ```
+
+- Replace `path\to\wsl-plugin-rs\target\release\plugin.dll` with the exact path of the signed DLL.
 
 5. **Restart WSL Service**:
    - For the plugin to be loaded by WSL, you need to restart the associated service:
@@ -86,18 +105,21 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
 
 6. **Verify Plugin Functionality**:
 
-   - Once the plugin is loaded, open the file `C:\wsl-plugin-demo.txt` to check the plugin output. Ensure that the plugin is correctly writing to this file during its operation.
+   - Once the plugin is loaded, open the file `C:\wsl-plugin.log` to check the plugin output. Ensure that the plugin is correctly writing to this file during its operation.
 
 7. **Troubleshooting**:
-   - If the plugin does not function as expected, check the error logs, ensure all steps of signing and registration were performed correctly, and that file paths are correct. Also look for any permissions and security settings that might block the plugin's execution.
-
-This section provides developers with all the necessary information to build, deploy, and test their WSL plugins using Rust, ensuring they follow best security practices and system maintenance.
+   - **Common Issues**:
+     - Ensure that the paths to `SignTool.exe` and OpenSSL are correctly set in your environment variables.
+     - Verify that the `sign-plugin.ps1` script has been run with elevated permissions (Administrator mode).
+     - Check the plugin's build output for any linking or compilation errors.
+     - Ensure all the steps for signing and registering the plugin have been followed.
+   - If the plugin does not function as expected, check the error logs, ensure all steps of signing and registration were performed correctly, and that file paths are correct. Also, check for any permissions and security settings that might block the plugin's execution.
 
 ## To do
 
 - Improve the interface to be more idiomatic rust.
 - Bug fixes.
-- publish the crate.
+- Publish the crate.
 
 ## Contributing
 
