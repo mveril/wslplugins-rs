@@ -1,24 +1,41 @@
 pub(crate) mod generator;
 pub(crate) mod hooks;
 pub(crate) mod parser;
+pub(crate) mod utils;
+
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use generator::generate;
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{parse2, Result};
+use syn::{parse2, Error, Result};
 
 use crate::parser::{ParsedImpl, RequiredVersion};
+static ALREADY_USED: AtomicBool = AtomicBool::new(false);
 
 pub fn wsl_plugin_v1(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
-    // Clonage pour éviter le déplacement
-    let parsed_impl = parse2::<ParsedImpl>(item.clone())?;
-    let required_version = parse2::<RequiredVersion>(attr.clone())?;
+    let already_used_result = match ALREADY_USED.swap(true, Ordering::SeqCst) {
+        true => Err(Error::new_spanned(
+            &attr,
+            "This attribute can be used only one time per crate.",
+        )),
+        false => Ok(()),
+    };
+
+    let parsed_impl_result = parse2::<ParsedImpl>(item.clone());
+    let required_version_result = parse2::<RequiredVersion>(attr);
+    let (_, parsed_impl, required_version) = acc_syn_result!(
+        already_used_result,
+        parsed_impl_result,
+        required_version_result,
+    )?;
     let generated_tokens = generate(&parsed_impl, &required_version)?;
 
     Ok(quote! {
         #item
         #generated_tokens
-    })
+    }
+    .into())
 }
 
 #[cfg(test)]

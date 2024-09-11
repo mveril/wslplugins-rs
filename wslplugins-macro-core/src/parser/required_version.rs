@@ -1,6 +1,10 @@
+use std::result;
+
 use syn::parse::{Parse, ParseStream};
 use syn::LitInt;
 use syn::{Result, Token};
+
+use crate::acc_syn_result;
 
 #[derive(Debug)]
 
@@ -11,30 +15,39 @@ pub struct RequiredVersion {
 }
 impl Parse for RequiredVersion {
     fn parse(input: ParseStream) -> Result<Self> {
-        // Parse the major version
-        let major: LitInt = input.parse()?;
-        // Parse the comma separator
-        input.parse::<Token![,]>()?;
-        // Parse the minor version
-        let minor: LitInt = input.parse()?;
+        // Define the function to get the u32
+        let base_10_parse = |lit: LitInt| lit.base10_parse::<u32>();
+        // Result of parsing the major version to u32
+        let major_result = input.parse::<LitInt>().and_then(base_10_parse);
+        // Result of parsing the coma version to u32
+        let comma_result = input.parse::<Token![,]>();
+        // Result of parsing the minor version to u32
+        let minor_result = input.parse::<LitInt>().and_then(base_10_parse);
 
         // Parse the revision if it exists, otherwise default to 0
-        let revision = if input.peek(Token![,]) {
-            input.parse::<Token![,]>()?;
-            input.parse::<LitInt>()?.base10_parse()?
+        let revision_result = if input.peek(Token![,]) {
+            input.parse::<Token![,]>().unwrap();
+            input.parse::<LitInt>().and_then(base_10_parse)
         } else {
-            0
+            Ok(0)
+        };
+        let no_extra_result: Result<()> = if input.is_empty() {
+            Ok(())
+        } else {
+            Err(input.error("unexpected additional components in version"))
         };
 
-        // Ensure there are no extra tokens after the revision
-        if !input.is_empty() {
-            return Err(input.error("unexpected additional components in version"));
-        }
-
+        let (major, minor, revision, _, _) = acc_syn_result!(
+            major_result,
+            minor_result,
+            revision_result,
+            comma_result,
+            no_extra_result
+        )?;
         Ok(RequiredVersion {
-            major: major.base10_parse()?,
-            minor: minor.base10_parse()?,
-            revision,
+            major: major,
+            minor: minor,
+            revision: revision,
         })
     }
 }
