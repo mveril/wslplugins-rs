@@ -36,13 +36,13 @@ impl Parse for RequiredVersion {
         let revision_result = revision_lit
             .map(|lit| lit.base10_parse::<u32>())
             .unwrap_or(Ok(0));
-        let (major, minor, revision) =
-            acc_syn_result!(major_result, minor_result, revision_result)?;
-        Ok(RequiredVersion {
-            major: major,
-            minor: minor,
-            revision: revision,
-        })
+        acc_syn_result!(major_result, minor_result, revision_result).map(
+            |(major, minor, revision)| RequiredVersion {
+                major,
+                minor,
+                revision,
+            },
+        )
     }
 }
 
