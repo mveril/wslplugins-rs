@@ -43,12 +43,10 @@ pub(crate) struct Plugin<'a> {
 - Implement the plugin infrastructure and add the macro attribute to the implementation:
 
 ```rust
-#[wsl_plugin_v1(1, 0, 5)]
+#[wsl_plugin_v1(2, 0, 5)]
 impl<'a> WSLPluginV1<'a> for Plugin<'a> {
     fn try_new(api: ApiV1<'a>) -> Result<Self> {
-        setup_logging()?;
         let plugin = Plugin { api };
-        info!("Plugin created");
         Ok(plugin)
     }
     ...
