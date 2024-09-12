@@ -1,5 +1,3 @@
-use std::result;
-
 use syn::parse::{Parse, ParseStream};
 use syn::LitInt;
 use syn::{Result, Token};
@@ -15,35 +13,31 @@ pub struct RequiredVersion {
 }
 impl Parse for RequiredVersion {
     fn parse(input: ParseStream) -> Result<Self> {
-        // Define the function to get the u32
-        let base_10_parse = |lit: LitInt| lit.base10_parse::<u32>();
         // Result of parsing the major version to u32
-        let major_result = input.parse::<LitInt>().and_then(base_10_parse);
+        let major_lit = input.parse::<LitInt>()?;
         // Result of parsing the coma version to u32
-        let comma_result = input.parse::<Token![,]>();
+        _ = input.parse::<Token![,]>()?;
         // Result of parsing the minor version to u32
-        let minor_result = input.parse::<LitInt>().and_then(base_10_parse);
-
-        // Parse the revision if it exists, otherwise default to 0
-        let revision_result = if input.peek(Token![,]) {
+        let minor_lit = input.parse::<LitInt>()?;
+        // Parse the revision if it exists
+        let revision_lit = if input.peek(Token![,]) {
             input.parse::<Token![,]>().unwrap();
-            input.parse::<LitInt>().and_then(base_10_parse)
+            Some(input.parse::<LitInt>()?)
         } else {
-            Ok(0)
+            None
         };
-        let no_extra_result: Result<()> = if input.is_empty() {
+        if input.is_empty() {
             Ok(())
         } else {
             Err(input.error("unexpected additional components in version"))
-        };
-
-        let (major, minor, revision, _, _) = acc_syn_result!(
-            major_result,
-            minor_result,
-            revision_result,
-            comma_result,
-            no_extra_result
-        )?;
+        }?;
+        let major_result = major_lit.base10_parse::<u32>();
+        let minor_result = minor_lit.base10_parse::<u32>();
+        let revision_result = revision_lit
+            .map(|lit| lit.base10_parse::<u32>())
+            .unwrap_or(Ok(0));
+        let (major, minor, revision) =
+            acc_syn_result!(major_result, minor_result, revision_result)?;
         Ok(RequiredVersion {
             major: major,
             minor: minor,
