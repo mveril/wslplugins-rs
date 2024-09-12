@@ -39,7 +39,7 @@ fn setup_logging() -> Result<()> {
     info!("Logging configured: {:}", log_level);
     Ok(())
 }
-#[wsl_plugin_v1(1, 0, 5)]
+#[wsl_plugin_v1(2, 0, 5)]
 impl<'a> WSLPluginV1<'a> for Plugin<'a> {
     fn try_new(api: ApiV1<'a>) -> Result<Self> {
         setup_logging()?;
