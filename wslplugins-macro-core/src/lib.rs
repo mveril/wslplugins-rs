@@ -48,11 +48,10 @@ mod test {
     fn test_wsl_plugin_v1() {
         let attr = quote! {1,0,5};
         let item = quote! {
-            impl WSLPluginV1<'a> for Plugin<'a> {
-                fn try_new(api: ApiV1<'a>) -> Result<Self> {
+            impl WSLPluginV1 for Plugin {
+                fn try_new() -> Result<Self> {
                     setup_logging()?;
-                    let plugin = Plugin { api };
-                    info!("Plugin created");
+                    let plugin = Plugin {};
                     Ok(plugin)
                 }
 
@@ -68,7 +67,7 @@ mod test {
                     );
 
                     let ver_args = ["/bin/cat", "/proc/version"];
-                    match self.api.execute_binary(session, &ver_args[0], &ver_args) {
+                    match WSLContext::get_current().api.execute_binary(session, &ver_args[0], &ver_args) {
                         Ok(mut stream) => {
                             let mut buf = String::new();
                             if stream.read_to_string(&mut buf).is_ok_and(|size| size != 0) {
@@ -86,7 +85,7 @@ mod test {
                         }
                     };
                     let ver_args = ["/bin/cat", "/proc/version"];
-                    match self.api.execute_binary(session, &ver_args[0], &ver_args) {
+                    match WSLContext::get_current().api.execute_binary(session, &ver_args[0], &ver_args) {
                         Ok(mut stream) => {
                             let mut buf = String::new();
                             if stream.read_to_string(&mut buf).is_ok_and(|size| size != 0) {

@@ -35,8 +35,8 @@ To sign the plugin correctly, ensure that:
 - Create a struct that will host the plugin:
 
 ```rust
-pub(crate) struct Plugin<'a> {
-    api: ApiV1<'a>,
+pub(crate) struct Plugin {
+    api: &'static WSLContext,
 }
 ```
 
@@ -44,9 +44,9 @@ pub(crate) struct Plugin<'a> {
 
 ```rust
 #[wsl_plugin_v1(2, 0, 5)]
-impl<'a> WSLPluginV1<'a> for Plugin<'a> {
-    fn try_new(api: ApiV1<'a>) -> Result<Self> {
-        let plugin = Plugin { api };
+impl WSLPluginV1 for Plugin {
+    fn try_new(context: WSLContext) -> Result<Self> {
+        let plugin = Plugin { context };
         Ok(plugin)
     }
     ...

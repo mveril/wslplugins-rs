@@ -101,7 +101,7 @@ impl<'a> ApiV1<'a> {
 
     /// Set the error message to display to the user if the VM or distribution creation fails.
     #[instrument]
-    pub fn plugin_error(&self, error: &OsStr) -> Result<()> {
+    pub(crate) fn plugin_error(&self, error: &OsStr) -> Result<()> {
         let error_vec = encode_wide_null_terminated(error);
         unsafe {
             (*self.0).PluginError.unwrap_unchecked()(PCWSTR::from_raw(error_vec.as_ptr())).ok()

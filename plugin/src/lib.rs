@@ -8,10 +8,11 @@ use windows::{
     core::{Error, Result, GUID},
     Win32::Foundation::E_FAIL,
 };
+use wslplugins_rs::Result as WSLResult;
 use wslplugins_rs::*;
 
-pub(crate) struct Plugin<'a> {
-    api: ApiV1<'a>,
+pub(crate) struct Plugin {
+    context: &'static WSLContext,
 }
 
 fn setup_logging() -> Result<()> {
@@ -40,10 +41,10 @@ fn setup_logging() -> Result<()> {
     Ok(())
 }
 #[wsl_plugin_v1(2, 0, 5)]
-impl<'a> WSLPluginV1<'a> for Plugin<'a> {
-    fn try_new(api: ApiV1<'a>) -> Result<Self> {
+impl WSLPluginV1 for Plugin {
+    fn try_new(context: &'static WSLContext) -> Result<Self> {
         setup_logging()?;
-        let plugin = Plugin { api };
+        let plugin = Plugin { context };
         info!("Plugin created");
         Ok(plugin)
     }
@@ -53,14 +54,18 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
         &self,
         session: &WSLSessionInformation,
         user_settings: &WSLVmCreationSettings,
-    ) -> Result<()> {
+    ) -> WSLResult<()> {
         info!(
             "User configuration {:?}",
             user_settings.custom_configuration_flags()
         );
 
         let ver_args = ["/bin/cat", "/proc/version"];
-        match self.api.execute_binary(session, &ver_args[0], &ver_args) {
+        match self
+            .context
+            .api
+            .execute_binary(session, &ver_args[0], &ver_args)
+        {
             Ok(mut stream) => {
                 let mut buf = String::new();
                 if stream.read_to_string(&mut buf).is_ok_and(|size| size != 0) {
@@ -78,7 +83,11 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
             }
         };
         let ver_args = ["/bin/cat", "/proc/version"];
-        match self.api.execute_binary(session, &ver_args[0], &ver_args) {
+        match self
+            .context
+            .api
+            .execute_binary(session, &ver_args[0], &ver_args)
+        {
             Ok(mut stream) => {
                 let mut buf = String::new();
                 if stream.read_to_string(&mut buf).is_ok_and(|size| size != 0) {
@@ -104,7 +113,7 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
         &self,
         session: &WSLSessionInformation,
         distribution: &DistributionInformation,
-    ) -> Result<()> {
+    ) -> WSLResult<()> {
         info!(
             "Distribution started. Sessionid= {:}, Id={:?} Name={:}, Package={}, PidNs={}, InitPid={}",
             session.id(),
@@ -143,14 +152,15 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
     }
 }
 
-impl Plugin<'_> {
+impl Plugin {
     fn log_os_release(&self, session: &WSLSessionInformation, distro_id: Option<&GUID>) {
         let args: [&str; 2] = ["/bin/cat", "/etc/os-release"];
         let tcp_stream = match distro_id {
             Some(dist_id) => self
+                .context
                 .api
                 .execute_binary_in_distribution(session, dist_id, &args[0], &args),
-            None => self.api.execute_binary(session, &args[0], &args),
+            None => self.context.api.execute_binary(session, &args[0], &args),
         };
         let result = tcp_stream;
         match result {

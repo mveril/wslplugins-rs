@@ -1,15 +1,17 @@
+use crate::wsl_plugin_error::Result as WSLPluginResult;
+use crate::WSLContext;
 use crate::{
     distribution_information::DistributionInformation,
     offline_distribution_information::OfflineDistributionInformation,
     wsl_session_information::WSLSessionInformation,
-    wsl_vm_creation_settings::WSLVmCreationSettings, ApiV1,
+    wsl_vm_creation_settings::WSLVmCreationSettings,
 };
 use std::marker::Sized;
 use windows::core::Result;
 
 /// Trait defining synchronous notifications sent to the plugin.
-pub trait WSLPluginV1<'a>: Sized + Sync {
-    fn try_new(api: ApiV1<'a>) -> Result<Self>;
+pub trait WSLPluginV1: Sized + Sync {
+    fn try_new(context: &'static WSLContext) -> Result<Self>;
 
     /// Called when the VM has started.
     #[allow(unused_variables)]
@@ -17,7 +19,7 @@ pub trait WSLPluginV1<'a>: Sized + Sync {
         &self,
         session: &WSLSessionInformation,
         user_settings: &WSLVmCreationSettings,
-    ) -> Result<()> {
+    ) -> WSLPluginResult<()> {
         Ok(())
     }
 
@@ -33,7 +35,7 @@ pub trait WSLPluginV1<'a>: Sized + Sync {
         &self,
         session: &WSLSessionInformation,
         distribution: &DistributionInformation,
-    ) -> Result<()> {
+    ) -> WSLPluginResult<()> {
         Ok(())
     }
 

@@ -1,13 +1,13 @@
 use windows::core::Result;
 use wslplugins_rs::*;
 
-pub(crate) struct Plugin<'a> {
-    api: ApiV1<'a>,
+pub(crate) struct Plugin {
+    context: &'static WSLContext,
 }
 #[wsl_plugin_v1(1, 0, 5)]
-impl<'a> WSLPluginV1<'a> for Plugin<'a> {
-    fn try_new(api: ApiV1<'a>) -> Result<Self> {
-        let plugin = Plugin { api };
+impl WSLPluginV1 for Plugin {
+    fn try_new(context: &'static WSLContext) -> Result<Self> {
+        let plugin = Plugin { context };
         Ok(plugin)
     }
 
@@ -15,7 +15,7 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
         &self,
         _session: &WSLSessionInformation,
         user_settings: &WSLVmCreationSettings,
-    ) -> Result<()> {
+    ) -> WSLpluginResult<()> {
         println!(
             "User configuration {:?}",
             user_settings.custom_configuration_flags()
@@ -27,7 +27,7 @@ impl<'a> WSLPluginV1<'a> for Plugin<'a> {
         &self,
         session: &WSLSessionInformation,
         distribution: &DistributionInformation,
-    ) -> Result<()> {
+    ) -> WSLpluginResult<()> {
         println!(
             "Distribution started. Sessionid= {:}, Id={:?} Name={:}, Package={}, PidNs={}, InitPid={}",
             session.id(),
