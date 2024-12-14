@@ -28,6 +28,10 @@ impl Error {
         }
     }
 
+    pub fn with_code(code: HRESULT) -> Self {
+        Self::new(code, None)
+    }
+
     pub fn code(&self) -> HRESULT {
         HRESULT(self.code.get())
     }
@@ -52,6 +56,8 @@ impl Error {
         result
     }
 }
+
+impl std::error::Error for Error {}
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
