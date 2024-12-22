@@ -7,7 +7,7 @@ edition = "2021"
 hooks-field-names = ["struct-field-names-as-array"]
 
 [build-dependencies]
-bindgen = "0.69"
+bindgen = "0.71.1"
 semver = "^1.0"
 
 [dependencies]

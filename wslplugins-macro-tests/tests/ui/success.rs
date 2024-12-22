@@ -35,7 +35,7 @@ impl WSLPluginV1 for Plugin {
             distribution.name().to_string_lossy(),
             distribution.package_family_name().unwrap_or_default().to_string_lossy(),
             distribution.pid_namespace(),
-            distribution.init_pid()
+            distribution.init_pid().unwrap()
         );
         Ok(())
     }
@@ -57,7 +57,7 @@ impl WSLPluginV1 for Plugin {
             distribution.name().to_string_lossy(),
             distribution.package_family_name().unwrap_or_default().to_string_lossy(),
             distribution.pid_namespace(),
-            distribution.init_pid()
+            distribution.init_pid().unwrap()
         );
         Ok(())
     }

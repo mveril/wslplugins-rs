@@ -1,10 +1,5 @@
-use crate::Result;
-use crate::{ApiV1, WSLContext, WSLPluginV1};
 use std::ffi::{CString, OsStr};
 use std::os::windows::ffi::OsStrExt;
-use windows::core::{Error as WinError, Result as WinResult};
-use windows::Win32::Foundation::ERROR_ALREADY_INITIALIZED;
-use wslplugins_sys::WSLPluginAPIV1;
 
 pub fn encode_wide_null_terminated(input: &OsStr) -> Vec<u16> {
     input
@@ -17,24 +12,6 @@ pub fn encode_wide_null_terminated(input: &OsStr) -> Vec<u16> {
 pub fn cstring_from_str(input: &str) -> CString {
     let filtered_input: Vec<u8> = input.bytes().filter(|&c| c != 0).collect();
     unsafe { CString::from_vec_unchecked(filtered_input) }
-}
-
-pub fn create_plugin_with_required_version<T: WSLPluginV1>(
-    api: &'static WSLPluginAPIV1,
-    required_major: u32,
-    required_minor: u32,
-    required_revision: u32,
-) -> windows::core::Result<T> {
-    unsafe {
-        wslplugins_sys::require_version(required_major, required_minor, required_revision, api)
-            .ok()?;
-    }
-    if let Some(context) = WSLContext::init(ApiV1::from(api)) {
-        let plugin = T::try_new(context)?;
-        Ok(plugin)
-    } else {
-        Err(WinError::from(ERROR_ALREADY_INITIALIZED))
-    }
 }
 
 #[cfg(test)]
@@ -70,8 +47,4 @@ mod tests {
         let expected = "Hello".as_bytes();
         assert_eq!(cstring.into_bytes(), expected);
     }
-}
-
-pub fn consume_to_win_result<T>(result: Result<T>) -> WinResult<T> {
-    result.map_err(|err| err.consume_error_message_unwrap())
 }

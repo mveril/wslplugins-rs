@@ -1,4 +1,4 @@
-use crate::wsl_plugin_error::Result as WSLPluginResult;
+pub use super::error::Result;
 use crate::WSLContext;
 use crate::{
     distribution_information::DistributionInformation,
@@ -7,11 +7,11 @@ use crate::{
     wsl_vm_creation_settings::WSLVmCreationSettings,
 };
 use std::marker::Sized;
-use windows::core::Result;
+use windows::core::Result as WinResult;
 
 /// Trait defining synchronous notifications sent to the plugin.
 pub trait WSLPluginV1: Sized + Sync {
-    fn try_new(context: &'static WSLContext) -> Result<Self>;
+    fn try_new(context: &'static WSLContext) -> WinResult<Self>;
 
     /// Called when the VM has started.
     #[allow(unused_variables)]
@@ -19,13 +19,13 @@ pub trait WSLPluginV1: Sized + Sync {
         &self,
         session: &WSLSessionInformation,
         user_settings: &WSLVmCreationSettings,
-    ) -> WSLPluginResult<()> {
+    ) -> Result<()> {
         Ok(())
     }
 
     /// Called when the VM is about to stop.
     #[allow(unused_variables)]
-    fn on_vm_stopping(&self, session: &WSLSessionInformation) -> Result<()> {
+    fn on_vm_stopping(&self, session: &WSLSessionInformation) -> WinResult<()> {
         Ok(())
     }
 
@@ -35,7 +35,7 @@ pub trait WSLPluginV1: Sized + Sync {
         &self,
         session: &WSLSessionInformation,
         distribution: &DistributionInformation,
-    ) -> WSLPluginResult<()> {
+    ) -> Result<()> {
         Ok(())
     }
 
@@ -48,7 +48,7 @@ pub trait WSLPluginV1: Sized + Sync {
         &self,
         session: &WSLSessionInformation,
         distribution: &DistributionInformation,
-    ) -> Result<()> {
+    ) -> WinResult<()> {
         Ok(())
     }
 
@@ -61,7 +61,7 @@ pub trait WSLPluginV1: Sized + Sync {
         &self,
         session: &WSLSessionInformation,
         distribution: &OfflineDistributionInformation,
-    ) -> Result<()> {
+    ) -> WinResult<()> {
         Ok(())
     }
     /// Called when a distribution is registered or unregisteed.
@@ -73,7 +73,7 @@ pub trait WSLPluginV1: Sized + Sync {
         &self,
         session: &WSLSessionInformation,
         distribution: &OfflineDistributionInformation,
-    ) -> Result<()> {
+    ) -> WinResult<()> {
         Ok(())
     }
 }

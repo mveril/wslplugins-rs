@@ -18,6 +18,7 @@ pub fn generate(imp: &ParsedImpl, version: &RequiredVersion) -> Result<TokenStre
     })
 }
 
+// Generate hook function implementations based on provided hook mappings
 fn generate_hook_fns(hooks: &[Hooks]) -> Result<Vec<TokenStream>> {
     hooks
         .iter()
@@ -31,6 +32,7 @@ fn generate_hook_fns(hooks: &[Hooks]) -> Result<Vec<TokenStream>> {
         .collect::<Result<Vec<TokenStream>>>()
 }
 
+// Create a static version of the type for plugin management
 fn create_static_type(imp: &ParsedImpl) -> Result<Type> {
     let mut static_type = imp.target_type.as_ref().clone();
     if let Some(lifetime) = utils::get_path_lifetime(&imp.trait_) {
@@ -43,7 +45,7 @@ fn create_static_type(imp: &ParsedImpl) -> Result<Type> {
     Ok(static_type)
 }
 
-// Prepares the hook mappings for the plugin, returns a list of TokenStream
+// Prepare hooks by mapping them to their respective fields in the hook structure
 fn prepare_hooks(hook_struct_name: &Ident, hooks: &[Hooks]) -> Result<Vec<TokenStream>> {
     hooks
         .iter()
@@ -51,16 +53,34 @@ fn prepare_hooks(hook_struct_name: &Ident, hooks: &[Hooks]) -> Result<Vec<TokenS
         .collect()
 }
 
-// Maps each hook to its corresponding field in the hooks structure
+// Map each hook to its corresponding field in the hooks structure
 fn hook_field_mapping(hooks_struct_name: &Ident, hook: Hooks) -> Result<TokenStream> {
     let field: Ident = parse_str(&hook.get_hook_field_name())?;
     let func: Ident = parse_str(&hook.get_c_method_name())?;
-    Ok(quote! {
-        #hooks_struct_name.#field = Some(#func);
-    })
+    let base = quote!(#hooks_struct_name.#field = Some(#func););
+    let result = match hook {
+        Hooks::OnDistributionRegistered | Hooks::OnDistributionUnregistered => {
+            quote! {
+                if api.version >= WSLVersion::new(2, 1, 2) {
+                    #base
+                } else {
+                    log::debug!(
+                        concat!(
+                            "Hook ",
+                            stringify!(#field),
+                            " not applied due to insufficient version (found: {:?}, required: 2.1.2)"
+                        ),
+                        api.version
+                    );
+                }
+            }
+        }
+        _ => base,
+    };
+    Ok(result)
 }
 
-// Generates the plugin entry function with hook management
+// Generate the plugin entry function with hook management and initialization
 fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<TokenStream> {
     let static_plugin_type = create_static_type(&imp)?;
     let hooks_ref_name = format_ident!("hooks_ref");
@@ -89,7 +109,7 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
             api: &'static ::wslplugins_rs::sys::WSLPluginAPIV1,
             hooks_ref: &mut ::wslplugins_rs::sys::WSLPluginHooksV1,
         ) -> ::windows::core::Result<()> {
-            let plugin: #static_plugin_type = create_plugin_with_required_version(api, #major, #minor, #revision)?;
+            let plugin: #static_plugin_type = ::wslplugins_rs::plugin::create_plugin_with_required_version(api, #major, #minor, #revision)?;
             #(#hook_set)*
             PLUGIN.set(plugin).map_err(|_| ::windows::core::Error::from(::windows::Win32::Foundation::E_ABORT))
         }
@@ -103,6 +123,7 @@ mod tests {
     use quote::{format_ident, ToTokens};
     use syn::{parse_quote, Type};
 
+    // Test for creating a static version of a type
     #[test]
     fn test_create_static_type() {
         let imp = ParsedImpl {
@@ -119,7 +140,7 @@ mod tests {
         );
     }
 
-    // Test de la fonction hook_field_mapping
+    // Test for hook field mapping
     #[test]
     fn test_hook_field_mapping() {
         let hook = Hooks::OnVMStarted;
@@ -132,7 +153,19 @@ mod tests {
         )
     }
 
-    // Test de la fonction prepare_hooks
+    // Test for hook field mapping with version condition
+    #[test]
+    fn test_hook_field_mapping_with_version() {
+        let hook = Hooks::OnDistributionRegistered;
+        let hooks_struct_name = format_ident!("hooks_struct");
+        let result = hook_field_mapping(&hooks_struct_name, hook);
+        assert!(result.is_ok());
+        let result_str = result.unwrap().to_string();
+        assert!(result_str.contains("if api.version >= WSLVersion::new(2, 1, 2)"));
+        assert!(result_str.contains("hooks_struct.OnDistributionRegistered = Some(on_distribution_registered);"));
+    }
+
+    // Test for preparing hooks
     #[test]
     fn test_prepare_hooks() {
         let hooks = vec![Hooks::OnVMStarted];
@@ -141,6 +174,7 @@ mod tests {
         assert_eq!(result.unwrap().len(), 1);
     }
 
+    // Test for generating hook functions
     #[test]
     fn test_generate_hook_fns() {
         let hooks = vec![Hooks::OnVMStarted];

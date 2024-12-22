@@ -1,9 +1,8 @@
 extern crate wslplugins_sys;
+use super::Result;
+use crate::api::errors::require_update_error::Result as UpReqResult;
+use crate::utils::{cstring_from_str, encode_wide_null_terminated};
 use crate::wsl_session_information::WSLSessionInformation;
-use crate::{
-    utils::{cstring_from_str, encode_wide_null_terminated},
-    wsl_version::WSLVersion,
-};
 use log_instrument::instrument;
 use std::ffi::{CString, OsStr, OsString};
 use std::iter::once;
@@ -16,9 +15,12 @@ use std::str::FromStr;
 use typed_path::Utf8UnixPath;
 use windows::Win32::Networking::WinSock::SOCKET as WinSocket;
 use windows::{
-    core::{Result, GUID, PCSTR, PCWSTR},
+    core::{Result as WinResult, GUID, PCSTR, PCWSTR},
     Win32::Foundation::BOOL,
 };
+use wslplugins_sys::WSLVersion;
+
+use super::utils::check_required_version_result;
 pub struct ApiV1<'a>(&'a wslplugins_sys::WSLPluginAPIV1);
 
 impl<'a> From<&'a wslplugins_sys::WSLPluginAPIV1> for ApiV1<'a> {
@@ -29,8 +31,8 @@ impl<'a> From<&'a wslplugins_sys::WSLPluginAPIV1> for ApiV1<'a> {
 
 impl<'a> ApiV1<'a> {
     #[instrument]
-    pub fn version(&self) -> WSLVersion {
-        WSLVersion::from(&self.0.Version)
+    pub fn version(&self) -> &WSLVersion {
+        return &self.0.Version;
     }
     /// Create plan9 mount between Windows & Linux
     #[instrument]
@@ -41,7 +43,7 @@ impl<'a> ApiV1<'a> {
         linux_path: UP,
         read_only: bool,
         name: &OsStr,
-    ) -> Result<()> {
+    ) -> WinResult<()> {
         let encoded_windows_path = encode_wide_null_terminated(windows_path.as_ref().as_os_str());
         let encoded_linux_path = encode_wide_null_terminated(
             OsString::from_str(linux_path.as_ref().as_str())
@@ -68,7 +70,7 @@ impl<'a> ApiV1<'a> {
         session: &WSLSessionInformation,
         path: P,
         args: &[&str],
-    ) -> Result<TcpStream> {
+    ) -> WinResult<TcpStream> {
         let c_path: Vec<u8> = path
             .as_ref()
             .as_str()
@@ -101,7 +103,7 @@ impl<'a> ApiV1<'a> {
 
     /// Set the error message to display to the user if the VM or distribution creation fails.
     #[instrument]
-    pub(crate) fn plugin_error(&self, error: &OsStr) -> Result<()> {
+    pub(crate) fn plugin_error(&self, error: &OsStr) -> WinResult<()> {
         let error_vec = encode_wide_null_terminated(error);
         unsafe {
             (*self.0).PluginError.unwrap_unchecked()(PCWSTR::from_raw(error_vec.as_ptr())).ok()
@@ -117,6 +119,7 @@ impl<'a> ApiV1<'a> {
         path: P,
         args: &[&str],
     ) -> Result<TcpStream> {
+        self.check_required_version(&WSLVersion::new(2, 1, 2))?;
         let c_path: Vec<u8> = path
             .as_ref()
             .as_str()
@@ -147,5 +150,8 @@ impl<'a> ApiV1<'a> {
             TcpStream::from_raw_socket(socket.0 as SOCKET)
         };
         Ok(stream)
+    }
+    fn check_required_version(&self, version: &WSLVersion) -> UpReqResult<()> {
+        check_required_version_result(self.version(), version)
     }
 }

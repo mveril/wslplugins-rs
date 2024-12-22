@@ -1,16 +1,30 @@
 use crate::WSLContext;
 use log::debug;
 use std::ffi::{OsStr, OsString};
-use std::fmt;
 use std::num::NonZeroI32;
+use thiserror::Error;
 use windows::core::{Error as WinError, HRESULT};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub struct Error {
     code: NonZeroI32,
     message: Option<OsString>,
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self.message {
+            Some(message) => write!(
+                f,
+                "WSLPluginError {}: {}",
+                self.code,
+                message.to_string_lossy()
+            ),
+            None => write!(f, "WSLPluginError {}", self.code),
+        }
+    }
 }
 
 impl Error {
@@ -22,7 +36,7 @@ impl Error {
         };
         let code = unsafe { NonZeroI32::new_unchecked(code.0) };
 
-        Error {
+        Self {
             code,
             message: message.map(|m| m.to_owned()),
         }
@@ -30,6 +44,10 @@ impl Error {
 
     pub fn with_code(code: HRESULT) -> Self {
         Self::new(code, None)
+    }
+
+    pub fn with_message(code: HRESULT, message: &OsStr) -> Self {
+        Self::new(code, Some(message))
     }
 
     pub fn code(&self) -> HRESULT {
@@ -45,31 +63,14 @@ impl Error {
             if let Some(context) = WSLContext::get_current() {
                 if let Err(err) = context.api.plugin_error(mess.as_os_str()) {
                     debug!(
-                        "Unable to set plugin error message {} due to error:{}",
+                        "Unable to set plugin error message {} due to error: {}",
                         mess.to_string_lossy(),
                         err
                     )
-                };
+                }
             }
         }
-        let result: R = R::from(self);
-        result
-    }
-}
-
-impl std::error::Error for Error {}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match &self.message {
-            Some(message) => write!(
-                f,
-                "WSLPluginError {}: {}",
-                self.code,
-                message.to_string_lossy()
-            ),
-            None => write!(f, "WSLPluginError {}", self.code),
-        }
+        R::from(self)
     }
 }
 
@@ -93,9 +94,15 @@ impl From<WinError> for Error {
             None
         };
 
-        Error {
+        Self {
             code: unsafe { NonZeroI32::new_unchecked(value.code().0) },
             message: os_message,
         }
+    }
+}
+
+impl From<HRESULT> for Error {
+    fn from(value: HRESULT) -> Self {
+        Self::new(value, None)
     }
 }

@@ -21,7 +21,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                         &::wslplugins_rs::WSLSessionInformation::from(session_ptr),
                         &::wslplugins_rs::WSLVmCreationSettings::from(settings_ptr),
                     );
-                    ::wslplugins_rs::consume_to_win_result(result).into()
+                    ::wslplugins_rs::plugin::utils::consume_to_win_result(result).into()
                 } else {
                     ::windows::Win32::Foundation::E_FAIL
                 }
@@ -51,7 +51,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                         &::wslplugins_rs::WSLSessionInformation::from(session_ptr),
                         &::wslplugins_rs::DistributionInformation::from(distribution_ptr),
                     );
-                    ::wslplugins_rs::consume_to_win_result(result).into()
+                    ::wslplugins_rs::plugin::utils::consume_to_win_result(result).into()
                 } else {
                     ::windows::Win32::Foundation::E_FAIL
                 }

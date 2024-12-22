@@ -119,7 +119,7 @@ mod test {
                         distribution.name().to_string_lossy(),
                         distribution.package_family_name().unwrap_or_default().to_string_lossy(),
                         distribution.pid_namespace(),
-                        distribution.init_pid()
+                        distribution.init_pid().unwrap()
                     );
                     self.log_os_release(session, Some(distribution.id()));
                     Ok(())
@@ -144,7 +144,7 @@ mod test {
                         distribution.name().to_string_lossy(),
                         distribution.package_family_name().unwrap_or_default().to_string_lossy(),
                         distribution.pid_namespace(),
-                        distribution.init_pid()
+                        distribution.init_pid().unwrap()
                     );
                     Ok(())
                 }
