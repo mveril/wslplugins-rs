@@ -29,10 +29,10 @@ impl<'a> From<&'a wslplugins_sys::WSLPluginAPIV1> for ApiV1<'a> {
     }
 }
 
-impl<'a> ApiV1<'a> {
+impl ApiV1<'_> {
     #[instrument]
     pub fn version(&self) -> &WSLVersion {
-        return &self.0.Version;
+        &self.0.Version
     }
     /// Create plan9 mount between Windows & Linux
     #[instrument]
@@ -52,7 +52,7 @@ impl<'a> ApiV1<'a> {
         );
         let encoded_name = encode_wide_null_terminated(name);
         let result = unsafe {
-            (*self.0).MountFolder.unwrap_unchecked()(
+            self.0.MountFolder.unwrap_unchecked()(
                 session.id(),
                 PCWSTR::from_raw(encoded_windows_path.as_ptr()),
                 PCWSTR::from_raw(encoded_linux_path.as_ptr()),
@@ -88,7 +88,7 @@ impl<'a> ApiV1<'a> {
         let args_ptr = args_ptrs.as_mut_ptr();
         let mut socket = MaybeUninit::<WinSocket>::uninit();
         let stream = unsafe {
-            (*self.0).ExecuteBinary.unwrap_unchecked()(
+            self.0.ExecuteBinary.unwrap_unchecked()(
                 session.id(),
                 PCSTR::from_raw(c_path.as_ptr()),
                 args_ptr,
@@ -106,7 +106,7 @@ impl<'a> ApiV1<'a> {
     pub(crate) fn plugin_error(&self, error: &OsStr) -> WinResult<()> {
         let error_vec = encode_wide_null_terminated(error);
         unsafe {
-            (*self.0).PluginError.unwrap_unchecked()(PCWSTR::from_raw(error_vec.as_ptr())).ok()
+            self.0.PluginError.unwrap_unchecked()(PCWSTR::from_raw(error_vec.as_ptr())).ok()
         }
     }
     /// Execute a program in a user distribution

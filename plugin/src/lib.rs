@@ -64,7 +64,7 @@ impl WSLPluginV1 for Plugin {
         match self
             .context
             .api
-            .execute_binary(session, &ver_args[0], &ver_args)
+            .execute_binary(session, ver_args[0], &ver_args)
         {
             Ok(mut stream) => {
                 let mut buf = String::new();
@@ -139,11 +139,11 @@ impl Plugin {
             Some(dist_id) => self
                 .context
                 .api
-                .execute_binary_in_distribution(session, dist_id, &args[0], &args),
+                .execute_binary_in_distribution(session, dist_id, args[0], &args),
             None => self
                 .context
                 .api
-                .execute_binary(session, &args[0], &args)
+                .execute_binary(session, args[0], &args)
                 .map_err(Into::into),
         };
         let result = tcp_stream;

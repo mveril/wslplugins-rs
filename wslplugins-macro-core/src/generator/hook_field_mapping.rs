@@ -23,10 +23,9 @@ fn generate_hook_fns(hooks: &[Hooks]) -> Result<Vec<TokenStream>> {
     hooks
         .iter()
         .map(|&mapping| {
-            let ts = c_funcs_tokens::get_c_func_tokens(mapping)?.expect(&format!(
-                "{:?} does not match with predefined C hook value",
-                mapping
-            ));
+            let ts = c_funcs_tokens::get_c_func_tokens(mapping)?.unwrap_or_else(|| {
+                panic!("{:?} does not match with predefined C hook value", mapping)
+            });
             Ok(ts)
         })
         .collect::<Result<Vec<TokenStream>>>()
@@ -82,7 +81,7 @@ fn hook_field_mapping(hooks_struct_name: &Ident, hook: Hooks) -> Result<TokenStr
 
 // Generate the plugin entry function with hook management and initialization
 fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<TokenStream> {
-    let static_plugin_type = create_static_type(&imp)?;
+    let static_plugin_type = create_static_type(imp)?;
     let hooks_ref_name = format_ident!("hooks_ref");
     let hook_set = prepare_hooks(&hooks_ref_name, &imp.hooks)?;
     let RequiredVersion {
@@ -94,13 +93,13 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
     Ok(quote! {
         static PLUGIN: ::std::sync::OnceLock<#static_plugin_type> = ::std::sync::OnceLock::new();
         #[no_mangle]
-        pub extern "C" fn WSLPluginAPIV1_EntryPoint(
+        pub unsafe extern "C" fn WSLPluginAPIV1_EntryPoint(
             api: *const ::wslplugins_rs::sys::WSLPluginAPIV1,
             hooks: *mut ::wslplugins_rs::sys::WSLPluginHooksV1,
         ) -> ::windows::core::HRESULT {
             unsafe {
-                let api_ref: &'static ::wslplugins_rs::sys::WSLPluginAPIV1 = &*api;
-                let #hooks_ref_name: &mut ::wslplugins_rs::sys::WSLPluginHooksV1 = &mut *hooks;
+                let api_ref: &'static ::wslplugins_rs::sys::WSLPluginAPIV1 = unsafe { &*api};
+                let #hooks_ref_name: &mut ::wslplugins_rs::sys::WSLPluginHooksV1 = unsafe{ &mut *hooks };
                 create_plugin(api_ref, #hooks_ref_name).into()
             }
         }
@@ -162,7 +161,8 @@ mod tests {
         assert!(result.is_ok());
         let result_str = result.unwrap().to_string();
         assert!(result_str.contains("if api.version >= WSLVersion::new(2, 1, 2)"));
-        assert!(result_str.contains("hooks_struct.OnDistributionRegistered = Some(on_distribution_registered);"));
+        assert!(result_str
+            .contains("hooks_struct.OnDistributionRegistered = Some(on_distribution_registered);"));
     }
 
     // Test for preparing hooks

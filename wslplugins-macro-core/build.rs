@@ -1,5 +1,4 @@
 use std::{env, fs::File, io::Write, path::PathBuf};
-use struct_field_names_as_array;
 use struct_field_names_as_array::FieldNamesAsSlice;
 use wslplugins_sys::WSLPluginHooksV1;
 
@@ -15,6 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut file = File::create(&dest_path)?;
     writeln!(file, "use strum::{{EnumIter, EnumString, Display}};")?;
     // Début de l'enum
+    writeln!(file, "#[allow(clippy::enum_variant_names)]")?;
     writeln!(
         file,
         "#[derive(EnumIter, EnumString, Clone, Copy, Display, Debug, PartialEq, Eq, Hash)]"

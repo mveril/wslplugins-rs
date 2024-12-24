@@ -10,17 +10,9 @@ use std::process::{Command, ExitStatus};
 const WSL_PACKAGE_NAME: &str = "Microsoft.WSL.PluginApi";
 const LOCAL_NUGET_PATH: &str = "nuget_packages"; // Local folder to store NuGet packages
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct BindgenCallback {
     generate_hooks_fields_name: bool,
-}
-
-impl Default for BindgenCallback {
-    fn default() -> Self {
-        Self {
-            generate_hooks_fields_name: false,
-        }
-    }
 }
 
 impl BindgenCallback {
@@ -60,7 +52,7 @@ fn ensure_package_installed(
 ) -> Result<ExitStatus, Box<dyn std::error::Error>> {
     // Run the NuGet install command with -NonInteractive to avoid prompts
     let status = Command::new("nuget")
-        .args(&[
+        .args([
             "install",
             package_name,
             "-Version",
@@ -125,8 +117,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .raw_line("use windows::Win32::Foundation::*;")
         .raw_line("use windows::Win32::Security::*;")
         .raw_line("use windows::Win32::Networking::WinSock::SOCKET;")
+        .raw_line("#[allow(clippy::upper_case_acronyms)]")
         .raw_line("type LPCWSTR = PCWSTR;")
+        .raw_line("#[allow(clippy::upper_case_acronyms)]")
         .raw_line("type LPCSTR = PCSTR;")
+        .raw_line("#[allow(clippy::upper_case_acronyms)]")
         .raw_line("type DWORD = u32;");
 
     if hooks_fields_name_feature {

@@ -1,5 +1,4 @@
 use proc_macro::TokenStream;
-use wslplugins_macro_core;
 
 #[proc_macro_attribute]
 pub fn wsl_plugin_v1(attr: TokenStream, item: TokenStream) -> TokenStream {

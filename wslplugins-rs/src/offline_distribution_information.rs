@@ -13,7 +13,7 @@ impl<'a> OfflineDistributionInformation<'a> {
     }
 }
 
-impl<'a> CoreDistributionInformation for OfflineDistributionInformation<'a> {
+impl CoreDistributionInformation for OfflineDistributionInformation<'_> {
     fn id(&self) -> &GUID {
         &self.0.Id
     }

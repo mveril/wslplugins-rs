@@ -35,14 +35,14 @@ mod tests {
     fn test_all_ok_results() {
         let result1: Result<i32> = Ok(10);
         let result2: Result<String> = Ok("Success".to_string());
-        let result3: Result<f64> = Ok(3.14);
+        let result3: Result<f64> = Ok(0.5);
 
         let combined_result = acc_syn_result!(result1, result2, result3);
         match combined_result {
             Ok((val1, val2, val3)) => {
                 assert_eq!(val1, 10);
                 assert_eq!(val2, "Success".to_string());
-                assert_eq!(val3, 3.14);
+                assert_eq!(val3, 0.5);
             }
             Err(_) => panic!("Expected all Ok results"),
         }
@@ -51,8 +51,8 @@ mod tests {
     #[test]
     fn test_single_error() {
         let result1: Result<i32> = Ok(10);
-        let result2: Result<String> = Err(Error::new_spanned(&"dummy", "Error in result2"));
-        let result3: Result<f64> = Ok(3.14);
+        let result2: Result<String> = Err(Error::new_spanned("dummy", "Error in result2"));
+        let result3: Result<f64> = Ok(0.5);
 
         let combined_result = acc_syn_result!(result1, result2, result3);
         match combined_result {
@@ -63,9 +63,9 @@ mod tests {
 
     #[test]
     fn test_multiple_errors() {
-        let result1: Result<i32> = Err(Error::new_spanned(&"dummy1", "Error in result1"));
-        let result2: Result<String> = Err(Error::new_spanned(&"dummy2", "Error in result2"));
-        let result3: Result<f64> = Ok(3.14);
+        let result1: Result<i32> = Err(Error::new_spanned("dummy1", "Error in result1"));
+        let result2: Result<String> = Err(Error::new_spanned("dummy2", "Error in result2"));
+        let result3: Result<f64> = Ok(0.5);
 
         let combined_result = acc_syn_result!(result1, result2, result3);
         match combined_result {
@@ -82,7 +82,7 @@ mod tests {
     #[test]
     fn test_ok_and_error() {
         let result1: Result<i32> = Ok(10);
-        let result2: Result<String> = Err(Error::new_spanned(&"dummy", "Error in result2"));
+        let result2: Result<String> = Err(Error::new_spanned("dummy", "Error in result2"));
 
         let combined_result = acc_syn_result!(result1, result2);
         match combined_result {

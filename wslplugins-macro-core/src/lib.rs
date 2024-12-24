@@ -34,8 +34,7 @@ pub fn wsl_plugin_v1(attr: TokenStream, item: TokenStream) -> Result<TokenStream
     Ok(quote! {
         #item
         #generated_tokens
-    }
-    .into())
+    })
 }
 
 #[cfg(test)]
@@ -67,7 +66,7 @@ mod test {
                     );
 
                     let ver_args = ["/bin/cat", "/proc/version"];
-                    match WSLContext::get_current().api.execute_binary(session, &ver_args[0], &ver_args) {
+                    match WSLContext::get_current().api.execute_binary(session, ver_args[0], &ver_args) {
                         Ok(mut stream) => {
                             let mut buf = String::new();
                             if stream.read_to_string(&mut buf).is_ok_and(|size| size != 0) {
@@ -85,7 +84,7 @@ mod test {
                         }
                     };
                     let ver_args = ["/bin/cat", "/proc/version"];
-                    match WSLContext::get_current().api.execute_binary(session, &ver_args[0], &ver_args) {
+                    match WSLContext::get_current().api.execute_binary(session, ver_args[0], &ver_args) {
                         Ok(mut stream) => {
                             let mut buf = String::new();
                             if stream.read_to_string(&mut buf).is_ok_and(|size| size != 0) {

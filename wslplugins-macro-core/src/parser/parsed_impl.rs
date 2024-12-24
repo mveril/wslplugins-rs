@@ -26,7 +26,7 @@ impl Parse for ParsedImpl {
             .items
             .iter()
             .filter_map(|item| match item {
-                ImplItem::Fn(func) => Hooks::from_trait_method_name(&func.sig.ident.to_string()),
+                ImplItem::Fn(func) => Hooks::from_trait_method_name(func.sig.ident.to_string()),
                 _ => None,
             })
             .collect();
