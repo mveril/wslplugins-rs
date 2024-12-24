@@ -72,30 +72,24 @@ mod tests {
 
     #[test]
     fn test_replace_lifetime_in_reference_type() {
-        // Préparez un type de référence avec une durée de vie
         let mut ty: Type = parse_quote!(&'a i32);
         let old_lifetime: Lifetime = parse_quote!('a);
         let new_lifetime: Lifetime = parse_quote!('b);
 
-        // Remplacez la durée de vie
         replace_lifetime_in_type(&mut ty, &old_lifetime, &new_lifetime);
 
-        // Vérifiez que la durée de vie a été remplacée
         let expected_ty: Type = parse_quote!(&'b i32);
         assert_eq!(ty, expected_ty);
     }
 
     #[test]
     fn test_replace_lifetime_in_path_type() {
-        // Préparez un type de chemin avec une durée de vie
         let mut ty: Type = parse_quote!(MyStruct<'a>);
         let old_lifetime: Lifetime = parse_quote!('a);
         let new_lifetime: Lifetime = parse_quote!('b);
 
-        // Remplacez la durée de vie
         replace_lifetime_in_type(&mut ty, &old_lifetime, &new_lifetime);
 
-        // Vérifiez que toutes les occurrences de la durée de vie ont été remplacées
         let expected_ty: Type = parse_quote!(MyStruct<'b>);
         assert_eq!(
             ty.to_token_stream().to_string(),
@@ -105,41 +99,32 @@ mod tests {
 
     #[test]
     fn test_replace_lifetime_in_tuple_type() {
-        // Préparez un type tuple avec plusieurs éléments ayant des durées de vie
         let mut ty: Type = parse_quote!((&'a i32, &'a str));
         let old_lifetime: Lifetime = parse_quote!('a);
         let new_lifetime: Lifetime = parse_quote!('b);
 
-        // Remplacez la durée de vie
         replace_lifetime_in_type(&mut ty, &old_lifetime, &new_lifetime);
 
-        // Vérifiez que toutes les occurrences de la durée de vie ont été remplacées
         let expected_ty: Type = parse_quote!((&'b i32, &'b str));
         assert_eq!(ty, expected_ty);
     }
 
     #[test]
     fn test_get_path_lifetime() {
-        // Préparez un chemin avec une durée de vie
         let path: Path = parse_quote!(MyStruct<'a>);
         let expected_lifetime: Lifetime = parse_quote!('a);
 
-        // Obtenez la durée de vie à partir du chemin
         let lifetime = get_path_lifetime(&path);
 
-        // Vérifiez que la durée de vie est correctement extraite
         assert_eq!(lifetime, Some(&expected_lifetime));
     }
 
     #[test]
     fn test_get_path_lifetime_no_lifetime() {
-        // Préparez un chemin sans durée de vie
         let path: Path = parse_quote!(MyStruct);
 
-        // Obtenez la durée de vie à partir du chemin
         let lifetime = get_path_lifetime(&path);
 
-        // Vérifiez qu'il n'y a pas de durée de vie
         assert_eq!(lifetime, None);
     }
 }
