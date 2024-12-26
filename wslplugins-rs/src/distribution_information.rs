@@ -4,7 +4,9 @@ use crate::api::{
 };
 use crate::core_distribution_information::CoreDistributionInformation;
 use crate::WSLContext;
-use std::{ffi::OsString, os::windows::ffi::OsStringExt};
+use std::fmt::Debug;
+use std::hash::Hash;
+use std::{ffi::OsString, fmt::Display, os::windows::ffi::OsStringExt};
 use windows::core::GUID;
 use wslplugins_sys::WSLVersion;
 pub struct DistributionInformation<'a>(&'a wslplugins_sys::WSLDistributionInformation);
@@ -47,6 +49,42 @@ impl CoreDistributionInformation for DistributionInformation<'_> {
             } else {
                 Some(OsString::from_wide(ptr.as_wide()))
             }
+        }
+    }
+}
+
+impl<T> PartialEq<T> for DistributionInformation<'_>
+where
+    T: CoreDistributionInformation,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.id() == other.id()
+    }
+}
+
+impl Hash for DistributionInformation<'_> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id().hash(state);
+    }
+}
+
+impl Display for DistributionInformation<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        unsafe { write!(f, "{:} {{{:?}}}", self.0.Name.display(), self.0.Id) }
+    }
+}
+
+impl Debug for DistributionInformation<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut dbg = f.debug_struct("DistributionInformation");
+        dbg.field("name", &self.name())
+            .field("id", &self.id())
+            .field("package_family_name", &self.package_family_name())
+            .field("pid_namespace", &self.pid_namespace());
+        if let Ok(pid) = self.init_pid() {
+            dbg.field("init_pid", &pid).finish()
+        } else {
+            dbg.finish_non_exhaustive()
         }
     }
 }
