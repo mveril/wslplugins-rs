@@ -45,9 +45,9 @@ impl<'a> From<&'a wslplugins_sys::WSLSessionInformation> for WSLSessionInformati
 impl fmt::Debug for WSLSessionInformation<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("WSLSessionInformation")
-            .field("SessionId", &self.0.SessionId)
-            .field("UserToken", &self.0.UserToken)
-            .field("UserSid", &self.0.UserSid)
+            .field("sessionId", &self.0.SessionId)
+            .field("userToken", &self.0.UserToken)
+            .field("userSid", &self.0.UserSid)
             .finish()
     }
 }
