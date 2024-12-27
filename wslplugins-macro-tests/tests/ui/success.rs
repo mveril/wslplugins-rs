@@ -1,4 +1,5 @@
-use windows::core::Result;
+use windows::core::Result as WinResult;
+use wslplugins_rs::plugin::{WSLPluginV1, Result};
 use wslplugins_rs::*;
 
 pub(crate) struct Plugin {
@@ -6,7 +7,7 @@ pub(crate) struct Plugin {
 }
 #[wsl_plugin_v1(1, 0, 5)]
 impl WSLPluginV1 for Plugin {
-    fn try_new(context: &'static WSLContext) -> Result<Self> {
+    fn try_new(context: &'static WSLContext) -> WinResult<Self> {
         let plugin = Plugin { context };
         Ok(plugin)
     }
@@ -15,7 +16,7 @@ impl WSLPluginV1 for Plugin {
         &self,
         _session: &WSLSessionInformation,
         user_settings: &WSLVmCreationSettings,
-    ) -> WSLpluginResult<()> {
+    ) -> Result<()> {
         println!(
             "User configuration {:?}",
             user_settings.custom_configuration_flags()
@@ -27,7 +28,7 @@ impl WSLPluginV1 for Plugin {
         &self,
         session: &WSLSessionInformation,
         distribution: &DistributionInformation,
-    ) -> WSLpluginResult<()> {
+    ) -> Result<()> {
         println!(
             "Distribution started. Sessionid= {:}, Id={:?} Name={:}, Package={}, PidNs={}, InitPid={}",
             session.id(),
@@ -40,7 +41,7 @@ impl WSLPluginV1 for Plugin {
         Ok(())
     }
 
-    fn on_vm_stopping(&self, session: &WSLSessionInformation) -> Result<()> {
+    fn on_vm_stopping(&self, session: &WSLSessionInformation) -> WinResult<()> {
         println!("VM Stopping. SessionId={:?}", session.id());
         Ok(())
     }
@@ -49,7 +50,7 @@ impl WSLPluginV1 for Plugin {
         &self,
         session: &WSLSessionInformation,
         distribution: &DistributionInformation,
-    ) -> Result<()> {
+    ) -> WinResult<()> {
         println!(
             "Distribution Stopping. SessionId={}, Id={:?} name={}, package={}, PidNs={}, InitPid={}",
             session.id(),
