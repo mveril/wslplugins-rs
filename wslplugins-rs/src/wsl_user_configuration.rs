@@ -9,7 +9,7 @@ use flagset::flags;
 
 // Define with nothing
 #[cfg(not(any(feature = "bitflags", feature = "flagset", feature = "enumflags2")))]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 pub struct WSLUserConfiguration(i32);
 
 #[cfg(not(any(feature = "bitflags", feature = "flagset", feature = "enumflags2")))]
@@ -26,6 +26,13 @@ bitflags! {
     pub struct WSLUserConfiguration: i32 {
         const CustomKernel = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel;
         const CustomKernelCommandLine = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernelCommandLine;
+    }
+}
+
+#[cfg(feature = "bitflags")]
+impl Default for WSLUserConfiguration {
+    fn default() -> Self {
+        Self::empty()
     }
 }
 
