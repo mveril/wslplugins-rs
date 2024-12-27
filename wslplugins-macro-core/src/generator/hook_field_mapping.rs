@@ -54,22 +54,24 @@ fn prepare_hooks(hook_struct_name: &Ident, hooks: &[Hooks]) -> Result<Vec<TokenS
 
 // Map each hook to its corresponding field in the hooks structure
 fn hook_field_mapping(hooks_struct_name: &Ident, hook: Hooks) -> Result<TokenStream> {
-    let field: Ident = parse_str(&hook.get_hook_field_name())?;
+    let field_str = hook.get_hook_field_name();
+    let field: Ident = parse_str(&field_str)?;
     let func: Ident = parse_str(&hook.get_c_method_name())?;
-    let base = quote!(#hooks_struct_name.#field = Some(#func););
+    let base = quote! {
+        #hooks_struct_name.#field = Some(#func);
+    };
     let result = match hook {
         Hooks::OnDistributionRegistered | Hooks::OnDistributionUnregistered => {
+            let required_version = "2.1.2";
             quote! {
                 if api.version >= WSLVersion::new(2, 1, 2) {
                     #base
                 } else {
-                    log::debug!(
-                        concat!(
-                            "Hook ",
-                            stringify!(#field),
-                            " not applied due to insufficient version (found: {:?}, required: 2.1.2)"
-                        ),
-                        api.version
+                    ::log::debug!(
+                        "Hook {} not applied due to insufficient version (found: {}, required: {})",
+                        #field_str,
+                        api.version,
+                        #required_version
                     );
                 }
             }
@@ -157,12 +159,22 @@ mod tests {
     fn test_hook_field_mapping_with_version() {
         let hook = Hooks::OnDistributionRegistered;
         let hooks_struct_name = format_ident!("hooks_struct");
-        let result = hook_field_mapping(&hooks_struct_name, hook);
-        assert!(result.is_ok());
-        let result_str = result.unwrap().to_string();
-        assert!(result_str.contains("if api.version >= WSLVersion::new(2, 1, 2)"));
-        assert!(result_str
-            .contains("hooks_struct.OnDistributionRegistered = Some(on_distribution_registered);"));
+        let result: std::result::Result<TokenStream, syn::Error> =
+            hook_field_mapping(&hooks_struct_name, hook);
+        assert_eq!(
+            result.unwrap().to_string(),
+            quote!(if api.version >= WSLVersion::new(2, 1, 2) {
+                hooks_struct.OnDistributionRegistered = Some(on_distribution_registered);
+            } else {
+                ::log::debug!(
+                    "Hook {} not applied due to insufficient version (found: {}, required: {})",
+                    "OnDistributionRegistered",
+                    api.version,
+                    "2.1.2"
+                );
+            })
+            .to_string()
+        )
     }
 
     // Test for preparing hooks
