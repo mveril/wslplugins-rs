@@ -5,6 +5,7 @@ use crate::utils::{cstring_from_str, encode_wide_null_terminated};
 use crate::wsl_session_information::WSLSessionInformation;
 use log_instrument::instrument;
 use std::ffi::{CString, OsStr, OsString};
+use std::fmt::Debug;
 use std::iter::once;
 use std::mem::MaybeUninit;
 use std::net::TcpStream;
@@ -105,9 +106,7 @@ impl ApiV1<'_> {
     #[instrument]
     pub(crate) fn plugin_error(&self, error: &OsStr) -> WinResult<()> {
         let error_vec = encode_wide_null_terminated(error);
-        unsafe {
-            self.0.PluginError.unwrap_unchecked()(PCWSTR::from_raw(error_vec.as_ptr())).ok()
-        }
+        unsafe { self.0.PluginError.unwrap_unchecked()(PCWSTR::from_raw(error_vec.as_ptr())).ok() }
     }
     /// Execute a program in a user distribution
     /// Introduced in 2.1.2
@@ -153,5 +152,13 @@ impl ApiV1<'_> {
     }
     fn check_required_version(&self, version: &WSLVersion) -> UpReqResult<()> {
         check_required_version_result(self.version(), version)
+    }
+}
+
+impl Debug for ApiV1<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ApiV1")
+            .field("version", self.version())
+            .finish()
     }
 }
