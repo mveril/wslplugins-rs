@@ -24,5 +24,7 @@ pub use errors::Result;
 
 /// The `utils` module provides utility functions and helpers for working with the WSL Plugin API.
 ///
+mod command;
 /// These utilities simplify common tasks, such as version checking or string manipulation.
 pub mod utils;
+pub use command::Command;
