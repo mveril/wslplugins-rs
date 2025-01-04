@@ -40,7 +40,7 @@ fn setup_logging() -> WinResult<()> {
     info!("Logging configured: {:}", log_level);
     Ok(())
 }
-#[wsl_plugin_v1(2, 0, 5)]
+#[wsl_plugin_v1(2, 1, 2)]
 impl WSLPluginV1 for Plugin {
     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
         setup_logging()?;
