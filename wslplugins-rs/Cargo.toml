@@ -23,6 +23,5 @@ thiserror = "2.0.7"
 version = ">0.1"
 optional = true
 [features]
-default = ["bitflags"]
 sys = []
 macro = ["wslplugins-macro", "sys"]

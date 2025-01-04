@@ -9,6 +9,7 @@ use windows::{
     core::{Error as WinError, Result as WinResult, GUID},
     Win32::Foundation::E_FAIL,
 };
+use wslplugins_rs::wsl_user_configuration::bitflags::WSLUserConfigurationFlags;
 use wslplugins_rs::*;
 
 pub(crate) struct Plugin {
@@ -55,10 +56,8 @@ impl WSLPluginV1 for Plugin {
         session: &WSLSessionInformation,
         user_settings: &WSLVmCreationSettings,
     ) -> Result<()> {
-        info!(
-            "User configuration {:?}",
-            user_settings.custom_configuration_flags()
-        );
+        let flags: WSLUserConfigurationFlags = user_settings.custom_configuration_flags().into();
+        info!("User configuration {:?}", flags);
 
         let ver_args = ["/bin/cat", "/proc/version"];
         match self
