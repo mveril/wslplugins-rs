@@ -1,4 +1,10 @@
-pub use super::error::Result;
+//! # WSL Plugin v1 Trait
+//!
+//! This module defines the `WSLPluginV1` trait, which provides a framework for handling
+//! synchronous notifications sent to a WSL plugin. The trait defines lifecycle events
+//! for managing the state of the WSL VM, distributions, and related settings.
+
+use super::error::Result;
 use crate::WSLContext;
 use crate::{
     distribution_information::DistributionInformation,
@@ -10,10 +16,56 @@ use std::marker::Sized;
 use windows::core::Result as WinResult;
 
 /// Trait defining synchronous notifications sent to the plugin.
+///
+/// Implementors of this trait must provide methods for responding to key lifecycle events
+/// in the WSL plugin system. Each method corresponds to a specific event, such as the start
+/// or stop of a WSL VM or distribution.
+///
+/// # Requirements
+/// - The trait is `Sized` and `Sync`, ensuring safe concurrent usage and instantiation.
+///
+/// # Example
+/// ```rust
+/// use wslplugins_rs::{plugin::{WSLPluginV1, Result}, WSLContext, WSLSessionInformation, WSLVmCreationSettings};
+/// use windows::core::Result as WinResult;
+///
+/// struct MyPlugin;
+///
+/// impl WSLPluginV1 for MyPlugin {
+///     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
+///         Ok(MyPlugin)
+///     }
+///
+///     fn on_vm_started(
+///         &self,
+///         session: &WSLSessionInformation,
+///         user_settings: &WSLVmCreationSettings,
+///     ) -> Result<()> {
+///         println!("VM started");
+///         Ok(())
+///     }
+/// }
+/// ```
 pub trait WSLPluginV1: Sized + Sync {
+    /// Attempts to create a new instance of the plugin.
+    ///
+    /// # Arguments
+    /// - `context`: A reference to the `WSLContext` providing access to the plugin API.
+    ///
+    /// # Returns
+    /// - `Ok(Self)`: If the plugin was successfully initialized.
+    /// - `Err(WinError)`: If initialization fails.
     fn try_new(context: &'static WSLContext) -> WinResult<Self>;
 
     /// Called when the VM has started.
+    ///
+    /// # Arguments
+    /// - `session`: Information about the current session.
+    /// - `user_settings`: Custom user settings for the VM creation.
+    ///
+    /// # Returns
+    /// - `Ok(())`: If the plugin successfully handled the event.
+    /// - `Err(`Error`)`: If the event handling failed.
     #[allow(unused_variables)]
     fn on_vm_started(
         &self,
@@ -24,12 +76,27 @@ pub trait WSLPluginV1: Sized + Sync {
     }
 
     /// Called when the VM is about to stop.
+    ///
+    /// # Arguments
+    /// - `session`: Information about the current session.
+    ///
+    /// # Returns
+    /// - `Ok(())`: If the plugin successfully handled the event.
+    /// - `Err(WinError)`: If the event handling failed.
     #[allow(unused_variables)]
     fn on_vm_stopping(&self, session: &WSLSessionInformation) -> WinResult<()> {
         Ok(())
     }
 
     /// Called when a distribution has started.
+    ///
+    /// # Arguments
+    /// - `session`: Information about the current session.
+    /// - `distribution`: Information about the distribution.
+    ///
+    /// # Returns
+    /// - `Ok(())`: If the plugin successfully handled the event.
+    /// - `Err(Error)`: If the event handling failed.
     #[allow(unused_variables)]
     fn on_distribution_started(
         &self,
@@ -41,8 +108,16 @@ pub trait WSLPluginV1: Sized + Sync {
 
     /// Called when a distribution is about to stop.
     ///
-    /// Note: It's possible that stopping a distribution fails (for instance, if a file is in use).
-    /// In this case, this notification might be called multiple times for the same distribution.
+    /// # Arguments
+    /// - `session`: Information about the current session.
+    /// - `distribution`: Information about the distribution.
+    ///
+    /// # Returns
+    /// - `Ok(())`: If the plugin successfully handled the event.
+    /// - `Err(WinError)`: If the event handling failed.
+    ///
+    /// # Notes
+    /// - This method might be called multiple times for the same distribution if stopping fails.
     #[allow(unused_variables)]
     fn on_distribution_stopping(
         &self,
@@ -52,10 +127,18 @@ pub trait WSLPluginV1: Sized + Sync {
         Ok(())
     }
 
-    /// Called when a distribution is registered or unregistered.
+    /// Called when a distribution is registered.
     ///
-    /// Returning failure will NOT cause the operation to fail.
-    /// Introduced in 2.1.2
+    /// # Arguments
+    /// - `session`: Information about the current session.
+    /// - `distribution`: Offline information about the distribution.
+    ///
+    /// # Returns
+    /// - `Ok(())`: If the plugin successfully handled the event.
+    /// - `Err(WinError)`: If the event handling failed.
+    ///
+    /// # Notes
+    /// - Introduced in API version 2.1.2.
     #[allow(unused_variables)]
     fn on_distribution_registered(
         &self,
@@ -64,10 +147,19 @@ pub trait WSLPluginV1: Sized + Sync {
     ) -> WinResult<()> {
         Ok(())
     }
-    /// Called when a distribution is registered or unregisteed.
+
+    /// Called when a distribution is unregistered.
     ///
-    /// Returning failure will NOT cause the operation to fail.
-    /// Introduced in 2.1.2
+    /// # Arguments
+    /// - `session`: Information about the current session.
+    /// - `distribution`: Offline information about the distribution.
+    ///
+    /// # Returns
+    /// - `Ok(())`: If the plugin successfully handled the event.
+    /// - `Err(WinError)`: If the event handling failed.
+    ///
+    /// # Notes
+    /// - Introduced in API version 2.1.2.
     #[allow(unused_variables)]
     fn on_distribution_unregistered(
         &self,
