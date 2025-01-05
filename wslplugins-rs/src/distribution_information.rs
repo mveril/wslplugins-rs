@@ -13,9 +13,10 @@
 //! - PID namespace
 
 extern crate wslplugins_sys;
+#[cfg(doc)]
+use crate::api::errors::require_update_error::Error;
 use crate::api::{
-    errors::require_update_error::{Error, Result},
-    utils::check_required_version_result_from_context,
+    errors::require_update_error::Result, utils::check_required_version_result_from_context,
 };
 use crate::core_distribution_information::CoreDistributionInformation;
 use crate::WSLContext;
@@ -53,7 +54,8 @@ impl DistributionInformation<'_> {
     ///
     /// # Returns
     /// - `Ok(u32)`: The PID of the init process.
-    /// - `Err(Error)`: If the API version is insufficient.
+    /// # Errors
+    /// [Error]: If the API version is insufficient.
     pub fn init_pid(&self) -> Result<u32> {
         check_required_version_result_from_context(
             WSLContext::get_current_or_panic(),
