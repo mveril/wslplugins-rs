@@ -11,7 +11,7 @@ bitflags! {
 
 impl From<WSLUserConfiguration> for WSLUserConfigurationFlags {
     fn from(value: WSLUserConfiguration) -> Self {
-        WSLUserConfigurationFlags::from_bits_truncate(value.0 as i32)
+        WSLUserConfigurationFlags::from_bits_truncate(value.0)
     }
 }
 
