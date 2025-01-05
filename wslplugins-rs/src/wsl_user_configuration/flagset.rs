@@ -1,7 +1,9 @@
+//! Provides an [flagset] implementation for [WSLUserConfiguration] flags.
 use super::WSLUserConfiguration;
 use flagset::{flags, FlagSet};
 
 flags! {
+    /// Represents the user configuration flags for WSL as flagset flags.
     #[derive(Hash)]
     pub enum WSLUserConfigurationFlags: i32 {
         CustomKernel = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel,

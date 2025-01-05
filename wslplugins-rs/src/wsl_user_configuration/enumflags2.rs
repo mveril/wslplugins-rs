@@ -1,8 +1,11 @@
+//! Provides an [enumflags2] implementation for [WSLUserConfiguration] flags.
 use super::WSLUserConfiguration;
 use enumflags2::{bitflags, BitFlags};
+
 #[bitflags]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[repr(u32)]
+/// Represents the user configuration flags for WSL as an enumflags2 bitflags.
 pub enum WSLUserConfigurationFlags {
     CustomKernel = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel as u32,
     CustomKernelCommandLine =

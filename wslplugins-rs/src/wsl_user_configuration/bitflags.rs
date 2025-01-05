@@ -1,7 +1,9 @@
+//! Provides a [bitflags] implementation for [WSLUserConfiguration] flags.
 use super::WSLUserConfiguration;
 use bitflags::bitflags;
 
 bitflags! {
+    /// Represents the user configuration flags for WSL.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
     pub struct WSLUserConfigurationFlags: i32 {
         const CustomKernel = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel;

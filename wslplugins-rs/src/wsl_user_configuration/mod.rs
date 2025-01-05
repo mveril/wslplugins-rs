@@ -1,3 +1,5 @@
+//! Provide types to interact with WSLUserConfiguration.
+
 #[cfg(feature = "bitflags")]
 pub mod bitflags;
 
@@ -7,6 +9,7 @@ pub mod enumflags2;
 #[cfg(feature = "flagset")]
 pub mod flagset;
 
+/// Represents a WSL user configuration as an integer.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 pub struct WSLUserConfiguration(i32);
 

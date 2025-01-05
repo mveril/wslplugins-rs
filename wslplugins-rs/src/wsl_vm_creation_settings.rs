@@ -32,18 +32,13 @@ impl<'a> From<&'a wslplugins_sys::WSLVmCreationSettings> for WSLVmCreationSettin
 
 impl WSLVmCreationSettings<'_> {
     /// Retrieves the custom configuration flags for the VM.
-    /// - **Default**: Uses a basic implementation when no flag library is enabled.
-    /// - **`bitflags`**: Uses the `bitflags` crate for managing flags.
-    /// - **`flagset`**: Uses the `flagset` crate for managing flags.
-    /// - **`enumflags2`**: Uses the `enumflags2` crate for managing flags.
     ///
     /// # Returns
     /// A wrapper type type representing the custom configuration flags.
     /// This type is convertible to some flags if the associated feature is enabled
-    /// /// - **Default**: Uses a basic implementation when no flag library is enabled.
-    /// - **`bitflags`**: Uses the `bitflags` crate for managing flags.
-    /// - **`flagset`**: Uses the `flagset` crate for managing flags.
-    /// - **`enumflags2`**: Uses the `enumflags2` crate for managing flags.
+    /// - **`bitflags`**: Uses the [bitflags]  crate for managing flags.
+    /// - **`flagset`**: Uses the [flagset] crate for managing flags.
+    /// - **`enumflags2`**: Uses the [enumflags2] crate for managing flags.
     ///
     pub fn custom_configuration_flags(&self) -> WSLUserConfiguration {
         WSLUserConfiguration::from(self.0.CustomConfigurationFlags)
