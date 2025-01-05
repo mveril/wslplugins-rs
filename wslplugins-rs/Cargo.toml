@@ -24,4 +24,4 @@ version = ">0.1"
 optional = true
 [features]
 sys = []
-macro = ["wslplugins-macro", "sys"]
+macro = ["dep:wslplugins-macro", "sys"]
