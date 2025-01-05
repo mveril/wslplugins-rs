@@ -3,6 +3,7 @@ use super::Result;
 use crate::api::errors::require_update_error::Result as UpReqResult;
 use crate::utils::{cstring_from_str, encode_wide_null_terminated};
 use crate::wsl_session_information::WSLSessionInformation;
+#[cfg(feature = "log-instrument")]
 use log_instrument::instrument;
 use std::ffi::{CString, OsStr, OsString};
 use std::fmt::Debug;
@@ -31,12 +32,12 @@ impl<'a> From<&'a wslplugins_sys::WSLPluginAPIV1> for ApiV1<'a> {
 }
 
 impl ApiV1<'_> {
-    #[instrument]
+    #[cfg_attr(feature = "log-instrument", instrument)]
     pub fn version(&self) -> &WSLVersion {
         &self.0.Version
     }
     /// Create plan9 mount between Windows & Linux
-    #[instrument]
+    #[cfg_attr(feature = "log-instrument", instrument)]
     pub fn mount_folder<WP: AsRef<Path>, UP: AsRef<Utf8UnixPath>>(
         &self,
         session: &WSLSessionInformation,
@@ -65,7 +66,7 @@ impl ApiV1<'_> {
     }
 
     /// Execute a program in the root namespace.
-    #[instrument]
+    #[cfg_attr(feature = "log-instrument", instrument)]
     pub fn execute_binary<P: AsRef<Utf8UnixPath>>(
         &self,
         session: &WSLSessionInformation,
@@ -103,14 +104,14 @@ impl ApiV1<'_> {
     }
 
     /// Set the error message to display to the user if the VM or distribution creation fails.
-    #[instrument]
+    #[cfg_attr(feature = "log-instrument", instrument)]
     pub(crate) fn plugin_error(&self, error: &OsStr) -> WinResult<()> {
         let error_vec = encode_wide_null_terminated(error);
         unsafe { self.0.PluginError.unwrap_unchecked()(PCWSTR::from_raw(error_vec.as_ptr())).ok() }
     }
     /// Execute a program in a user distribution
     /// Introduced in 2.1.2
-    #[instrument]
+    #[cfg_attr(feature = "log-instrument", instrument)]
     pub fn execute_binary_in_distribution<P: AsRef<Utf8UnixPath>>(
         &self,
         session: &WSLSessionInformation,

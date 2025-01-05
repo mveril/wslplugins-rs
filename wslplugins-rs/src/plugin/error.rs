@@ -1,4 +1,5 @@
 use crate::WSLContext;
+#[cfg(feature = "log")]
 use log::debug;
 use std::ffi::{OsStr, OsString};
 use std::num::NonZeroI32;
@@ -61,7 +62,9 @@ impl Error {
     pub(crate) fn consume_error_message_unwrap<R: From<Self>>(self) -> R {
         if let Some(ref mess) = self.message {
             if let Some(context) = WSLContext::get_current() {
-                if let Err(err) = context.api.plugin_error(mess.as_os_str()) {
+                let _plugin_error_result = context.api.plugin_error(mess.as_os_str());
+                #[cfg(feature = "log")]
+                if let Err(err) = _plugin_error_result {
                     debug!(
                         "Unable to set plugin error message {} due to error: {}",
                         mess.to_string_lossy(),

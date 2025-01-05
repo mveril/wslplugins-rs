@@ -8,7 +8,11 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-wslplugins-rs = { path = "../wslplugins-rs", features = ["macro", "bitflags"] }
+wslplugins-rs = { path = "../wslplugins-rs", features = [
+  "macro",
+  "bitflags",
+  "log-full",
+] }
 chrono = "^0.*"
 log = "0.4"
 log-instrument = "0.3"
