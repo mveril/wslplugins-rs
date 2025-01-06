@@ -12,7 +12,7 @@ flags! {
 
 impl From<WSLUserConfiguration> for FlagSet<WSLUserConfigurationFlags> {
     fn from(value: WSLUserConfiguration) -> Self {
-        FlagSet::new_truncated(value.0 as i32)
+        FlagSet::new_truncated(value.0)
     }
 }
 
