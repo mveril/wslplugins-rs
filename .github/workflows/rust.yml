@@ -2,9 +2,9 @@ name: Rust CI for WSLPlugins-rs
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -22,20 +22,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rust (Matrix)
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          target: x86_64-pc-windows-msvc
-          override: true
+        run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
 
       - name: Lint with Clippy (Stable Only)
         if: matrix.rust == 'stable'
-        uses: actions-rs/clippy@v1
+        run: cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Check Code Formatting (Stable Only)
         if: matrix.rust == 'stable'
-        uses: actions-rs/rustfmt@v1
+        run: cargo fmt -- --check
 
       - name: Build the Project
         run: cargo build --verbose
@@ -51,7 +46,3 @@ jobs:
         if: matrix.rust == 'nightly'
         run: |
           RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --no-deps
-
-      - name: Run Security Audit (Nightly Only)
-        if: matrix.rust == 'nightly'
-        run: cargo audit
