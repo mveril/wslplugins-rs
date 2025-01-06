@@ -22,7 +22,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rust (Matrix)
-        run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: x86_64-pc-windows-msvc
+          override: true
 
       - name: Lint with Clippy (Stable Only)
         if: matrix.rust == 'stable'
@@ -44,5 +49,13 @@ jobs:
 
       - name: Generate Documentation for Docs.rs (Nightly Only)
         if: matrix.rust == 'nightly'
+        shell: pwsh
         run: |
-          RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --no-deps
+          $env:RUSTDOCFLAGS = "--cfg docsrs"
+          cargo +nightly doc --no-deps
+
+      - name: Install and Run Security Audit (Nightly Only)
+        if: matrix.rust == 'nightly'
+        run: |
+          cargo install cargo-audit
+          cargo audit
