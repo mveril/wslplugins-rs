@@ -1,3 +1,7 @@
+#![warn(missing_docs)]
+// Enable doc_cfg if docrs
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+
 //! # WSLPlugin-rs
 //!
 //! This is the main entry point for the **WSLPlugin-rs** crate, a framework designed for creating
@@ -31,8 +35,6 @@
 //!     }
 //! }
 //! ```
-// Enable doc_cfg if docrs
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 /// Provides interfaces for interacting with WSL plugin APIs.
 pub mod api;

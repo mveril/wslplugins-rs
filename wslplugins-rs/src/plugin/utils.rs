@@ -11,6 +11,8 @@ use wslplugins_sys::WSLPluginAPIV1;
 
 use crate::{api::ApiV1, WSLContext};
 
+#[cfg(doc)]
+use super::Error;
 use super::{Result, WSLPluginV1};
 
 /// Creates a WSL plugin instance with a specified required API version.
@@ -56,6 +58,29 @@ pub fn create_plugin_with_required_version<T: WSLPluginV1>(
     }
 }
 
+/// Converts a generic `Result<T>` using the custom `Error` type into a `WinResult<T>`.
+///
+/// This function simplifies the interoperability between the custom error handling
+/// in the WSL plugin system and the Windows error system by mapping the plugin [Error]
+/// into a [windows::core::Error] using the `consume_error_message_unwrap` method.
+///
+/// # Arguments
+/// - `result`: A [Result<T>] using the custom [Error] type defined in this crate.
+///
+/// # Returns
+/// A `WinResult<T>` where:
+/// - `Ok(value)` contains the successful result `T`.
+/// - `Err(error)` contains a [windows::core::Error] converted from the plugin [Error].
+///
+/// # Behavior
+/// - If the `result` is `Ok`, it is returned as-is.
+/// - If the `result` is `Err`, the error is consumed using the
+///   and sent to WSL and is then
+///   converted into a [windows::core::Error].
+///
+/// # Usage
+/// This utility is intended to facilitate the transition between idiomatic Rust
+/// error handling and the Windows API error-handling conventions.
 pub fn consume_to_win_result<T>(result: Result<T>) -> WinResult<T> {
     result.map_err(|err| err.consume_error_message_unwrap())
 }
