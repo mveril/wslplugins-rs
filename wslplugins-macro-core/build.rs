@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut file = File::create(&dest_path)?;
     writeln!(file, "use strum::{{EnumIter, EnumString, Display}};")?;
-    
+
     // Begin the enum definition
     writeln!(file, "#[allow(clippy::enum_variant_names)]")?;
     writeln!(

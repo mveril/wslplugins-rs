@@ -13,10 +13,8 @@ use crate::parser::{ParsedImpl, RequiredVersion};
 pub fn wsl_plugin_v1(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let parsed_impl_result = parse2::<ParsedImpl>(item.clone());
     let required_version_result = parse2::<RequiredVersion>(attr);
-    let (parsed_impl, required_version) = acc_syn_result!(
-        parsed_impl_result,
-        required_version_result,
-    )?;
+    let (parsed_impl, required_version) =
+        acc_syn_result!(parsed_impl_result, required_version_result,)?;
     let generated_tokens = generate(&parsed_impl, &required_version)?;
 
     Ok(quote! {

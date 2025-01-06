@@ -13,7 +13,6 @@ const fn make_hresult(severity: u32, facility: FACILITY_CODE, code: u32) -> HRES
 pub const WSL_E_PLUGIN_REQUIRES_UPDATE: HRESULT =
     make_hresult(SEVERITY_ERROR, FACILITY_ITF, 0x8004032A);
 
-
 /// Ensures the WSL Plugin API version meets the minimum required version.
 ///
 /// This function compares the version of the API passed as a parameter against the required
