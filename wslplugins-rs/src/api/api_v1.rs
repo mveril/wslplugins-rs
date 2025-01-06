@@ -56,9 +56,8 @@ impl ApiV1<'_> {
     pub fn version(&self) -> &WSLVersion {
         &self.0.Version
     }
-    /// Create plan9 mount between Windows & Linux
 
-    ///
+    /// Create plan9 mount between Windows & Linux
     /// Allows sharing a folder between the Windows host and the Linux environment.
     ///
     /// # Arguments
