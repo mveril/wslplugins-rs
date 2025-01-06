@@ -1,10 +1,31 @@
+//! Provides an [enumflags2] implementation for [WSLUserConfiguration] flags.
 use super::WSLUserConfiguration;
 use enumflags2::{bitflags, BitFlags};
+
+/// Represents the user configuration flags for Windows Subsystem for Linux (WSL) as
+/// [enumflags2]
+///
+/// These flags are used to customize the behavior of WSL instances based on user configuration.
+/// The values correspond to the definitions in the WSL Plugin API provided by Microsoft.
+///
+/// # Variants
+///
+/// - `CustomKernel`: Indicates that the WSL instance use use a custom Linux kernel instead of the default kernel.
+/// - `CustomKernelCommandLine`: Specifies that the WSL instance use use a custom kernel command-line during boot.
+///
+///
+/// # References
+///
+/// See [WSL Configuration](https://learn.microsoft.com/windows/wsl/wsl-config)
+/// for additional details on WSL user configurations.
 #[bitflags]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[repr(u32)]
 pub enum WSLUserConfigurationFlags {
+    /// A custom Linux kernel is used for the WSL instance.
     CustomKernel = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel as u32,
+
+    /// A custom kernel command-line is used for the WSL instance.
     CustomKernelCommandLine =
         wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernelCommandLine as u32,
 }

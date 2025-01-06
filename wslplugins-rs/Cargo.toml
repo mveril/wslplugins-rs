@@ -26,3 +26,7 @@ optional = true
 sys = []
 log-full = ["log", "log-instrument"]
 macro = ["dep:wslplugins-macro", "sys"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

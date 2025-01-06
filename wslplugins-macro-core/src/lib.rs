@@ -1,7 +1,7 @@
-pub(crate) mod generator;
-pub(crate) mod hooks;
-pub(crate) mod parser;
-pub(crate) mod utils;
+mod generator;
+mod hooks;
+mod parser;
+mod utils;
 
 use generator::generate;
 use proc_macro2::TokenStream;

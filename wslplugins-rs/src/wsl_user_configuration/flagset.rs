@@ -1,10 +1,28 @@
+//! Provides an [flagset] implementation for [WSLUserConfiguration] flags.
 use super::WSLUserConfiguration;
 use flagset::{flags, FlagSet};
 
 flags! {
+    /// Represents the user configuration flags for Windows Subsystem for Linux (WSL) as
+    /// [flagset]
+    ///
+    /// These flags are used to customize the behavior of WSL instances based on user configuration.
+    /// The values correspond to the definitions in the WSL Plugin API provided by Microsoft.
+    ///
+    /// # Variants
+    ///
+    /// - `CustomKernel`: Indicates that the WSL instance use use a custom Linux kernel instead of the default kernel.
+    /// - `CustomKernelCommandLine`: Specifies that the WSL instance use use a custom kernel command-line during boot.
+    ///
+    /// # References
+    ///
+    /// See [WSL Configuration](https://learn.microsoft.com/windows/wsl/wsl-config)
+    /// for additional details on WSL user configurations.
     #[derive(Hash)]
     pub enum WSLUserConfigurationFlags: i32 {
+        /// A custom Linux kernel is used for the WSL instance.
         CustomKernel = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel,
+        /// A custom kernel command-line is used for the WSL instance.
         CustomKernelCommandLine =
             wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernelCommandLine,
     }

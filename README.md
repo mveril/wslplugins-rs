@@ -19,7 +19,7 @@ Ensure you have the following requirements installed:
 - Cargo (Rust's package manager)
 - PowerShell (for running signing scripts)
 - OpenSSL (used in the signing process) [Download OpenSSL](https://slproweb.com/products/Win32OpenSSL.html)
-- **SignTool.exe** from the Windows SDK (for signing the plugin) [Download Windows SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk/)
+- **SignTool.exe** from the Windows SDK (for signing the plugin) [Download Windows SDK](https://developer.microsoft.com/windows/downloads/windows-10-sdk/)
 - nuget.exe (for downloading [Microsoft's WSL Plugin API](https://www.nuget.org/packages/Microsoft.WSL.PluginApi))
 
 ### Important Notes
