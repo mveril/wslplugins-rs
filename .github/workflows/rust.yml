@@ -15,26 +15,22 @@ jobs:
 
     strategy:
       matrix:
-        rust: ["stable", "nightly"]
+        toolchain: ["stable", "nightly"]
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Install Rust (Matrix)
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          target: x86_64-pc-windows-msvc
-          override: true
+        shell: pwsh
+        run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
 
       - name: Lint with Clippy (Stable Only)
-        if: matrix.rust == 'stable'
+        if: matrix.toolchain == 'stable'
         run: cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Check Code Formatting (Stable Only)
-        if: matrix.rust == 'stable'
+        if: matrix.toolchain == 'stable'
         run: cargo fmt -- --check
 
       - name: Build the Project
@@ -44,18 +40,18 @@ jobs:
         run: cargo test --verbose
 
       - name: Generate Documentation (Stable Only)
-        if: matrix.rust == 'stable'
+        if: matrix.toolchain == 'stable'
         run: cargo doc --no-deps
 
       - name: Generate Documentation for Docs.rs (Nightly Only)
-        if: matrix.rust == 'nightly'
+        if: matrix.toolchain == 'nightly'
         shell: pwsh
         run: |
           $env:RUSTDOCFLAGS = "--cfg docsrs"
           cargo +nightly doc --no-deps
 
       - name: Install and Run Security Audit (Nightly Only)
-        if: matrix.rust == 'nightly'
+        if: matrix.toolchain == 'nightly'
         run: |
           cargo install cargo-audit
           cargo audit
