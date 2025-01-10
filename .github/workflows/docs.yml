@@ -1,0 +1,39 @@
+name: Rust CI for WSLPlugins-rs
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  build-and-validate:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        include:
+          - toolchain: stable
+            RUSTDOCFLAGS: "-D warnings"
+          - toolchain: nightly
+            RUSTDOCFLAGS: "-D warnings --cfg docsrs"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Rust (Matrix)
+        shell: pwsh
+        run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+
+      - name: Run Doc Tests
+        run: cargo test --docs
+
+      - name: Generate Documentation
+        env:
+          RUSTDOCFLAGS: ${{ matrix.RUSTDOCFLAGS }}
+        run: cargo doc --no-deps
