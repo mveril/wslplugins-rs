@@ -1,4 +1,4 @@
-name: Rust CI for WSLPlugins-rs
+name: Rust CI for WSLPlugins-rs code
 
 on:
   push:
