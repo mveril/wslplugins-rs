@@ -1,0 +1,70 @@
+name: Rust CI for WSLPlugins-rs
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-and-validate:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        include:
+          - toolchain: stable
+            RUSTDOCFLAGS: "-D warnings"
+            DOCTYPE: "docrs"
+          - toolchain: nightly
+            RUSTDOCFLAGS: "-D warnings --cfg docsrs"
+            DOCTYPE: "doc"
+    env:
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -D warnings
+      RUSTDOCFLAGS: ${{ matrix.RUSTDOCFLAGS }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Cache Cargo Registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo Git Index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-index-
+
+      - name: Install Rust (Matrix)
+        shell: pwsh
+        run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+
+      - name: Lint with Clippy (Stable Only)
+        if: matrix.toolchain == 'stable'
+        run: cargo clippy --all-targets --all-features
+
+      - name: Check Code Formatting (Stable Only)
+        if: matrix.toolchain == 'stable'
+        run: cargo fmt -- --check
+
+      - name: Build the Project
+        run: cargo build --verbose
+
+      - name: Run Tests
+        run: cargo test --verbose
+
+      - name: Generate Documentation (${{ matrix.RUSTDOCFLAGS }}, ${{ matrix.toolchain }})
+        run: cargo doc --no-deps --all-features
+
+      - name: Install and Run Security Audit (Nightly Only)
+        if: matrix.toolchain == 'nightly'
+        run: |
+          cargo install cargo-audit
+          cargo audit
