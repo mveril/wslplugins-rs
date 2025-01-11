@@ -9,7 +9,6 @@ on:
 jobs:
   build-and-validate:
     runs-on: windows-latest
-
     strategy:
       matrix:
         include:
@@ -19,6 +18,8 @@ jobs:
           - toolchain: nightly
             RUSTDOCFLAGS: "-D warnings --cfg docsrs"
             DOCTYPE: "doc"
+
+    name: "Build and validate on toolchain ${{ matrix.toolchain}}"
     env:
       CARGO_TERM_COLOR: always
       RUSTFLAGS: -D warnings
