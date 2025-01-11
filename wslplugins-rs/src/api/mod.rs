@@ -26,5 +26,5 @@ pub use errors::Result;
 ///
 /// These utilities simplify common tasks, such as version checking or string manipulation.
 pub mod utils;
-pub mod wsl_command;
+mod wsl_command;
 pub use wsl_command::WSLCommand;

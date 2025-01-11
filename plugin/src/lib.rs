@@ -6,7 +6,7 @@ use log_instrument::instrument;
 use plugin::{Result, WSLPluginV1};
 use std::{env, io::Read};
 use windows::{
-    core::{Error as WinError, Result as WinResult, GUID},
+    core::{Error as WinError, Result as WinResult},
     Win32::Foundation::E_FAIL,
 };
 use wslplugins_rs::wsl_user_configuration::bitflags::WSLUserConfigurationFlags;
@@ -58,12 +58,12 @@ impl WSLPluginV1 for Plugin {
     ) -> Result<()> {
         let flags: WSLUserConfigurationFlags = user_settings.custom_configuration_flags().into();
         info!("User configuration {:?}", flags);
-
-        let ver_args = ["/bin/cat", "/proc/version"];
         match self
             .context
             .api
-            .execute_binary(session, ver_args[0], &ver_args)
+            .new_command(session, "/bin/cat")
+            .arg("/proc/version")
+            .execute()
         {
             Ok(mut stream) => {
                 let mut buf = String::new();
@@ -81,7 +81,7 @@ impl WSLPluginV1 for Plugin {
                 )
             }
         };
-        self.log_os_release(session, None);
+        self.log_os_release(session, DistributionID::System);
         Ok(())
     }
 
@@ -101,7 +101,7 @@ impl WSLPluginV1 for Plugin {
             // Use unknow if init_pid not available
             distribution.init_pid().map(|res| res.to_string()).unwrap_or("Unknow".to_string())
         );
-        self.log_os_release(session, Some(distribution.id()));
+        self.log_os_release(session, DistributionID::User(distribution.id()));
         Ok(())
     }
 
@@ -132,21 +132,15 @@ impl WSLPluginV1 for Plugin {
 }
 
 impl Plugin {
-    fn log_os_release(&self, session: &WSLSessionInformation, distro_id: Option<GUID>) {
-        let args: [&str; 2] = ["/bin/cat", "/etc/os-release"];
-        let tcp_stream: std::result::Result<std::net::TcpStream, api::Error> = match distro_id {
-            Some(dist_id) => self
-                .context
-                .api
-                .execute_binary_in_distribution(session, dist_id, args[0], &args),
-            None => self
-                .context
-                .api
-                .execute_binary(session, args[0], &args)
-                .map_err(Into::into),
-        };
-        let result = tcp_stream;
-        match result {
+    fn log_os_release(&self, session: &WSLSessionInformation, distro_id: DistributionID) {
+        match self
+            .context
+            .api
+            .new_command(session, "/bin/cat")
+            .arg("/etc/os-release")
+            .distribution_id(distro_id)
+            .execute()
+        {
             Ok(stream) => match OsRelease::from_reader(stream) {
                 Ok(release) => {
                     if let Some(version) = release.version() {

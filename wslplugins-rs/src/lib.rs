@@ -41,6 +41,7 @@ pub mod api;
 
 // Internal modules for managing specific WSL features.
 mod core_distribution_information;
+pub mod distribution_id;
 mod distribution_information;
 mod offline_distribution_information;
 mod utils;
@@ -56,6 +57,7 @@ pub mod plugin;
 
 // Re-exports for core structures to simplify usage.
 pub use core_distribution_information::CoreDistributionInformation;
+pub use distribution_id::DistributionID;
 pub use distribution_information::DistributionInformation;
 pub use offline_distribution_information::OfflineDistributionInformation;
 pub use wsl_context::WSLContext;

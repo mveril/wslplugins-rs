@@ -1,95 +1,8 @@
-//! # WSL Distribution and WSLCommand Management Module
-//!
-//! This module provides abstractions for identifying and manipulating WSL
-//! distributions and for running commands in those distributions. It builds on the WSL APIs and
-//! uses [GUID]s to uniquely identify distributions.
+use typed_path::Utf8UnixPath;
 
-use std::{convert::TryFrom, fmt::Display, net::TcpStream};
-use thiserror::Error;
-use windows::core::GUID;
-
-#[cfg(doc)]
-use super::super::api::Error as ApiError;
-use super::super::api::Result as ApiResult;
-use crate::{CoreDistributionInformation, WSLContext, WSLSessionInformation};
-
-/// Represents a distribution identifier in WSL.
-///
-/// This can either be the system-level distribution or a user-specific distribution
-/// identified by a GUID.
-#[derive(Debug, Clone, Copy)]
-pub enum DistributionID {
-    /// Represents the system-level distribution.
-    System,
-    /// Represents a user-specific distribution identified by a GUID.
-    User(GUID),
-}
-
-/// Error type for conversion failures between `DistributionID` and GUID.
-#[derive(Debug, Error)]
-#[error("Cannot convert System distribution to GUID.")]
-pub struct ConversionError;
-
-impl TryFrom<DistributionID> for GUID {
-    type Error = ConversionError;
-
-    /// Attempts to convert a `DistributionID` into a GUID.
-    ///
-    /// # Errors
-    /// Returns `ConversionError` if the `DistributionID` is `System`.
-    fn try_from(value: DistributionID) -> Result<Self, Self::Error> {
-        match value {
-            DistributionID::User(id) => Ok(id),
-            DistributionID::System => Err(ConversionError),
-        }
-    }
-}
-
-impl From<GUID> for DistributionID {
-    /// Converts a GUID into a `DistributionID`.
-    fn from(value: GUID) -> Self {
-        Self::User(value)
-    }
-}
-
-impl<T: CoreDistributionInformation> From<T> for DistributionID {
-    /// Converts a type implementing `CoreDistributionInformation` into a `DistributionID`.
-    fn from(value: T) -> Self {
-        (*value.id()).into()
-    }
-}
-
-impl From<Option<GUID>> for DistributionID {
-    /// Converts an `Option<GUID>` into a `DistributionID`, defaulting to `System` if `None`.
-    fn from(value: Option<GUID>) -> Self {
-        match value {
-            Some(id) => Self::User(id),
-            None => Self::System,
-        }
-    }
-}
-
-impl From<DistributionID> for Option<GUID> {
-    /// Converts a `DistributionID` into an `Option<GUID>`.
-    fn from(value: DistributionID) -> Self {
-        match value {
-            DistributionID::System => None,
-            DistributionID::User(id) => Some(id),
-        }
-    }
-}
-
-impl Display for DistributionID {
-    /// Formats the `DistributionID` for display.
-    ///
-    /// Displays "System" for the system-level distribution, or the GUID for a user-specific distribution.
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            DistributionID::System => f.write_str("System"),
-            DistributionID::User(id) => std::fmt::Debug::fmt(id, f),
-        }
-    }
-}
+use super::super::api::{ApiV1, Result as ApiResult};
+use crate::{DistributionID, WSLSessionInformation};
+use std::net::TcpStream;
 
 /// Represents a command to be executed in WSL.
 ///
@@ -98,11 +11,11 @@ impl Display for DistributionID {
 #[derive(Clone)]
 pub struct WSLCommand<'a> {
     /// The WSL context associated with the command.
-    context: &'static WSLContext,
+    api: &'a ApiV1<'a>,
     /// Arguments for the command.
     args: Vec<&'a str>,
     /// Path to the program being executed.
-    path: &'a str,
+    path: &'a Utf8UnixPath,
     /// The distribution ID under which the command is executed.
     distribution_id: DistributionID,
     /// Session information for the current WSL session.
@@ -112,26 +25,38 @@ pub struct WSLCommand<'a> {
 impl<'a> WSLCommand<'a> {
     /// Creates a new `WSLCommand` instance.
     ///
+    /// This function initializes a `WSLCommand` with the necessary details to
+    /// execute a program in a WSL instance.
+    ///
     /// # Parameters
-    /// - `context`: The WSL context.
-    /// - `session`: The session information for the WSL instance.
-    /// - `program`: The path to the program to be executed.
-    pub fn new(
-        context: &'static WSLContext,
+    /// - `api`: A reference to the WSL API version 1.
+    /// - `session`: The session information associated with the WSL instance.
+    /// - `program`: A reference to the path of the program to be executed,
+    ///   represented as an object implementing `AsRef<Utf8UnixPath>`.
+    ///
+    /// # Returns
+    /// A new `WSLCommand` instance.
+    ///
+    /// # Type Parameters
+    /// - `T`: A type that implements `AsRef<Utf8UnixPath>`.
+    pub(crate) fn new<T: AsRef<Utf8UnixPath> + ?Sized>(
+        api: &'a ApiV1<'a>,
         session: &'a WSLSessionInformation<'a>,
-        program: &'a str,
+        program: &'a T,
     ) -> Self {
+        let my_program = program.as_ref();
+        let program_str = my_program.as_str();
         Self {
-            context,
-            args: vec![program],
-            path: program,
+            api,
+            args: vec![program_str],
+            path: &my_program,
             distribution_id: DistributionID::System,
             session,
         }
     }
 
     /// Returns the path of the command.
-    pub fn get_path(&self) -> &'a str {
+    pub fn get_path(&self) -> &'a Utf8UnixPath {
         self.path
     }
 
@@ -156,7 +81,7 @@ impl<'a> WSLCommand<'a> {
 
     /// Resets the first argument to the path of the command.
     pub fn reset_arg0(&mut self) -> &mut Self {
-        self.args[0] = self.path;
+        self.args[0] = self.path.as_str();
         self
     }
 
@@ -233,13 +158,12 @@ impl<'a> WSLCommand<'a> {
     pub fn execute(&mut self) -> ApiResult<TcpStream> {
         let stream = match self.distribution_id {
             DistributionID::System => {
-                self.context
-                    .api
+                self.api
                     .execute_binary(self.session, self.path, self.args.as_slice())?
             }
-            DistributionID::User(id) => self.context.api.execute_binary_in_distribution(
+            DistributionID::User(id) => self.api.execute_binary_in_distribution(
                 self.session,
-                &id,
+                id,
                 self.path,
                 self.args.as_slice(),
             )?,
