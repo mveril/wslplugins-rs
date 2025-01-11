@@ -1,10 +1,10 @@
-//! Provides a [bitflags] implementation for [WSLUserConfiguration] flags.
+//! Provides a [mod@bitflags] implementation for [WSLUserConfiguration] flags.
 use super::WSLUserConfiguration;
 use bitflags::bitflags;
 
 bitflags! {
     /// Represents the user configuration flags for Windows Subsystem for Linux (WSL) as
-    /// [bitflags]
+    /// [mod@bitflags]
     ///
     /// These flags are used to customize the behavior of WSL instances based on user configuration.
     /// The values correspond to the definitions in the WSL Plugin API provided by Microsoft.

@@ -1,25 +1,45 @@
-name: Rust CI for WSLPlugins-rs
-
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   build-and-validate:
     runs-on: windows-latest
-
     strategy:
       matrix:
-        toolchain: ["stable", "nightly"]
+        include:
+          - toolchain: stable
+            RUSTDOCFLAGS: "-D warnings"
+            DOCTYPE: "docrs"
+          - toolchain: nightly
+            RUSTDOCFLAGS: "-D warnings --cfg docsrs"
+            DOCTYPE: "doc"
+
+    name: "Build and validate (${{ matrix.toolchain}})"
+    env:
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -D warnings
+      RUSTDOCFLAGS: ${{ matrix.RUSTDOCFLAGS }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Cache Cargo Registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo Git Index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-index-
 
       - name: Install Rust (Matrix)
         shell: pwsh
@@ -27,7 +47,7 @@ jobs:
 
       - name: Lint with Clippy (Stable Only)
         if: matrix.toolchain == 'stable'
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features
 
       - name: Check Code Formatting (Stable Only)
         if: matrix.toolchain == 'stable'
@@ -39,16 +59,8 @@ jobs:
       - name: Run Tests
         run: cargo test --verbose
 
-      - name: Generate Documentation (Stable Only)
-        if: matrix.toolchain == 'stable'
-        run: cargo doc --no-deps
-
-      - name: Generate Documentation for Docs.rs (Nightly Only)
-        if: matrix.toolchain == 'nightly'
-        shell: pwsh
-        run: |
-          $env:RUSTDOCFLAGS = "--cfg docsrs"
-          cargo +nightly doc --no-deps
+      - name: Generate Documentation (${{ matrix.RUSTDOCFLAGS }}, ${{ matrix.toolchain }})
+        run: cargo doc --no-deps --all-features
 
       - name: Install and Run Security Audit (Nightly Only)
         if: matrix.toolchain == 'nightly'

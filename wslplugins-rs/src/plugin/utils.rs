@@ -65,7 +65,7 @@ pub fn create_plugin_with_required_version<T: WSLPluginV1>(
 /// into a [windows::core::Error] using the `consume_error_message_unwrap` method.
 ///
 /// # Arguments
-/// - `result`: A [Result<T>] using the custom [Error] type defined in this crate.
+/// - `result`: A [`Result<T>`] using the custom [Error] type defined in this crate.
 ///
 /// # Returns
 /// A `WinResult<T>` where:
@@ -74,7 +74,7 @@ pub fn create_plugin_with_required_version<T: WSLPluginV1>(
 ///
 /// # Behavior
 /// - If the `result` is `Ok`, it is returned as-is.
-/// - If the `result` is `Err`, the error is consumed using the
+/// - If the `result` is `Err`, the error is consumed
 ///   and sent to WSL and is then
 ///   converted into a [windows::core::Error].
 ///
