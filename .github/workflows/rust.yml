@@ -1,5 +1,3 @@
-name: Rust CI for WSLPlugins-rs
-
 on:
   push:
     branches: ["main"]
@@ -19,7 +17,7 @@ jobs:
             RUSTDOCFLAGS: "-D warnings --cfg docsrs"
             DOCTYPE: "doc"
 
-    name: "Build and validate on toolchain ${{ matrix.toolchain}}"
+    name: "Build and validate (${{ matrix.toolchain}})"
     env:
       CARGO_TERM_COLOR: always
       RUSTFLAGS: -D warnings
