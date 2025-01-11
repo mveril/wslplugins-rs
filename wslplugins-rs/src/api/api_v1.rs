@@ -1,9 +1,9 @@
 #[cfg(doc)]
 use super::Error;
-use super::Result;
+use super::{Result, WSLCommand};
 use crate::api::errors::require_update_error::Result as UpReqResult;
 use crate::cstring_ext::CstringExt;
-use crate::{SessionID, UserDistributionID, WSLVersion};
+use crate::{SessionID, UserDistributionID, WSLSessionInformation, WSLVersion};
 use std::ffi::{CString, OsStr};
 use std::fmt::{self, Debug};
 use std::iter::once;
@@ -328,6 +328,31 @@ impl ApiV1 {
             TcpStream::from_raw_socket(socket as SOCKET)
         };
         Ok(stream)
+    }
+    /// Creates a new `WSLCommand` instance tied to the current WSL API.
+    ///
+    /// This method initializes a `WSLCommand` with the provided session and
+    /// program details. The program is specified as a path that can be converted
+    /// to a `Utf8UnixPath`.
+    ///
+    /// # Parameters
+    /// - `session`: The session information associated with the WSL instance.
+    /// - `program`: A reference to the path of the program to be executed,
+    ///   represented as an object implementing `AsRef<Utf8UnixPath>`.
+    ///
+    /// # Returns
+    /// A new instance of `WSLCommand` configured to execute the specified program
+    /// within the provided WSL session.
+    ///
+    /// # Type Parameters
+    /// - `T`: A type that implements `AsRef<Utf8UnixPath>`.
+    #[inline]
+    pub fn new_command<'a, T: AsRef<Utf8UnixPath> + ?Sized>(
+        &'a self,
+        session: &'a WSLSessionInformation,
+        program: &'a T,
+    ) -> WSLCommand<'a> {
+        WSLCommand::new(self, session, program)
     }
 
     fn check_required_version(&self, version: &WSLVersion) -> UpReqResult<()> {

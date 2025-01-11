@@ -44,6 +44,7 @@ pub(crate) mod cstring_ext;
 mod session_id;
 pub mod user_distribution_id;
 pub use windows_core;
+pub mod distribution_id;
 mod distribution_information;
 mod offline_distribution_information;
 mod utils;
@@ -60,6 +61,7 @@ pub mod plugin;
 
 // Re-exports for core structures to simplify usage.
 pub use core_distribution_information::CoreDistributionInformation;
+pub use distribution_id::DistributionID;
 pub use distribution_information::DistributionInformation;
 pub use offline_distribution_information::OfflineDistributionInformation;
 pub use wsl_context::WSLContext;
