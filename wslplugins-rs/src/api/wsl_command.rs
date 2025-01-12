@@ -1,8 +1,12 @@
 use typed_path::Utf8UnixPath;
 
+#[cfg(doc)]
+use super::super::api::Error as ApiError;
 use super::super::api::{ApiV1, Result as ApiResult};
 use crate::{DistributionID, WSLSessionInformation};
 use std::net::TcpStream;
+#[cfg(doc)]
+use windows::core::GUID;
 
 /// Represents a command to be executed in WSL.
 ///
@@ -133,7 +137,7 @@ impl<'a> WSLCommand<'a> {
     /// This method determines the API call to be used based on the [`DistributionID`]:
     /// - If [`DistributionID::System`], the method invokes [`execute_binary`](super::ApiV1::execute_binary).
     /// - If [`DistributionID::User`], it invokes [`execute_binary_in_distribution`](super::ApiV1::execute_binary_in_distribution)
-    ///   with the associated [`GUID`].
+    ///   with the associated [GUID].
     ///
     /// # Returns
     /// - On success, it returns a [`TcpStream`] connected to the executed process, enabling interaction
