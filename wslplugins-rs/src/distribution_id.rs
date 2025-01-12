@@ -16,18 +16,37 @@
 //! distribution identification via GUIDs or when a distinction between a system-level
 //! distribution and a user-specific distribution is necessary. The associated functions
 //! and conversions simplify integration with APIs like those defined in `WslPluginApi`.
+
 use crate::CoreDistributionInformation;
 use std::{convert::TryFrom, fmt::Display};
 use thiserror::Error;
 use windows_core::GUID;
 
-/// Represents a distribution identifier in WSL.
+/// Represents a distribution identifier in the Windows Subsystem for Linux (WSL).
 ///
-/// This can either be the system-level distribution or a user-specific distribution
-/// identified by a GUID.
+/// A distribution can either be the system-level distribution or a user-specific distribution
+/// identified by a [GUID].
+///
+/// ## Variants
+///
+/// - `System`: Represents the system distribution, a central distribution used by WSL
+///   for managing low-level functionalities such as audio and graphical interaction.
+///   Refer to the [WSLg Architecture blogpost](https://devblogs.microsoft.com/commandline/wslg-architecture/#system-distro).
+///
+/// - `User(GUID)`: Represents an individual distribution installed by a user. Each distribution
+///   is uniquely identified by a [GUID], which is consistent across reboots. This GUID
+///   corresponds to the identifier used by WSL for managing the distribution.
+///
+/// ## Note
+///
+/// - The system distribution serves as a foundational component in WSL, often interacting with
+///   user distributions for operations like Linux GUI apps.
+/// - User distributions provide isolated environments for specific Linux distributions, allowing
+///   users to install and run various Linux distributions on their Windows machines.
 #[derive(Debug, Clone, Copy)]
 pub enum DistributionID {
     /// Represents the system-level distribution.
+    /// For more info about the system distribution please check the [WSLg architecture blogpost](https://devblogs.microsoft.com/commandline/wslg-architecture/#system-distro)
     System,
     /// Represents an installed user-specific distribution identified by a [GUID].
     User(GUID),
