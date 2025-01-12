@@ -49,7 +49,7 @@ impl<'a> WSLCommand<'a> {
         Self {
             api,
             args: vec![program_str],
-            path: &my_program,
+            path: my_program,
             distribution_id: DistributionID::System,
             session,
         }
