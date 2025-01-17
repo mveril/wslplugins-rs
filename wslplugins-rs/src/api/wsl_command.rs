@@ -6,7 +6,7 @@ use super::super::api::{ApiV1, Result as ApiResult};
 use crate::{DistributionID, WSLSessionInformation};
 use std::net::TcpStream;
 #[cfg(doc)]
-use windows::core::GUID;
+use windows_core::GUID;
 
 /// Represents a command to be executed in WSL.
 ///
@@ -75,8 +75,8 @@ impl<'a> WSLCommand<'a> {
         clippy::indexing_slicing,
         reason = "The vec is known to have at least one value (the arg0)"
     )]
-    pub fn arg0(&mut self, arg0: &'a str) -> &mut Self {
-        self.args[0] = arg0;
+    pub fn arg0<T: AsRef<str> + ?Sized>(&mut self, arg0: &'a T) -> &mut Self {
+        self.args[0] = arg0.as_ref();
         self
     }
 
@@ -114,8 +114,8 @@ impl<'a> WSLCommand<'a> {
     /// # Parameters
     /// - `arg`: The argument to add.
     #[inline]
-    pub fn arg(&mut self, arg: &'a str) -> &mut Self {
-        self.args.push(arg);
+    pub fn arg<T: AsRef<str> + ?Sized>(&mut self, arg: &'a T) -> &mut Self {
+        self.args.push(arg.as_ref());
         self
     }
 
@@ -124,8 +124,12 @@ impl<'a> WSLCommand<'a> {
     /// # Parameters
     /// - `args`: An iterator of arguments to add.
     #[inline]
-    pub fn args<I: IntoIterator<Item = &'a str>>(&mut self, args: I) -> &mut Self {
-        self.args.extend(args);
+    pub fn args<I, T>(&mut self, args: I) -> &mut Self
+    where
+        I: IntoIterator<Item = &'a T>,
+        T: 'a + AsRef<str> + ?Sized,
+    {
+        self.args.extend(args.into_iter().map(AsRef::as_ref));
         self
     }
 
@@ -138,6 +142,48 @@ impl<'a> WSLCommand<'a> {
             reason = "The vec is known to have at least one value (the arg0)"
         )]
         self.args[1..].iter().copied()
+    }
+
+    /// Clears all arguments except arg0.
+    ///
+    /// This method removes all additional arguments from the command,
+    /// effectively resetting the arguments to only include the program path.
+    ///
+    /// # Returns
+    /// A mutable reference to the current `WSLCommand` instance.
+    ///
+    /// # Example
+    /// ```rust ignore
+    /// command.arg("Hello").arg("World");
+    /// command.clear_args(); // Only arg0 ("/bin/echo") remains.
+    /// assert_eq!(command.get_args().count(), 0)
+    /// ```
+    #[inline]
+    pub fn crear_args(&mut self) -> &mut Self {
+        self.truncate_args(0);
+        self
+    }
+
+    /// Truncates the arguments of the command after a specified index.
+    ///
+    /// This method keeps `arg0` and the first `i` additional arguments, discarding the rest.
+    ///
+    /// # Parameters
+    /// - `i`: The index after which arguments will be removed. Note that `i = 0` keeps only `arg0`.
+    ///
+    /// # Returns
+    /// A mutable reference to the current `WSLCommand` instance.
+    ///
+    /// # Example
+    /// ```rust ignore
+    /// let mut command = WSLCommand::new(context, session, "/bin/echo");
+    /// command.arg("Hello").arg("World");
+    /// command.truncate_args(1); // Keeps only "/bin/echo" and "Hello".
+    /// ```
+    #[inline]
+    pub fn truncate_args(&mut self, i: usize) -> &mut Self {
+        self.args.truncate(i + 1);
+        self
     }
 
     /// Sets the distribution ID for the command.
