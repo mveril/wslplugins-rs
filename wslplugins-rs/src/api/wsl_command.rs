@@ -134,7 +134,7 @@ impl<'a> WSLCommand<'a> {
         self.truncate_args(0);
         self
     }
-    
+
     /// Truncates the arguments of the command after a specified index.
     ///
     /// This method keeps `arg0` and the first `i` additional arguments, discarding the rest.
