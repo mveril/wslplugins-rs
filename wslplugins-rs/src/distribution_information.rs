@@ -79,8 +79,8 @@ impl CoreDistributionInformation for DistributionInformation<'_> {
     ///
     /// # Returns
     /// A reference to the [GUID] representing the distribution's unique identifier.
-    fn id(&self) -> &GUID {
-        &self.0.Id
+    fn id(&self) -> GUID {
+        self.0.Id
     }
 
     /// Retrieves the name of the distribution.

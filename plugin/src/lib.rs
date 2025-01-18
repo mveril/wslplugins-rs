@@ -132,7 +132,7 @@ impl WSLPluginV1 for Plugin {
 }
 
 impl Plugin {
-    fn log_os_release(&self, session: &WSLSessionInformation, distro_id: Option<&GUID>) {
+    fn log_os_release(&self, session: &WSLSessionInformation, distro_id: Option<GUID>) {
         let args: [&str; 2] = ["/bin/cat", "/etc/os-release"];
         let tcp_stream: std::result::Result<std::net::TcpStream, api::Error> = match distro_id {
             Some(dist_id) => self

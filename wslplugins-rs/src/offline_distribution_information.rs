@@ -39,8 +39,8 @@ impl<'a> OfflineDistributionInformation<'a> {
 
 impl CoreDistributionInformation for OfflineDistributionInformation<'_> {
     /// Retrieves the [GUID] of the offline distribution.
-    fn id(&self) -> &GUID {
-        &self.0.Id
+    fn id(&self) -> GUID {
+        self.0.Id
     }
 
     /// Retrieves the name of the offline distribution as an [OsString].

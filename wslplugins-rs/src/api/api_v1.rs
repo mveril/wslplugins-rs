@@ -210,7 +210,7 @@ impl ApiV1<'_> {
     pub fn execute_binary_in_distribution<P: AsRef<Utf8UnixPath>>(
         &self,
         session: &WSLSessionInformation,
-        distribution_id: &GUID,
+        distribution_id: GUID,
         path: P,
         args: &[&str],
     ) -> Result<TcpStream> {
@@ -235,7 +235,7 @@ impl ApiV1<'_> {
         let stream = unsafe {
             self.0.ExecuteBinaryInDistribution.unwrap_unchecked()(
                 session.id(),
-                distribution_id,
+                &distribution_id,
                 path_ptr,
                 args_ptr,
                 socket.as_mut_ptr(),

@@ -22,8 +22,8 @@ pub trait CoreDistributionInformation {
     /// The ID is guaranteed to remain the same across reboots.
     ///
     /// # Returns
-    /// A reference to the [GUID] representing the distribution's unique identifier.
-    fn id(&self) -> &GUID;
+    /// The [GUID] representing the distribution's unique identifier.
+    fn id(&self) -> GUID;
 
     /// Retrieves the name of the distribution.
     ///
