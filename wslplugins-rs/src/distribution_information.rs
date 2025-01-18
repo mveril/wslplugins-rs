@@ -55,10 +55,10 @@ impl DistributionInformation<'_> {
     /// # Returns
     /// - `Ok(u32)`: The PID of the init process.
     /// # Errors
-    /// [Error]: If the API version is insufficient.
+    /// [Error]: If the runtime version version is insufficient if no [WSLContext] found we assume returned value is accessible.
     pub fn init_pid(&self) -> Result<u32> {
         check_required_version_result_from_context(
-            WSLContext::get_current_or_panic(),
+            WSLContext::get_current(),
             &WSLVersion::new(2, 0, 5),
         )?;
         Ok(self.0.InitPid)
