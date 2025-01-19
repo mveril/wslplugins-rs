@@ -19,6 +19,19 @@ use windows::core::GUID;
 /// its ID, name, and optional package family name.
 #[repr(transparent)]
 pub struct OfflineDistributionInformation(wslplugins_sys::WslOfflineDistributionInformation);
+
+impl From<OfflineDistributionInformation> for wslplugins_sys::WslOfflineDistributionInformation {
+    fn from(value: OfflineDistributionInformation) -> Self {
+        value.0
+    }
+}
+
+impl From<wslplugins_sys::WslOfflineDistributionInformation> for OfflineDistributionInformation {
+    fn from(value: wslplugins_sys::WslOfflineDistributionInformation) -> Self {
+        OfflineDistributionInformation(value)
+    }
+}
+
 impl AsRef<wslplugins_sys::WslOfflineDistributionInformation> for OfflineDistributionInformation {
     fn as_ref(&self) -> &wslplugins_sys::WslOfflineDistributionInformation {
         &self.0

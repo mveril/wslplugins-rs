@@ -44,19 +44,15 @@ impl WSLSessionInformation {
     }
 }
 
-impl From<&wslplugins_sys::WSLSessionInformation> for &WSLSessionInformation {
-    /// Creates a `WSLSessionInformation` instance from a reference to `WSLSessionInformation` from the API.
-    ///
-    /// # Arguments
-    /// - `ptr`: A reference to a `WSLSessionInformation` instance.
-    ///
-    /// # Returns
-    /// A safe wrapper around the provided pointer.
-    fn from(internal: &wslplugins_sys::WSLSessionInformation) -> Self {
-        unsafe {
-            &*(internal as *const wslplugins_sys::WSLSessionInformation
-                as *const WSLSessionInformation)
-        }
+impl From<wslplugins_sys::WSLSessionInformation> for WSLSessionInformation {
+    fn from(value: wslplugins_sys::WSLSessionInformation) -> Self {
+        WSLSessionInformation(value)
+    }
+}
+
+impl From<WSLSessionInformation> for wslplugins_sys::WSLSessionInformation {
+    fn from(value: WSLSessionInformation) -> Self {
+        value.0
     }
 }
 

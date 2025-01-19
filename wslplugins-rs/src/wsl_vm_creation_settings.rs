@@ -17,6 +17,18 @@ use crate::WSLUserConfiguration;
 /// - `'a`: The lifetime of the referenced `WSLVmCreationSettings` instance.
 pub struct WSLVmCreationSettings(wslplugins_sys::WSLVmCreationSettings);
 
+impl From<wslplugins_sys::WSLVmCreationSettings> for WSLVmCreationSettings {
+    fn from(value: wslplugins_sys::WSLVmCreationSettings) -> Self {
+        WSLVmCreationSettings(value)
+    }
+}
+
+impl From<WSLVmCreationSettings> for wslplugins_sys::WSLVmCreationSettings {
+    fn from(value: WSLVmCreationSettings) -> Self {
+        value.0
+    }
+}
+
 impl AsRef<wslplugins_sys::WSLVmCreationSettings> for WSLVmCreationSettings {
     fn as_ref(&self) -> &wslplugins_sys::WSLVmCreationSettings {
         &self.0

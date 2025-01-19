@@ -33,6 +33,18 @@ use super::utils::check_required_version_result;
 #[repr(transparent)]
 pub struct ApiV1(WSLPluginAPIV1);
 
+impl From<ApiV1> for WSLPluginAPIV1 {
+    fn from(value: ApiV1) -> Self {
+        value.0
+    }
+}
+
+impl From<WSLPluginAPIV1> for ApiV1 {
+    fn from(value: WSLPluginAPIV1) -> Self {
+        ApiV1(value)
+    }
+}
+
 impl AsRef<WSLPluginAPIV1> for ApiV1 {
     fn as_ref(&self) -> &WSLPluginAPIV1 {
         &self.0

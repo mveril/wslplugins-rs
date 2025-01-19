@@ -43,9 +43,21 @@ impl AsRef<DistributionInformation> for wslplugins_sys::WSLDistributionInformati
     }
 }
 
+impl From<DistributionInformation> for wslplugins_sys::WSLDistributionInformation {
+    fn from(value: DistributionInformation) -> Self {
+        value.0
+    }
+}
+
 impl AsRef<wslplugins_sys::WSLDistributionInformation> for DistributionInformation {
     fn as_ref(&self) -> &wslplugins_sys::WSLDistributionInformation {
         &self.0
+    }
+}
+
+impl From<wslplugins_sys::WSLDistributionInformation> for DistributionInformation {
+    fn from(value: wslplugins_sys::WSLDistributionInformation) -> Self {
+        DistributionInformation(value)
     }
 }
 
