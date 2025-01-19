@@ -45,10 +45,7 @@ impl AsRef<DistributionInformation> for wslplugins_sys::WSLDistributionInformati
 
 impl AsRef<wslplugins_sys::WSLDistributionInformation> for DistributionInformation {
     fn as_ref(&self) -> &wslplugins_sys::WSLDistributionInformation {
-        unsafe {
-            &*(self as *const DistributionInformation
-                as *const wslplugins_sys::WSLDistributionInformation)
-        }
+        &self.0
     }
 }
 

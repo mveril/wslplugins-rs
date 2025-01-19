@@ -19,9 +19,7 @@ pub struct WSLVmCreationSettings(wslplugins_sys::WSLVmCreationSettings);
 
 impl AsRef<wslplugins_sys::WSLVmCreationSettings> for WSLVmCreationSettings {
     fn as_ref(&self) -> &wslplugins_sys::WSLVmCreationSettings {
-        unsafe {
-            &*(self as *const WSLVmCreationSettings as *const wslplugins_sys::WSLVmCreationSettings)
-        }
+        &self.0
     }
 }
 

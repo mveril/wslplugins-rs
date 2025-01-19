@@ -21,10 +21,7 @@ use windows::core::GUID;
 pub struct OfflineDistributionInformation(wslplugins_sys::WslOfflineDistributionInformation);
 impl AsRef<wslplugins_sys::WslOfflineDistributionInformation> for OfflineDistributionInformation {
     fn as_ref(&self) -> &wslplugins_sys::WslOfflineDistributionInformation {
-        unsafe {
-            &*(self as *const OfflineDistributionInformation
-                as *const wslplugins_sys::WslOfflineDistributionInformation)
-        }
+        &self.0
     }
 }
 
