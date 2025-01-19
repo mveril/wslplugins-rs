@@ -21,6 +21,12 @@ pub fn cstring_from_str(input: &str) -> CString {
 }
 
 #[cfg(test)]
+pub(crate) fn test_transparence<T, U>() {
+    assert_eq!(align_of::<T>(), align_of::<U>());
+    assert_eq!(size_of::<T>(), size_of::<U>());
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use std::ffi::OsString;
@@ -57,10 +63,4 @@ mod tests {
         let expected = "Hello".as_bytes();
         assert_eq!(cstring.into_bytes(), expected);
     }
-}
-
-#[cfg(test)]
-pub(crate) fn test_transparence<T, U>() {
-    assert_eq!(align_of::<T>(), align_of::<U>());
-    assert_eq!(size_of::<T>(), size_of::<U>());
 }
