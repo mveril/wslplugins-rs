@@ -16,7 +16,7 @@ static CURRENT_CONTEXT: OnceLock<WSLContext> = OnceLock::new();
 /// throughout the plugin's lifecycle.
 pub struct WSLContext {
     /// The API interface used for interacting with the WSL plugin API.
-    pub api: ApiV1<'static>,
+    pub api: &'static ApiV1,
 }
 
 impl WSLContext {
@@ -59,7 +59,7 @@ impl WSLContext {
     /// # Returns
     /// - `Some(&'static WSLContext)`: If the context was successfully initialized.
     /// - `None`: If the context has already been initialized.
-    pub fn init(api: ApiV1<'static>) -> Option<&'static Self> {
+    pub fn init(api: &'static ApiV1) -> Option<&'static Self> {
         CURRENT_CONTEXT.set(WSLContext { api }).ok()?;
         CURRENT_CONTEXT.get()
     }

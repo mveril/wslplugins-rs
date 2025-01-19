@@ -17,27 +17,27 @@ use windows::core::GUID;
 ///
 /// This struct allows access to the details of an offline WSL distribution, including
 /// its ID, name, and optional package family name.
-///
-/// # Lifetime Parameters
-/// - `'a`: The lifetime of the referenced `WslOfflineDistributionInformation` instance.
-pub struct OfflineDistributionInformation<'a>(
-    &'a wslplugins_sys::WslOfflineDistributionInformation,
-);
-
-impl<'a> OfflineDistributionInformation<'a> {
-    /// Creates a new `OfflineDistributionInformation` instance from a raw pointer.
-    ///
-    /// # Arguments
-    /// - `ptr`: A reference to a `WslOfflineDistributionInformation` instance.
-    ///
-    /// # Returns
-    /// A safe wrapper around the provided pointer.
-    pub fn from(ptr: &'a wslplugins_sys::WslOfflineDistributionInformation) -> Self {
-        Self(ptr)
+#[repr(transparent)]
+pub struct OfflineDistributionInformation(wslplugins_sys::WslOfflineDistributionInformation);
+impl AsRef<wslplugins_sys::WslOfflineDistributionInformation> for OfflineDistributionInformation {
+    fn as_ref(&self) -> &wslplugins_sys::WslOfflineDistributionInformation {
+        unsafe {
+            &*(self as *const OfflineDistributionInformation
+                as *const wslplugins_sys::WslOfflineDistributionInformation)
+        }
     }
 }
 
-impl CoreDistributionInformation for OfflineDistributionInformation<'_> {
+impl AsRef<OfflineDistributionInformation> for wslplugins_sys::WslOfflineDistributionInformation {
+    fn as_ref(&self) -> &OfflineDistributionInformation {
+        unsafe {
+            &*(self as *const wslplugins_sys::WslOfflineDistributionInformation
+                as *const OfflineDistributionInformation)
+        }
+    }
+}
+
+impl CoreDistributionInformation for OfflineDistributionInformation {
     /// Retrieves the [GUID] of the offline distribution.
     fn id(&self) -> GUID {
         self.0.Id
@@ -65,7 +65,7 @@ impl CoreDistributionInformation for OfflineDistributionInformation<'_> {
     }
 }
 
-impl<T> PartialEq<T> for OfflineDistributionInformation<'_>
+impl<T> PartialEq<T> for OfflineDistributionInformation
 where
     T: CoreDistributionInformation,
 {
@@ -75,14 +75,14 @@ where
     }
 }
 
-impl Hash for OfflineDistributionInformation<'_> {
+impl Hash for OfflineDistributionInformation {
     /// Computes a hash based on the distribution's ID.
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.id().hash(state);
     }
 }
 
-impl Display for OfflineDistributionInformation<'_> {
+impl Display for OfflineDistributionInformation {
     /// Formats the offline distribution information for display.
     ///
     /// The output includes the distribution's name and ID.
@@ -91,7 +91,7 @@ impl Display for OfflineDistributionInformation<'_> {
     }
 }
 
-impl Debug for OfflineDistributionInformation<'_> {
+impl Debug for OfflineDistributionInformation {
     /// Formats the offline distribution information for debugging.
     ///
     /// The output includes the distribution's name, ID, and package family name.
@@ -101,5 +101,19 @@ impl Debug for OfflineDistributionInformation<'_> {
             .field("id", &self.id())
             .field("package_family_name", &self.package_family_name())
             .finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utils::test_transparence;
+
+    #[test]
+    fn test_layouts() {
+        test_transparence::<
+            wslplugins_sys::WslOfflineDistributionInformation,
+            OfflineDistributionInformation,
+        >();
     }
 }

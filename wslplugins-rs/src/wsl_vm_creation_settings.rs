@@ -15,22 +15,25 @@ use crate::WSLUserConfiguration;
 ///
 /// # Lifetime Parameters
 /// - `'a`: The lifetime of the referenced `WSLVmCreationSettings` instance.
-pub struct WSLVmCreationSettings<'a>(&'a wslplugins_sys::WSLVmCreationSettings);
+pub struct WSLVmCreationSettings(wslplugins_sys::WSLVmCreationSettings);
 
-impl<'a> From<&'a wslplugins_sys::WSLVmCreationSettings> for WSLVmCreationSettings<'a> {
-    /// Creates a `WSLVmCreationSettings` instance from a reference to the raw WSL Plugin API structure.
-    ///
-    /// # Arguments
-    /// - `value`: A reference to a `WSLVmCreationSettings` instance from the WSL Plugin API.
-    ///
-    /// # Returns
-    /// A wrapped `WSLVmCreationSettings` instance.
-    fn from(value: &'a wslplugins_sys::WSLVmCreationSettings) -> Self {
-        WSLVmCreationSettings(value)
+impl AsRef<wslplugins_sys::WSLVmCreationSettings> for WSLVmCreationSettings {
+    fn as_ref(&self) -> &wslplugins_sys::WSLVmCreationSettings {
+        unsafe {
+            &*(self as *const WSLVmCreationSettings as *const wslplugins_sys::WSLVmCreationSettings)
+        }
     }
 }
 
-impl WSLVmCreationSettings<'_> {
+impl AsRef<WSLVmCreationSettings> for wslplugins_sys::WSLVmCreationSettings {
+    fn as_ref(&self) -> &WSLVmCreationSettings {
+        unsafe {
+            &*(self as *const wslplugins_sys::WSLVmCreationSettings as *const WSLVmCreationSettings)
+        }
+    }
+}
+
+impl WSLVmCreationSettings {
     /// Retrieves the custom configuration flags for the VM.
     ///
     /// # Returns
@@ -45,7 +48,7 @@ impl WSLVmCreationSettings<'_> {
     }
 }
 
-impl Debug for WSLVmCreationSettings<'_> {
+impl Debug for WSLVmCreationSettings {
     /// Formats the VM creation settings for debugging.
     ///
     /// The debug output includes the custom configuration flags.
@@ -56,5 +59,17 @@ impl Debug for WSLVmCreationSettings<'_> {
                 &self.custom_configuration_flags(),
             )
             .finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::utils::test_transparence;
+
+    use super::WSLVmCreationSettings;
+
+    #[test]
+    fn test_layouts() {
+        test_transparence::<wslplugins_sys::WSLVmCreationSettings, WSLVmCreationSettings>();
     }
 }

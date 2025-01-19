@@ -16,9 +16,9 @@ use windows::Win32::Security::PSID;
 ///
 /// # Lifetime Parameters
 /// - `'a`: The lifetime of the referenced `WSLSessionInformation` instance.
-pub struct WSLSessionInformation<'a>(&'a wslplugins_sys::WSLSessionInformation);
+pub struct WSLSessionInformation(wslplugins_sys::WSLSessionInformation);
 
-impl WSLSessionInformation<'_> {
+impl WSLSessionInformation {
     /// Retrieves the session ID.
     ///
     /// # Returns
@@ -44,7 +44,7 @@ impl WSLSessionInformation<'_> {
     }
 }
 
-impl<'a> From<&'a wslplugins_sys::WSLSessionInformation> for WSLSessionInformation<'a> {
+impl From<&wslplugins_sys::WSLSessionInformation> for &WSLSessionInformation {
     /// Creates a `WSLSessionInformation` instance from a reference to `WSLSessionInformation` from the API.
     ///
     /// # Arguments
@@ -52,12 +52,31 @@ impl<'a> From<&'a wslplugins_sys::WSLSessionInformation> for WSLSessionInformati
     ///
     /// # Returns
     /// A safe wrapper around the provided pointer.
-    fn from(ptr: &'a wslplugins_sys::WSLSessionInformation) -> Self {
-        Self(ptr)
+    fn from(internal: &wslplugins_sys::WSLSessionInformation) -> Self {
+        unsafe {
+            &*(internal as *const wslplugins_sys::WSLSessionInformation
+                as *const WSLSessionInformation)
+        }
     }
 }
 
-impl hash::Hash for WSLSessionInformation<'_> {
+impl AsRef<WSLSessionInformation> for wslplugins_sys::WSLSessionInformation {
+    fn as_ref(&self) -> &WSLSessionInformation {
+        unsafe {
+            &*(self as *const wslplugins_sys::WSLSessionInformation as *const WSLSessionInformation)
+        }
+    }
+}
+
+impl AsRef<wslplugins_sys::WSLSessionInformation> for WSLSessionInformation {
+    fn as_ref(&self) -> &wslplugins_sys::WSLSessionInformation {
+        unsafe {
+            &*(self as *const WSLSessionInformation as *const wslplugins_sys::WSLSessionInformation)
+        }
+    }
+}
+
+impl hash::Hash for WSLSessionInformation {
     /// Computes a hash based on the session ID.
     ///
     /// # Arguments
@@ -67,7 +86,7 @@ impl hash::Hash for WSLSessionInformation<'_> {
     }
 }
 
-impl PartialEq for WSLSessionInformation<'_> {
+impl PartialEq for WSLSessionInformation {
     /// Compares two `WSLSessionInformation` instances for equality based on their session IDs.
     ///
     /// # Arguments
@@ -81,7 +100,7 @@ impl PartialEq for WSLSessionInformation<'_> {
 }
 
 // Manually implements Debug for `WSLSessionInformation`.
-impl fmt::Debug for WSLSessionInformation<'_> {
+impl fmt::Debug for WSLSessionInformation {
     /// Formats the session information for debugging.
     ///
     /// The output includes the session ID, user token, and user SID.
@@ -91,5 +110,17 @@ impl fmt::Debug for WSLSessionInformation<'_> {
             .field("userToken", &self.0.UserToken)
             .field("userSid", &self.0.UserSid)
             .finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::utils::test_transparence;
+
+    use super::WSLSessionInformation;
+
+    #[test]
+    fn test_layouts() {
+        test_transparence::<wslplugins_sys::WSLSessionInformation, WSLSessionInformation>();
     }
 }
