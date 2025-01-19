@@ -50,7 +50,7 @@ pub fn create_plugin_with_required_version<T: WSLPluginV1>(
         wslplugins_sys::require_version(required_major, required_minor, required_revision, api)
             .ok()?;
     }
-    if let Some(context) = WSLContext::init(api.into()) {
+    if let Some(context) = WSLContext::init(api.as_ref()) {
         let plugin = T::try_new(context)?;
         Ok(plugin)
     } else {
