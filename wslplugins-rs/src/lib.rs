@@ -57,6 +57,7 @@ pub mod plugin;
 // Re-exports for core structures to simplify usage.
 pub use core_distribution_information::CoreDistributionInformation;
 pub use distribution_information::DistributionInformation;
+pub use offline_distribution_information::OfflineDistributionInformation;
 pub use wsl_context::WSLContext;
 pub use wsl_session_information::WSLSessionInformation;
 pub use wsl_vm_creation_settings::WSLVmCreationSettings;
