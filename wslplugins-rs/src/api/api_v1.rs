@@ -3,11 +3,11 @@ extern crate wslplugins_sys;
 use super::Error;
 use super::Result;
 use crate::api::errors::require_update_error::Result as UpReqResult;
-use crate::utils::{cstring_from_str, encode_wide_null_terminated};
+use crate::cstring_ext::CstringExt;
 use crate::wsl_session_information::WSLSessionInformation;
 #[cfg(feature = "log-instrument")]
 use log_instrument::instrument;
-use std::ffi::{CString, OsStr, OsString};
+use std::ffi::{CString, OsStr};
 use std::fmt::Debug;
 use std::iter::once;
 use std::mem::MaybeUninit;
@@ -15,8 +15,8 @@ use std::net::TcpStream;
 use std::os::windows::io::FromRawSocket;
 use std::os::windows::raw::SOCKET;
 use std::path::Path;
-use std::str::FromStr;
 use typed_path::Utf8UnixPath;
+use widestring::U16CString;
 use windows::Win32::Networking::WinSock::SOCKET as WinSocket;
 use windows::{
     core::{Result as WinResult, GUID, PCSTR, PCWSTR},
@@ -99,13 +99,10 @@ impl ApiV1 {
         read_only: bool,
         name: &OsStr,
     ) -> WinResult<()> {
-        let encoded_windows_path = encode_wide_null_terminated(windows_path.as_ref().as_os_str());
-        let encoded_linux_path = encode_wide_null_terminated(
-            OsString::from_str(linux_path.as_ref().as_str())
-                .unwrap()
-                .as_os_str(),
-        );
-        let encoded_name = encode_wide_null_terminated(name);
+        let encoded_windows_path =
+            U16CString::from_os_str_truncate(windows_path.as_ref().as_os_str());
+        let encoded_linux_path = U16CString::from_str_truncate(linux_path.as_ref().as_str());
+        let encoded_name = U16CString::from_os_str_truncate(name);
         let result = unsafe {
             self.0.MountFolder.unwrap_unchecked()(
                 session.id(),
@@ -163,7 +160,10 @@ impl ApiV1 {
             .copied()
             .chain(once(0))
             .collect();
-        let c_args: Vec<CString> = args.iter().map(|&arg| cstring_from_str(arg)).collect();
+        let c_args: Vec<CString> = args
+            .iter()
+            .map(|&arg| CString::from_str_truncate(arg))
+            .collect();
         let mut args_ptrs: Vec<PCSTR> = c_args
             .iter()
             .map(|arg| PCSTR::from_raw(arg.as_ptr() as *const u8))
@@ -188,7 +188,7 @@ impl ApiV1 {
     /// Set the error message to display to the user if the VM or distribution creation fails.
     #[cfg_attr(feature = "log-instrument", instrument)]
     pub(crate) fn plugin_error(&self, error: &OsStr) -> WinResult<()> {
-        let error_vec = encode_wide_null_terminated(error);
+        let error_vec = widestring::U16String::from_os_str(error);
         unsafe { self.0.PluginError.unwrap_unchecked()(PCWSTR::from_raw(error_vec.as_ptr())).ok() }
     }
 
@@ -242,7 +242,10 @@ impl ApiV1 {
             .chain(once(0))
             .collect();
         let path_ptr = PCSTR::from_raw(c_path.as_ptr());
-        let c_args: Vec<CString> = args.iter().map(|&arg| cstring_from_str(arg)).collect();
+        let c_args: Vec<CString> = args
+            .iter()
+            .map(|&arg| CString::from_str_truncate(arg))
+            .collect();
         let mut args_ptrs: Vec<PCSTR> = c_args
             .iter()
             .map(|arg| PCSTR::from_raw(arg.as_ptr() as *const u8))
