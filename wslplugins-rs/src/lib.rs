@@ -41,6 +41,7 @@ pub mod api;
 
 // Internal modules for managing specific WSL features.
 mod core_distribution_information;
+pub(crate) mod cstring_ext;
 mod distribution_information;
 mod offline_distribution_information;
 mod utils;
