@@ -188,8 +188,10 @@ impl ApiV1 {
     /// Set the error message to display to the user if the VM or distribution creation fails.
     #[cfg_attr(feature = "log-instrument", instrument)]
     pub(crate) fn plugin_error(&self, error: &OsStr) -> WinResult<()> {
-        let error_vec = widestring::U16String::from_os_str(error);
-        unsafe { self.0.PluginError.unwrap_unchecked()(PCWSTR::from_raw(error_vec.as_ptr())).ok() }
+        let error_utf16 = U16CString::from_os_str_truncate(error);
+        unsafe {
+            self.0.PluginError.unwrap_unchecked()(PCWSTR::from_raw(error_utf16.as_ptr())).ok()
+        }
     }
 
     /// Execute a program in a user distribution
