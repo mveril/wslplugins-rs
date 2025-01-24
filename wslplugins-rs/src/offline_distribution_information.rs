@@ -6,12 +6,14 @@
 extern crate wslplugins_sys;
 use crate::core_distribution_information::CoreDistributionInformation;
 use std::{
-    ffi::OsString,
+    ffi::{OsStr, OsString},
     fmt::{Debug, Display},
     hash::Hash,
+    mem::ManuallyDrop,
     os::windows::ffi::OsStringExt,
 };
-use windows::core::GUID;
+use widestring::U16CString;
+use windows::core::{GUID, PCWSTR};
 
 /// A wrapper around `WslOfflineDistributionInformation` providing a safe interface.
 ///
@@ -20,9 +22,27 @@ use windows::core::GUID;
 #[repr(transparent)]
 pub struct OfflineDistributionInformation(wslplugins_sys::WslOfflineDistributionInformation);
 
+impl OfflineDistributionInformation {
+    pub fn new<S: AsRef<OsStr>>(id: GUID, name: S, package_family_name: Option<S>) -> Self {
+        let name_u16 = ManuallyDrop::new(U16CString::from_os_str_truncate(name.as_ref()));
+        let package_familly_name = package_family_name
+            .map(|pfn| ManuallyDrop::new(U16CString::from_os_str_truncate((pfn))));
+        let pfn_ptr = match package_familly_name {
+            Some(pfn) => PCWSTR::from_raw(pfn.as_ptr()),
+            None => PCWSTR::null(),
+        };
+        Self(wslplugins_sys::WslOfflineDistributionInformation {
+            Id: id,
+            Name: PCWSTR::from_raw(name_u16.as_ptr()),
+            PackageFamilyName: pfn_ptr,
+        })
+    }
+}
+
 impl From<OfflineDistributionInformation> for wslplugins_sys::WslOfflineDistributionInformation {
-    fn from(value: OfflineDistributionInformation) -> Self {
-        value.0
+    unsafe fn from(value: OfflineDistributionInformation) -> Self {
+        let value = ManuallyDrop::new(value);
+        std::ptr::read(&value.0)
     }
 }
 
@@ -111,6 +131,19 @@ impl Debug for OfflineDistributionInformation {
             .field("id", &self.id())
             .field("package_family_name", &self.package_family_name())
             .finish()
+    }
+}
+
+impl Drop for OfflineDistributionInformation {
+    fn drop(&mut self) {
+        unsafe {
+            widestring::U16CString::from_raw(self.0.Name.as_ptr() as *mut _);
+        }
+        if !self.0.PackageFamilyName.is_null() {
+            unsafe {
+                widestring::U16CString::from_raw(self.0.PackageFamilyName.as_ptr() as *mut _);
+            }
+        }
     }
 }
 

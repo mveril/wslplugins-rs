@@ -172,6 +172,19 @@ impl Debug for DistributionInformation {
     }
 }
 
+impl Drop for DistributionInformation {
+    fn drop(&mut self) {
+        unsafe {
+            widestring::U16CString::from_raw(self.0.Name.as_ptr() as *mut _);
+        }
+        if !self.0.PackageFamilyName.is_null() {
+            unsafe {
+                widestring::U16CString::from_raw(self.0.PackageFamilyName.as_ptr() as *mut _);
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
