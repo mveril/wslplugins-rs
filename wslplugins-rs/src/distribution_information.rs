@@ -31,22 +31,37 @@ use wslplugins_sys::WSLVersion;
 ///
 /// This struct wraps the `WSLDistributionInformation` from the WSL Plugin API and provides
 /// safe, idiomatic Rust access to its fields.
-pub struct DistributionInformation<'a>(&'a wslplugins_sys::WSLDistributionInformation);
+#[repr(transparent)]
+pub struct DistributionInformation(wslplugins_sys::WSLDistributionInformation);
 
-impl<'a> From<&'a wslplugins_sys::WSLDistributionInformation> for DistributionInformation<'a> {
-    /// Creates a `DistributionInformation` instance from a reference to the raw WSL Plugin API structure.
-    ///
-    /// # Arguments
-    /// - `ptr`: A reference to a `WSLDistributionInformation` instance.
-    ///
-    /// # Returns
-    /// A wrapped `DistributionInformation` instance.
-    fn from(ptr: &'a wslplugins_sys::WSLDistributionInformation) -> Self {
-        Self(ptr)
+impl AsRef<DistributionInformation> for wslplugins_sys::WSLDistributionInformation {
+    fn as_ref(&self) -> &DistributionInformation {
+        unsafe {
+            &*(self as *const wslplugins_sys::WSLDistributionInformation
+                as *const DistributionInformation)
+        }
     }
 }
 
-impl DistributionInformation<'_> {
+impl From<DistributionInformation> for wslplugins_sys::WSLDistributionInformation {
+    fn from(value: DistributionInformation) -> Self {
+        value.0
+    }
+}
+
+impl AsRef<wslplugins_sys::WSLDistributionInformation> for DistributionInformation {
+    fn as_ref(&self) -> &wslplugins_sys::WSLDistributionInformation {
+        &self.0
+    }
+}
+
+impl From<wslplugins_sys::WSLDistributionInformation> for DistributionInformation {
+    fn from(value: wslplugins_sys::WSLDistributionInformation) -> Self {
+        DistributionInformation(value)
+    }
+}
+
+impl DistributionInformation {
     /// Retrieves the PID of the init process.
     ///
     /// This requires API version 2.0.5 or higher. If the current API version does not meet
@@ -74,7 +89,7 @@ impl DistributionInformation<'_> {
     }
 }
 
-impl CoreDistributionInformation for DistributionInformation<'_> {
+impl CoreDistributionInformation for DistributionInformation {
     /// Retrieves the unique ID of the distribution.
     ///
     /// # Returns
@@ -108,7 +123,7 @@ impl CoreDistributionInformation for DistributionInformation<'_> {
     }
 }
 
-impl<T> PartialEq<T> for DistributionInformation<'_>
+impl<T> PartialEq<T> for DistributionInformation
 where
     T: CoreDistributionInformation,
 {
@@ -118,14 +133,14 @@ where
     }
 }
 
-impl Hash for DistributionInformation<'_> {
+impl Hash for DistributionInformation {
     /// Computes a hash based on the distribution's ID.
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.id().hash(state);
     }
 }
 
-impl Display for DistributionInformation<'_> {
+impl Display for DistributionInformation {
     /// Formats the distribution information for display.
     ///
     /// The output includes the distribution's name and ID.
@@ -134,7 +149,7 @@ impl Display for DistributionInformation<'_> {
     }
 }
 
-impl Debug for DistributionInformation<'_> {
+impl Debug for DistributionInformation {
     /// Formats the distribution information for debugging.
     ///
     /// The output includes:
@@ -154,5 +169,16 @@ impl Debug for DistributionInformation<'_> {
         } else {
             dbg.finish_non_exhaustive()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utils::test_transparence;
+
+    #[test]
+    fn test_layouts() {
+        test_transparence::<wslplugins_sys::WSLDistributionInformation, DistributionInformation>();
     }
 }

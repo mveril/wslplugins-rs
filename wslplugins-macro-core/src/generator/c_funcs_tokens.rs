@@ -18,8 +18,8 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                 let settings_ptr = unsafe { &*settings };
                 if let Some(plugin) = PLUGIN.get() {
                     let result = plugin.#trait_method_ident(
-                        &::wslplugins_rs::WSLSessionInformation::from(session_ptr),
-                        &::wslplugins_rs::WSLVmCreationSettings::from(settings_ptr),
+                        session_ptr.as_ref(),
+                        settings_ptr.as_ref(),
                     );
                     ::wslplugins_rs::plugin::utils::consume_to_win_result(result).into()
                 } else {
@@ -33,7 +33,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
             ) -> ::windows::core::HRESULT {
                 let session_ptr = unsafe { &*session };
                 if let Some(plugin) = PLUGIN.get() {
-                    plugin.#trait_method_ident(&::wslplugins_rs::WSLSessionInformation::from(session_ptr)).into()
+                    plugin.#trait_method_ident(session_ptr.as_ref()).into()
                 } else {
                     ::windows::Win32::Foundation::E_FAIL
                 }
@@ -48,8 +48,8 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                 let distribution_ptr = unsafe { &*distribution };
                 if let Some(plugin) = PLUGIN.get() {
                     let result = plugin.#trait_method_ident(
-                        &::wslplugins_rs::WSLSessionInformation::from(session_ptr),
-                        &::wslplugins_rs::DistributionInformation::from(distribution_ptr),
+                        session_ptr.as_ref(),
+                        distribution_ptr.as_ref(),
                     );
                     ::wslplugins_rs::plugin::utils::consume_to_win_result(result).into()
                 } else {
@@ -66,8 +66,8 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                 let distribution_ptr = unsafe { &*distribution };
                 if let Some(plugin) = PLUGIN.get() {
                     plugin.#trait_method_ident(
-                        &::wslplugins_rs::WSLSessionInformation::from(session_ptr),
-                        &::wslplugins_rs::DistributionInformation::from(distribution_ptr),
+                        session_ptr.as_ref(),
+                        distribution_ptr.as_ref(),
                     ).into()
                 } else {
                     ::windows::Win32::Foundation::E_FAIL
@@ -83,8 +83,8 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                 let distribution_ptr = unsafe { &*distribution };
                 if let Some(plugin) = PLUGIN.get() {
                     plugin.#trait_method_ident(
-                        &::wslplugins_rs::WSLSessionInformation::from(session_ptr),
-                        &::wslplugins_rs::OfflineDistributionInformation::from(distribution_ptr),
+                        session_ptr.as_ref(),
+                        distribution_ptr.as_ref(),
                     ).into()
                 } else {
                     ::windows::Win32::Foundation::E_FAIL
@@ -100,8 +100,8 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                 let distribution_ptr = unsafe { &*distribution };
                 if let Some(plugin) = PLUGIN.get() {
                     plugin.#trait_method_ident(
-                        &::wslplugins_rs::WSLSessionInformation::from(session_ptr),
-                        &::wslplugins_rs::OfflineDistributionInformation::from(distribution_ptr),
+                        session_ptr.as_ref(),
+                        distribution_ptr.as_ref(),
                     ).into()
                 } else {
                     ::windows::Win32::Foundation::E_FAIL

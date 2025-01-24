@@ -30,16 +30,34 @@ use super::utils::check_required_version_result;
 /// Represents a structured interface for interacting with the WSLPluginAPIV1 API.
 /// This struct encapsulates the methods provided by the WSLPluginAPIV1 API, allowing
 /// idiomatic interaction with the Windows Subsystem for Linux (WSL).
-pub struct ApiV1<'a>(&'a WSLPluginAPIV1);
+#[repr(transparent)]
+pub struct ApiV1(WSLPluginAPIV1);
 
-/// Converts a raw reference to `WSLPluginAPIV1` into [ApiV1].
-impl<'a> From<&'a WSLPluginAPIV1> for ApiV1<'a> {
-    fn from(value: &'a WSLPluginAPIV1) -> Self {
-        Self(value)
+impl From<ApiV1> for WSLPluginAPIV1 {
+    fn from(value: ApiV1) -> Self {
+        value.0
     }
 }
 
-impl ApiV1<'_> {
+impl From<WSLPluginAPIV1> for ApiV1 {
+    fn from(value: WSLPluginAPIV1) -> Self {
+        ApiV1(value)
+    }
+}
+
+impl AsRef<WSLPluginAPIV1> for ApiV1 {
+    fn as_ref(&self) -> &WSLPluginAPIV1 {
+        &self.0
+    }
+}
+
+impl AsRef<ApiV1> for WSLPluginAPIV1 {
+    fn as_ref(&self) -> &ApiV1 {
+        unsafe { &*(self as *const WSLPluginAPIV1 as *const ApiV1) }
+    }
+}
+
+impl ApiV1 {
     /// Returns the current version of the WSL API being used.
     ///
     /// This is useful for checking compatibility with specific API features.
@@ -252,10 +270,21 @@ impl ApiV1<'_> {
     }
 }
 
-impl Debug for ApiV1<'_> {
+impl Debug for ApiV1 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ApiV1")
             .field("version", self.version())
             .finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utils::test_transparence;
+
+    #[test]
+    fn test_layouts() {
+        test_transparence::<WSLPluginAPIV1, ApiV1>();
     }
 }
