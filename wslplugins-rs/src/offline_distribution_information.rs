@@ -41,7 +41,8 @@ impl OfflineDistributionInformation {
 
 impl From<OfflineDistributionInformation> for wslpluginapi_sys::WslOfflineDistributionInformation {
     fn from(value: OfflineDistributionInformation) -> Self {
-        value.0
+        let value = ManuallyDrop::new(value);
+        unsafe { std::ptr::read(&value.0) }
     }
 }
 
