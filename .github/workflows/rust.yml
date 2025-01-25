@@ -1,8 +1,16 @@
+name: ci
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
+      - develop
+      - feature/*
+      - release/*
+      - hotfix/*
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
+      - develop
 
 jobs:
   build-and-validate:
@@ -59,7 +67,7 @@ jobs:
       - name: Run Tests
         run: cargo test --verbose
 
-      - name: Generate Documentation (${{ matrix.RUSTDOCFLAGS }}, ${{ matrix.toolchain }})
+      - name: Generate Documentation (${{ matrix.DOCTYPE }}, ${{ matrix.toolchain }})
         run: cargo doc --no-deps --all-features
 
       - name: Install and Run Security Audit (Nightly Only)
