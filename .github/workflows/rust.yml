@@ -1,4 +1,4 @@
-name: ci
+name: rust
 on:
   push:
     branches:
