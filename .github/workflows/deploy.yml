@@ -57,7 +57,6 @@ jobs:
                   Write-Error "Extracted version '$rawVersion' contains metadata, which is not allowed."
                   exit 1
               }
-              # Renvoyer si c'est une prerelease
               if ($Version.Prerelease) {
                   echo "::set-output name=prerelease::true"
               } else {
@@ -77,7 +76,11 @@ jobs:
         uses: actions/create-release@v1
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
+          release_name: |
+            ${{ steps.validate.outputs.prerelease == 'true' && 'Prerelease' || 'Release' }} ${{ github.ref_name }}
+          body: |
+            This is a ${{ steps.validate.outputs.prerelease == 'true' && 'prerelease' || 'release' }} of the crate.
+            You can find the [main crate here](https://crates.io/crates/${{ github.repository }}).:
           prerelease: ${{ steps.validate.outputs.prerelease }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
