@@ -78,6 +78,7 @@ jobs:
         run: |
           try {
               $expectedSemVer = [PSSemVer]::Parse($env:EXPECTED_VERSION)
+              $expectedSemVer.Metadata = "" # Remove metadata for comparison
           } catch {
               Write-Error "Expected version '$env:EXPECTED_VERSION' is not a valid semantic version."
               exit 1
@@ -97,14 +98,8 @@ jobs:
               }
 
               $name = $package.name
-              $versionStr = [PSSemVer]::Parse($package.version).ToString("M.N.P") # Parse and format without metadata
-
-              try {
-                  $semVer = [PSSemVer]::Parse($versionStr)
-              } catch {
-                  $errors += "ERROR: Version '$versionStr' of crate '$name' is not a valid semantic version."
-                  continue
-              }
+              $semVer = [PSSemVer]::Parse($package.version)
+              $semVer.Metadata = "" # Remove metadata for comparison
 
               if ($semVer.CompareTo($expectedSemVer) -ne 0) {
                   if ($package.publish -ne $false) {

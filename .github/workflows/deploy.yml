@@ -1,0 +1,86 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  validate-and-release:
+    runs-on: windows-latest
+    env:
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -D warnings
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache Cargo Registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo Git Index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-index-
+
+      - name: Install Rust
+        shell: pwsh
+        run: rustup update stable && rustup default stable
+
+      - name: Install PSSemVer
+        shell: pwsh
+        run: |
+          try {
+            Import-Module -Name PSSemVer -ErrorAction Stop
+          } catch {
+            Write-Host "Installing PSSemVer module..."
+            Install-Module -Name PSSemVer -Scope CurrentUser -Force -ErrorAction Stop
+            Import-Module -Name PSSemVer -ErrorAction Stop
+          }
+
+      - name: Validate Tag with PSSemVer
+        id: validate
+        shell: pwsh
+        run: |
+          $tagName = "${{ github.ref_name }}"
+          try {
+              $rawVersion = $tagName -replace '^v', ''
+              $Version = [PSSemVer]::Parse($rawVersion)
+              if ($Version.HasMetadata) {
+                  Write-Error "Extracted version '$rawVersion' contains metadata, which is not allowed."
+                  exit 1
+              }
+              # Renvoyer si c'est une prerelease
+              if ($Version.Prerelease) {
+                  echo "::set-output name=prerelease::true"
+              } else {
+                  echo "::set-output name=prerelease::false"
+              }
+          } catch {
+              Write-Error "Tag name does not contain a valid semantic version. Current tag: $tagName"
+              exit 1
+          }
+        continue-on-error: false
+
+      - name: Cargo Publish Dry-Run
+        run: cargo publish --dry-run
+
+      - name: Create GitHub Release
+        id: release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          prerelease: ${{ steps.validate.outputs.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cargo Publish
+        run: cargo publish
