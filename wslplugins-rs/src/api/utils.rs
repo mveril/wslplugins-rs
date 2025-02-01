@@ -5,7 +5,7 @@
 
 use super::errors::require_update_error::{Error, Result};
 use crate::WSLContext;
-use wslplugins_sys::WSLVersion;
+use crate::WSLVersion;
 
 pub(crate) fn check_required_version_result(
     current_version: &WSLVersion,
@@ -15,8 +15,8 @@ pub(crate) fn check_required_version_result(
         Ok(())
     } else {
         Err(Error {
-            current_version: *current_version,
-            required_version: *required_version,
+            current_version: current_version.clone(),
+            required_version: required_version.clone(),
         })
     }
 }
@@ -36,7 +36,7 @@ pub(crate) fn check_required_version_result_from_context(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wslplugins_sys::WSLVersion;
+    use crate::WSLVersion;
 
     /// Tests that `check_required_version_result` returns `Ok` when the current version meets the requirement.
     #[test]

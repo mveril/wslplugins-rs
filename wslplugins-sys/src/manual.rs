@@ -1,6 +1,4 @@
-use std::fmt::Display;
-
-use crate::{WSLPluginAPIV1, WSLVersion};
+use crate::WSLPluginAPIV1;
 use windows::core::HRESULT;
 use windows::Win32::Foundation::{SEVERITY_ERROR, S_OK};
 use windows::Win32::System::Diagnostics::Debug::{FACILITY_CODE, FACILITY_ITF};
@@ -55,22 +53,6 @@ pub const unsafe fn require_version(
         WSL_E_PLUGIN_REQUIRES_UPDATE
     } else {
         S_OK
-    }
-}
-
-impl Display for WSLVersion {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}.{}.{}", self.Major, self.Minor, self.Revision)
-    }
-}
-
-impl WSLVersion {
-    pub fn new(major: u32, minor: u32, revision: u32) -> Self {
-        Self {
-            Major: major,
-            Minor: minor,
-            Revision: revision,
-        }
     }
 }
 
@@ -172,19 +154,5 @@ mod tests {
         };
 
         assert_eq!(unsafe { require_version(1, 0, 1, &api) }, S_OK);
-    }
-
-    #[test]
-    fn test_display_trait() {
-        let version = WSLVersion::new(1, 2, 3);
-        assert_eq!(format!("{}", version), "1.2.3");
-    }
-
-    #[test]
-    fn test_new_constructor() {
-        let version = WSLVersion::new(1, 2, 3);
-        assert_eq!(version.Major, 1);
-        assert_eq!(version.Minor, 2);
-        assert_eq!(version.Revision, 3);
     }
 }

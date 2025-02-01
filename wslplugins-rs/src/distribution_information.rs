@@ -20,12 +20,12 @@ use crate::api::{
 };
 use crate::core_distribution_information::CoreDistributionInformation;
 use crate::WSLContext;
+use crate::WSLVersion;
 use std::ffi::OsString;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::os::windows::ffi::OsStringExt;
 use windows::core::GUID;
-use wslplugins_sys::WSLVersion;
 
 /// Represents detailed information about a WSL distribution.
 ///
