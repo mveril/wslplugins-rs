@@ -1,7 +1,9 @@
 [package]
 name = "plugin"
-version = "0.1.0-alpha.0"
-authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]
+authors.workspace = true
+version.workspace = true
+license.workspace = true
+repository.workspace = true
 edition = "2021"
 
 [lib]

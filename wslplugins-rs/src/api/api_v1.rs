@@ -1,10 +1,11 @@
-extern crate wslplugins_sys;
+extern crate wslpluginapi_sys;
 #[cfg(doc)]
 use super::Error;
 use super::Result;
 use crate::api::errors::require_update_error::Result as UpReqResult;
 use crate::cstring_ext::CstringExt;
 use crate::wsl_session_information::WSLSessionInformation;
+use crate::WSLVersion;
 #[cfg(feature = "log-instrument")]
 use log_instrument::instrument;
 use std::ffi::{CString, OsStr};
@@ -23,7 +24,7 @@ use windows::{
     Win32::Foundation::BOOL,
 };
 
-use wslplugins_sys::{WSLPluginAPIV1, WSLVersion};
+use wslpluginapi_sys::WSLPluginAPIV1;
 
 use super::utils::check_required_version_result;
 
@@ -72,7 +73,7 @@ impl ApiV1 {
     /// );
     #[cfg_attr(feature = "log-instrument", instrument)]
     pub fn version(&self) -> &WSLVersion {
-        &self.0.Version
+        self.0.Version.as_ref()
     }
 
     /// Create plan9 mount between Windows & Linux

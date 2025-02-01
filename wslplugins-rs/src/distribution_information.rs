@@ -12,7 +12,7 @@
 //! - Process ID (PID) of the init process (requires API version 2.0.5 or higher)
 //! - PID namespace
 
-extern crate wslplugins_sys;
+extern crate wslpluginapi_sys;
 #[cfg(doc)]
 use crate::api::errors::require_update_error::Error;
 use crate::api::{
@@ -20,43 +20,43 @@ use crate::api::{
 };
 use crate::core_distribution_information::CoreDistributionInformation;
 use crate::WSLContext;
+use crate::WSLVersion;
 use std::ffi::OsString;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::os::windows::ffi::OsStringExt;
 use windows::core::GUID;
-use wslplugins_sys::WSLVersion;
 
 /// Represents detailed information about a WSL distribution.
 ///
 /// This struct wraps the `WSLDistributionInformation` from the WSL Plugin API and provides
 /// safe, idiomatic Rust access to its fields.
 #[repr(transparent)]
-pub struct DistributionInformation(wslplugins_sys::WSLDistributionInformation);
+pub struct DistributionInformation(wslpluginapi_sys::WSLDistributionInformation);
 
-impl AsRef<DistributionInformation> for wslplugins_sys::WSLDistributionInformation {
+impl AsRef<DistributionInformation> for wslpluginapi_sys::WSLDistributionInformation {
     fn as_ref(&self) -> &DistributionInformation {
         unsafe {
-            &*(self as *const wslplugins_sys::WSLDistributionInformation
+            &*(self as *const wslpluginapi_sys::WSLDistributionInformation
                 as *const DistributionInformation)
         }
     }
 }
 
-impl From<DistributionInformation> for wslplugins_sys::WSLDistributionInformation {
+impl From<DistributionInformation> for wslpluginapi_sys::WSLDistributionInformation {
     fn from(value: DistributionInformation) -> Self {
         value.0
     }
 }
 
-impl AsRef<wslplugins_sys::WSLDistributionInformation> for DistributionInformation {
-    fn as_ref(&self) -> &wslplugins_sys::WSLDistributionInformation {
+impl AsRef<wslpluginapi_sys::WSLDistributionInformation> for DistributionInformation {
+    fn as_ref(&self) -> &wslpluginapi_sys::WSLDistributionInformation {
         &self.0
     }
 }
 
-impl From<wslplugins_sys::WSLDistributionInformation> for DistributionInformation {
-    fn from(value: wslplugins_sys::WSLDistributionInformation) -> Self {
+impl From<wslpluginapi_sys::WSLDistributionInformation> for DistributionInformation {
+    fn from(value: wslpluginapi_sys::WSLDistributionInformation) -> Self {
         DistributionInformation(value)
     }
 }
@@ -192,6 +192,7 @@ mod tests {
 
     #[test]
     fn test_layouts() {
-        test_transparence::<wslplugins_sys::WSLDistributionInformation, DistributionInformation>();
+        test_transparence::<wslpluginapi_sys::WSLDistributionInformation, DistributionInformation>(
+        );
     }
 }

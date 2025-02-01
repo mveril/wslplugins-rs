@@ -3,7 +3,7 @@
 //! This module provides an abstraction over `WslOfflineDistributionInformation` from the WSL Plugin API,
 //! offering a safe and idiomatic Rust interface for accessing offline distribution details.
 
-extern crate wslplugins_sys;
+extern crate wslpluginapi_sys;
 use crate::core_distribution_information::CoreDistributionInformation;
 use std::{
     ffi::{OsStr, OsString},
@@ -20,7 +20,7 @@ use windows::core::{GUID, PCWSTR};
 /// This struct allows access to the details of an offline WSL distribution, including
 /// its ID, name, and optional package family name.
 #[repr(transparent)]
-pub struct OfflineDistributionInformation(wslplugins_sys::WslOfflineDistributionInformation);
+pub struct OfflineDistributionInformation(wslpluginapi_sys::WslOfflineDistributionInformation);
 
 impl OfflineDistributionInformation {
     pub fn new<S: AsRef<OsStr>>(id: GUID, name: S, package_family_name: Option<S>) -> Self {
@@ -31,7 +31,7 @@ impl OfflineDistributionInformation {
             Some(pfn) => PCWSTR::from_raw(pfn.as_ptr()),
             None => PCWSTR::null(),
         };
-        Self(wslplugins_sys::WslOfflineDistributionInformation {
+        Self(wslpluginapi_sys::WslOfflineDistributionInformation {
             Id: id,
             Name: PCWSTR::from_raw(name_u16.as_ptr()),
             PackageFamilyName: pfn_ptr,
@@ -39,29 +39,28 @@ impl OfflineDistributionInformation {
     }
 }
 
-impl From<OfflineDistributionInformation> for wslplugins_sys::WslOfflineDistributionInformation {
-    unsafe fn from(value: OfflineDistributionInformation) -> Self {
-        let value = ManuallyDrop::new(value);
-        std::ptr::read(&value.0)
+impl From<OfflineDistributionInformation> for wslpluginapi_sys::WslOfflineDistributionInformation {
+    fn from(value: OfflineDistributionInformation) -> Self {
+        value.0
     }
 }
 
-impl From<wslplugins_sys::WslOfflineDistributionInformation> for OfflineDistributionInformation {
-    fn from(value: wslplugins_sys::WslOfflineDistributionInformation) -> Self {
+impl From<wslpluginapi_sys::WslOfflineDistributionInformation> for OfflineDistributionInformation {
+    fn from(value: wslpluginapi_sys::WslOfflineDistributionInformation) -> Self {
         OfflineDistributionInformation(value)
     }
 }
 
-impl AsRef<wslplugins_sys::WslOfflineDistributionInformation> for OfflineDistributionInformation {
-    fn as_ref(&self) -> &wslplugins_sys::WslOfflineDistributionInformation {
+impl AsRef<wslpluginapi_sys::WslOfflineDistributionInformation> for OfflineDistributionInformation {
+    fn as_ref(&self) -> &wslpluginapi_sys::WslOfflineDistributionInformation {
         &self.0
     }
 }
 
-impl AsRef<OfflineDistributionInformation> for wslplugins_sys::WslOfflineDistributionInformation {
+impl AsRef<OfflineDistributionInformation> for wslpluginapi_sys::WslOfflineDistributionInformation {
     fn as_ref(&self) -> &OfflineDistributionInformation {
         unsafe {
-            &*(self as *const wslplugins_sys::WslOfflineDistributionInformation
+            &*(self as *const wslpluginapi_sys::WslOfflineDistributionInformation
                 as *const OfflineDistributionInformation)
         }
     }
@@ -155,7 +154,7 @@ mod tests {
     #[test]
     fn test_layouts() {
         test_transparence::<
-            wslplugins_sys::WslOfflineDistributionInformation,
+            wslpluginapi_sys::WslOfflineDistributionInformation,
             OfflineDistributionInformation,
         >();
     }

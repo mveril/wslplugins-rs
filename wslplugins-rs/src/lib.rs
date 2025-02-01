@@ -62,12 +62,14 @@ pub use offline_distribution_information::OfflineDistributionInformation;
 pub use wsl_context::WSLContext;
 pub use wsl_session_information::WSLSessionInformation;
 pub use wsl_vm_creation_settings::WSLVmCreationSettings;
+mod wsl_version;
+pub use wsl_version::WSLVersion;
 
 /// Re-exports procedural macros when the `macro` feature is enabled.
 /// It allow to mark a plugin struct (that implement [WSLPluginV1] trait) to be easely integrated to the WSL plugin system without writing manually C code for entry point or hooks.
 #[cfg(feature = "macro")]
 pub use wslplugins_macro::wsl_plugin_v1;
 
-/// Re-exports the `wslplugins_sys` crate as `sys` when the `sys` feature is enabled.
+/// Re-exports the `wslpluginapi_sys` crate as `sys` when the `sys` feature is enabled.
 #[cfg(feature = "sys")]
-pub use wslplugins_sys as sys;
+pub use wslpluginapi_sys as sys;

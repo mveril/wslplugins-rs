@@ -856,6 +856,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "wslpluginapi-sys"
+version = "0.1.0-alpha.0+2.1.3"
+source = "git+https://github.com/mveril/wslpluginapi-sys.git?branch=main#19cb304cb9c76df2fb27a3d601a6872c3bb4f414"
+dependencies = [
+ "bindgen",
+ "libc",
+ "semver",
+ "struct-field-names-as-array",
+ "windows",
+]
+
+[[package]]
 name = "wslplugins-macro"
 version = "0.1.0-alpha.0"
 dependencies = [
@@ -875,7 +887,7 @@ dependencies = [
  "struct-field-names-as-array",
  "strum",
  "syn",
- "wslplugins-sys",
+ "wslpluginapi-sys",
 ]
 
 [[package]]
@@ -884,8 +896,8 @@ version = "0.1.0-alpha.0"
 dependencies = [
  "trybuild",
  "windows",
+ "wslpluginapi-sys",
  "wslplugins-rs",
- "wslplugins-sys",
 ]
 
 [[package]]
@@ -902,17 +914,6 @@ dependencies = [
  "typed-path",
  "widestring",
  "windows",
+ "wslpluginapi-sys",
  "wslplugins-macro",
- "wslplugins-sys",
-]
-
-[[package]]
-name = "wslplugins-sys"
-version = "0.1.0-alpha.0+2.1.3"
-dependencies = [
- "bindgen",
- "libc",
- "semver",
- "struct-field-names-as-array",
- "windows",
 ]
