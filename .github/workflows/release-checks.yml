@@ -1,0 +1,151 @@
+on:
+  push:
+    branches:
+      - release/*
+  pull_request:
+    branches:
+      - release/*
+
+jobs:
+  version-check:
+    runs-on: windows-latest
+    name: "Check crate versions"
+    env:
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -D warnings
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Cache Cargo Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-dependencies-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-dependencies-
+
+      - name: Cache PowerShell Modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            $env:USERPROFILE\Documents\WindowsPowerShell\Modules
+          key: ${{ runner.os }}-powershell-modules
+          restore-keys: ${{ runner.os }}-powershell-modules-
+
+      - name: Install Rust
+        shell: pwsh
+        run: rustup update stable && rustup default stable
+
+      - name: Install PSSemVer
+        shell: pwsh
+        run: |
+          try {
+            Import-Module -Name PSSemVer -ErrorAction Stop
+          } catch {
+            Write-Host "Installing PSSemVer module..."
+            Install-Module -Name PSSemVer -Scope CurrentUser -Force -ErrorAction Stop
+            Import-Module -Name PSSemVer -ErrorAction Stop
+          }
+
+      - name: Extract Branch Version
+        id: extract_version
+        shell: pwsh
+        run: |
+          $branchName = "${{ github.ref_name }}"
+          try {
+              $rawVersion = $branchName -replace '^release/', ''
+              $expectedVersion = [PSSemVer]::Parse($rawVersion)
+
+
+              Write-Output "expected_version=$expectedVersion" | Out-File -FilePath $GITHUB_OUTPUT -Encoding utf8
+              Write-Host "Expected version for crates: $expectedVersion"
+          } catch {
+              Write-Error "Branch name does not contain a valid semantic version. Current branch: $branchName"
+              exit 1
+          }
+
+      - name: Parse and Compare Crate Versions
+        shell: pwsh
+        env:
+          EXPECTED_VERSION: ${{ steps.extract_version.outputs.expected_version }}
+        run: |
+          try {
+              $expectedSemVer = [PSSemVer]::Parse($env:EXPECTED_VERSION)
+          } catch {
+              Write-Error "Expected version '$env:EXPECTED_VERSION' is not a valid semantic version."
+              exit 1
+          }
+
+          # Retrieve workspace metadata
+          $metadataJson = cargo metadata --format-version 1
+          $metadata = $metadataJson | ConvertFrom-Json
+          $workspaceMembers = $metadata.workspace_members
+
+          $errors = @()
+
+          foreach ($package in $metadata.packages) {
+              # Skip non-workspace members
+              if (-not ($workspaceMembers -contains $package.id)) {
+                  continue
+              }
+
+              $name = $package.name
+              $semVer = [PSSemVer]::Parse($package.version)
+
+              if ($semVer.CompareTo($expectedSemVer) -ne 0) {
+                  if ($package.publish -ne $false) {
+                      $errors += "ERROR: Publishable crate '$name' has version '$semVer', expected '$expectedSemVer'."
+                  } else {
+                      Write-Warning "Non-publishable crate '$name' has version '$semVer', expected '$expectedSemVer'."
+                  }
+              } else {
+                  Write-Host "Crate '$name' with version '$semVer' matches the branch version."
+              }
+          }
+
+          if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error $_ }
+              exit 1
+          }
+
+  publish-dry-run:
+    needs: version-check
+    runs-on: windows-latest
+    name: "Publish Dry-Run"
+    env:
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -D warnings
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Cache Cargo Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-dependencies-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-dependencies-
+
+      - name: Install Rust
+        shell: pwsh
+        run: rustup update stable && rustup default stable
+
+      - name: Run Tests
+        shell: pwsh
+        run: |
+          echo "Running tests..."
+          cargo test --all-targets
+
+      - name: Publish Dry-Run
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        shell: pwsh
+        run: |
+          echo "Running cargo publish dry-run..."
+          cargo publish --dry-run

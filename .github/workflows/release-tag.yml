@@ -1,0 +1,44 @@
+name: Tag on Merge to Master
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - master
+
+jobs:
+  create-tag:
+    if: ${{ github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/') }}
+    runs-on: windows-latest
+    env:
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Extract Version from Branch Name
+        id: extract_version
+        shell: pwsh
+        run: |
+          $branchName = "${{ github.event.pull_request.head.ref }}"
+          $version = $branchName -replace '^release/', ''
+          Write-Host "Extracted version: $version"
+          echo "version=$version" >> $GITHUB_ENV
+
+      - name: Create Git Tag
+        id: create_tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag "v${{ env.version }}" -a -m "Release version ${{ env.version }}"
+          git push origin "v${{ env.version }}"
+
+      - name: Verify Tag
+        run: |
+          git fetch --tags
+          if (! git tag | grep -q "v${{ env.version }}") {
+              echo "Tag creation failed for version ${{ env.version }}."
+              exit 1
+          }
