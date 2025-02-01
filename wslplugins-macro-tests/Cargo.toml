@@ -6,6 +6,7 @@ license.workspace = true
 repository.workspace = true
 description = "A Rust framework for developing WSL plugins using safe and idiomatic Rust."
 edition = "2021"
+publish = false
 
 [dependencies]
 wslplugins-rs = { path = "../wslplugins-rs", features = ["macro"] }
