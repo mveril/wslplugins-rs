@@ -1,7 +1,5 @@
 # WSLPlugins-rs
-
 WSLPlugins-rs is a Rust framework for building [WSL plugins](https://learn.microsoft.com/windows/wsl/wsl-plugins). It wraps the raw WSL plugin API with safer, more idiomatic Rust types and provides a procedural macro for generating the plugin entry points and hook wiring.
-
 The project is intended for Windows hosts that load plugins through WSL. It includes:
 
 - a runtime crate: `wslplugins-rs`
