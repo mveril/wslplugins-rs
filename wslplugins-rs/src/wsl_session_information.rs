@@ -56,7 +56,8 @@ impl From<WSLSessionInformation> for wslpluginapi_sys::WSLSessionInformation {
 impl AsRef<WSLSessionInformation> for wslpluginapi_sys::WSLSessionInformation {
     fn as_ref(&self) -> &WSLSessionInformation {
         unsafe {
-            &*(self as *const wslpluginapi_sys::WSLSessionInformation as *const WSLSessionInformation)
+            &*(self as *const wslpluginapi_sys::WSLSessionInformation
+                as *const WSLSessionInformation)
         }
     }
 }

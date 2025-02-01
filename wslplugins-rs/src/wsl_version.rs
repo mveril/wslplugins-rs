@@ -3,11 +3,30 @@ use std::{
     hash::Hash,
 };
 
+/// Represents a WSL version number.
+///
+/// This struct wraps the `WSLVersion` from the WSL Plugin API and provides
+/// safe, idiomatic Rust access to its fields.
+/// # Example
+/// ```
+/// use wslplugins_rs::WSLVersion;
+/// let version = WSLVersion::new(2, 0, 0);
+/// assert_eq!(version.major(), 2);
+/// assert_eq!(version.minor(), 0);
+/// assert_eq!(version.revision(), 0);
+/// ```
 #[repr(transparent)]
 #[derive(Clone, Eq)]
 pub struct WSLVersion(wslpluginapi_sys::WSLVersion);
 
 impl WSLVersion {
+    /// Creates a new `WSLVersion` instance.
+    /// # Parameters
+    /// - `major`: The major version number.
+    /// - `minor`: The minor version number.
+    /// - `revision`: The revision number.
+    /// # Returns
+    /// The new `WSLVersion` instance.
     pub fn new(major: u32, minor: u32, revision: u32) -> Self {
         wslpluginapi_sys::WSLVersion {
             Major: major,
@@ -17,26 +36,32 @@ impl WSLVersion {
         .into()
     }
 
+    /// Retrieves the major version number.
     pub fn major(&self) -> u32 {
         self.0.Major
     }
 
+    /// Set the major version number.
     pub fn set_major(&mut self, major: u32) {
         self.0.Major = major
     }
 
+    /// Retrieves the minor version number.
     pub fn minor(&self) -> u32 {
         self.0.Minor
     }
 
+    /// Set the minor version number.
     pub fn set_minor(&mut self, minor: u32) {
         self.0.Minor = minor
     }
 
+    /// Retrieves the revision version number.
     pub fn revision(&self) -> u32 {
         self.0.Revision
     }
 
+    /// Set the revision version number.
     pub fn set_revision(&mut self, revision: u32) {
         self.0.Revision = revision
     }
