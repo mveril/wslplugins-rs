@@ -1,7 +1,10 @@
 [package]
 name = "wslplugins-macro-tests"
-version = "0.1.0-alpha.0"
-authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]
+authors.workspace = true
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "A Rust framework for developing WSL plugins using safe and idiomatic Rust."
 edition = "2021"
 
 [dependencies]
