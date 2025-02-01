@@ -59,10 +59,6 @@ jobs:
               $rawVersion = $branchName -replace '^release/', ''
               $expectedVersion = [PSSemVer]::Parse($rawVersion)
 
-              if ($expectedVersion.HasMetadata) {
-                  Write-Error "Extracted version '$rawVersion' contains metadata, which is not allowed."
-                  exit 1
-              }
 
               Write-Output "expected_version=$expectedVersion" | Out-File -FilePath $GITHUB_OUTPUT -Encoding utf8
               Write-Host "Expected version for crates: $expectedVersion"
@@ -78,7 +74,6 @@ jobs:
         run: |
           try {
               $expectedSemVer = [PSSemVer]::Parse($env:EXPECTED_VERSION)
-              $expectedSemVer.Metadata = "" # Remove metadata for comparison
           } catch {
               Write-Error "Expected version '$env:EXPECTED_VERSION' is not a valid semantic version."
               exit 1
@@ -99,7 +94,6 @@ jobs:
 
               $name = $package.name
               $semVer = [PSSemVer]::Parse($package.version)
-              $semVer.Metadata = "" # Remove metadata for comparison
 
               if ($semVer.CompareTo($expectedSemVer) -ne 0) {
                   if ($package.publish -ne $false) {

@@ -53,10 +53,6 @@ jobs:
           try {
               $rawVersion = $tagName -replace '^v', ''
               $Version = [PSSemVer]::Parse($rawVersion)
-              if ($Version.HasMetadata) {
-                  Write-Error "Extracted version '$rawVersion' contains metadata, which is not allowed."
-                  exit 1
-              }
               if ($Version.Prerelease) {
                   echo "::set-output name=prerelease::true"
               } else {
