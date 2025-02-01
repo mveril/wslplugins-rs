@@ -4,9 +4,10 @@
 //! does not meet the required version. It integrates with Windows error codes for seamless interop
 //! with WSL APIs.
 
+use crate::WSLVersion;
 use thiserror::Error;
 use windows::core::HRESULT;
-use wslplugins_sys::{WSLVersion, WSL_E_PLUGIN_REQUIRES_UPDATE};
+use wslpluginapi_sys::WSL_E_PLUGIN_REQUIRES_UPDATE;
 
 /// Represents an error when the current WSL version is unsupported.
 ///

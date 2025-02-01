@@ -7,7 +7,7 @@ use windows::{
     core::{Error as WinError, Result as WinResult},
     Win32::Foundation::ERROR_ALREADY_INITIALIZED,
 };
-use wslplugins_sys::WSLPluginAPIV1;
+use wslpluginapi_sys::WSLPluginAPIV1;
 
 use crate::WSLContext;
 
@@ -35,7 +35,7 @@ use super::{Result, WSLPluginV1};
 ///
 /// # Errors
 /// - Returns [WinError]`::from(`[ERROR_ALREADY_INITIALIZED]`)` if a plugin is already initialized.
-/// - Returns [WinError]`::from(`[WSL_E_PLUGIN_REQUIRES_UPDATE](wslplugins_sys::WSL_E_PLUGIN_REQUIRES_UPDATE)`)` error if the API version is insufficient.
+/// - Returns [WinError]`::from(`[WSL_E_PLUGIN_REQUIRES_UPDATE](wslpluginapi_sys::WSL_E_PLUGIN_REQUIRES_UPDATE)`)` error if the API version is insufficient.
 ///
 /// # Safety
 /// This function calls an unsafe API to check the reqred version. Ensure the provided API pointer
@@ -47,7 +47,7 @@ pub fn create_plugin_with_required_version<T: WSLPluginV1>(
     required_revision: u32,
 ) -> WinResult<T> {
     unsafe {
-        wslplugins_sys::require_version(required_major, required_minor, required_revision, api)
+        wslpluginapi_sys::require_version(required_major, required_minor, required_revision, api)
             .ok()?;
     }
     if let Some(context) = WSLContext::init(api.as_ref()) {

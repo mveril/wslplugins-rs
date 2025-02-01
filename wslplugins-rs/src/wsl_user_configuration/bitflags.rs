@@ -21,9 +21,9 @@ bitflags! {
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
     pub struct WSLUserConfigurationFlags: i32 {
         /// A custom Linux kernel is used for the WSL instance.
-        const CustomKernel = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel;
+        const CustomKernel = wslpluginapi_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel;
         /// A custom kernel command-line is used for the WSL instance.
-        const CustomKernelCommandLine = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernelCommandLine;
+        const CustomKernelCommandLine = wslpluginapi_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernelCommandLine;
     }
 }
 

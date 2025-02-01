@@ -8,7 +8,7 @@ use thiserror::Error;
 pub mod require_update_error;
 pub use require_update_error::Error as RequireUpdateError;
 use windows::core::{Error as WinError, HRESULT};
-use wslplugins_sys::WSL_E_PLUGIN_REQUIRES_UPDATE;
+use wslpluginapi_sys::WSL_E_PLUGIN_REQUIRES_UPDATE;
 
 /// A comprehensive error type for WSL plugins.
 ///

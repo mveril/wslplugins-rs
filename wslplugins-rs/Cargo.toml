@@ -1,7 +1,10 @@
 [package]
 name = "wslplugins-rs"
-version = "0.1.0-alpha.0"
-authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]
+authors.workspace = true
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+description.workspace = true
 edition = "2021"
 
 [dependencies.windows]
@@ -18,7 +21,7 @@ thiserror = "2.0.7"
 typed-path = ">0.1"
 widestring = { version = "1", features = ["alloc"] }
 wslplugins-macro = { path = "../wslplugins-macro", optional = true }
-wslplugins-sys = { path = "../wslplugins-sys" }
+wslpluginapi-sys = { git = "https://github.com/mveril/wslpluginapi-sys.git", branch = "main" }
 
 [dependencies.semver]
 version = ">0.1"

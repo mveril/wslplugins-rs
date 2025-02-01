@@ -21,10 +21,10 @@ flags! {
     #[derive(Hash)]
     pub enum WSLUserConfigurationFlags: i32 {
         /// A custom Linux kernel is used for the WSL instance.
-        CustomKernel = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel,
+        CustomKernel = wslpluginapi_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel,
         /// A custom kernel command-line is used for the WSL instance.
         CustomKernelCommandLine =
-            wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernelCommandLine,
+            wslpluginapi_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernelCommandLine,
     }
 }
 
