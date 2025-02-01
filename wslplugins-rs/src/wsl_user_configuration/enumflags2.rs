@@ -23,11 +23,11 @@ use enumflags2::{bitflags, BitFlags};
 #[repr(u32)]
 pub enum WSLUserConfigurationFlags {
     /// A custom Linux kernel is used for the WSL instance.
-    CustomKernel = wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel as u32,
+    CustomKernel = wslpluginapi_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernel as u32,
 
     /// A custom kernel command-line is used for the WSL instance.
     CustomKernelCommandLine =
-        wslplugins_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernelCommandLine as u32,
+        wslpluginapi_sys::WSLUserConfiguration_WSLUserConfigurationCustomKernelCommandLine as u32,
 }
 
 impl From<WSLUserConfiguration> for BitFlags<WSLUserConfigurationFlags> {

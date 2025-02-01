@@ -12,30 +12,31 @@ use crate::WSLUserConfiguration;
 ///
 /// This struct wraps the `WSLVmCreationSettings` structure from the WSL Plugin API, providing
 /// safe and idiomatic Rust access to its fields.
-pub struct WSLVmCreationSettings(wslplugins_sys::WSLVmCreationSettings);
+pub struct WSLVmCreationSettings(wslpluginapi_sys::WSLVmCreationSettings);
 
-impl From<wslplugins_sys::WSLVmCreationSettings> for WSLVmCreationSettings {
-    fn from(value: wslplugins_sys::WSLVmCreationSettings) -> Self {
+impl From<wslpluginapi_sys::WSLVmCreationSettings> for WSLVmCreationSettings {
+    fn from(value: wslpluginapi_sys::WSLVmCreationSettings) -> Self {
         WSLVmCreationSettings(value)
     }
 }
 
-impl From<WSLVmCreationSettings> for wslplugins_sys::WSLVmCreationSettings {
+impl From<WSLVmCreationSettings> for wslpluginapi_sys::WSLVmCreationSettings {
     fn from(value: WSLVmCreationSettings) -> Self {
         value.0
     }
 }
 
-impl AsRef<wslplugins_sys::WSLVmCreationSettings> for WSLVmCreationSettings {
-    fn as_ref(&self) -> &wslplugins_sys::WSLVmCreationSettings {
+impl AsRef<wslpluginapi_sys::WSLVmCreationSettings> for WSLVmCreationSettings {
+    fn as_ref(&self) -> &wslpluginapi_sys::WSLVmCreationSettings {
         &self.0
     }
 }
 
-impl AsRef<WSLVmCreationSettings> for wslplugins_sys::WSLVmCreationSettings {
+impl AsRef<WSLVmCreationSettings> for wslpluginapi_sys::WSLVmCreationSettings {
     fn as_ref(&self) -> &WSLVmCreationSettings {
         unsafe {
-            &*(self as *const wslplugins_sys::WSLVmCreationSettings as *const WSLVmCreationSettings)
+            &*(self as *const wslpluginapi_sys::WSLVmCreationSettings
+                as *const WSLVmCreationSettings)
         }
     }
 }
@@ -77,6 +78,6 @@ mod tests {
 
     #[test]
     fn test_layouts() {
-        test_transparence::<wslplugins_sys::WSLVmCreationSettings, WSLVmCreationSettings>();
+        test_transparence::<wslpluginapi_sys::WSLVmCreationSettings, WSLVmCreationSettings>();
     }
 }

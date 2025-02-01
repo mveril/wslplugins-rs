@@ -1,6 +1,6 @@
 use std::{env, fs::File, io::Write, path::PathBuf};
 use struct_field_names_as_array::FieldNamesAsSlice;
-use wslplugins_sys::WSLPluginHooksV1;
+use wslpluginapi_sys::WSLPluginHooksV1;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let items: &'static [&'static str] = WSLPluginHooksV1::FIELD_NAMES_AS_SLICE;

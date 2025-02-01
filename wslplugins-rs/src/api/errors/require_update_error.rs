@@ -5,7 +5,7 @@
 //! with WSL APIs.
 
 use crate::{WSLVersion};
-use wslplugins_sys::WSL_E_PLUGIN_REQUIRES_UPDATE;
+use wslpluginapi_sys::WSL_E_PLUGIN_REQUIRES_UPDATE;
 use thiserror::Error;
 use windows::core::HRESULT;
 

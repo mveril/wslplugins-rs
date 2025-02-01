@@ -5,11 +5,11 @@ use std::{
 
 #[repr(transparent)]
 #[derive(Clone, Eq)]
-pub struct WSLVersion(wslplugins_sys::WSLVersion);
+pub struct WSLVersion(wslpluginapi_sys::WSLVersion);
 
 impl WSLVersion {
     pub fn new(major: u32, minor: u32, revision: u32) -> Self {
-        wslplugins_sys::WSLVersion {
+        wslpluginapi_sys::WSLVersion {
             Major: major,
             Minor: minor,
             Revision: revision,
@@ -42,26 +42,26 @@ impl WSLVersion {
     }
 }
 
-impl From<wslplugins_sys::WSLVersion> for WSLVersion {
-    fn from(value: wslplugins_sys::WSLVersion) -> Self {
+impl From<wslpluginapi_sys::WSLVersion> for WSLVersion {
+    fn from(value: wslpluginapi_sys::WSLVersion) -> Self {
         WSLVersion(value)
     }
 }
 
-impl From<WSLVersion> for wslplugins_sys::WSLVersion {
+impl From<WSLVersion> for wslpluginapi_sys::WSLVersion {
     fn from(value: WSLVersion) -> Self {
         value.0
     }
 }
 
-impl AsRef<WSLVersion> for wslplugins_sys::WSLVersion {
+impl AsRef<WSLVersion> for wslpluginapi_sys::WSLVersion {
     fn as_ref(&self) -> &WSLVersion {
-        unsafe { &*(self as *const wslplugins_sys::WSLVersion as *const WSLVersion) }
+        unsafe { &*(self as *const wslpluginapi_sys::WSLVersion as *const WSLVersion) }
     }
 }
 
-impl AsRef<wslplugins_sys::WSLVersion> for WSLVersion {
-    fn as_ref(&self) -> &wslplugins_sys::WSLVersion {
+impl AsRef<wslpluginapi_sys::WSLVersion> for WSLVersion {
+    fn as_ref(&self) -> &wslpluginapi_sys::WSLVersion {
         &self.0
     }
 }

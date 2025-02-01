@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 wslplugins-rs = { path = "../wslplugins-rs", features = ["macro"] }
-wslplugins-sys = { path = "../wslplugins-sys" }
+wslpluginapi-sys = { git = "https://github.com/mveril/wslpluginapi-sys.git", branch = "main" }
 [dependencies.windows]
 version = "0.58"
 features = ["Win32_Foundation"]

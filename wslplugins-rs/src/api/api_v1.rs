@@ -1,4 +1,4 @@
-extern crate wslplugins_sys;
+extern crate wslpluginapi_sys;
 #[cfg(doc)]
 use super::Error;
 use super::Result;
@@ -24,7 +24,7 @@ use windows::{
     Win32::Foundation::BOOL,
 };
 
-use wslplugins_sys::WSLPluginAPIV1;
+use wslpluginapi_sys::WSLPluginAPIV1;
 
 use super::utils::check_required_version_result;
 

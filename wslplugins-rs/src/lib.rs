@@ -70,6 +70,6 @@ pub use wsl_version::WSLVersion;
 #[cfg(feature = "macro")]
 pub use wslplugins_macro::wsl_plugin_v1;
 
-/// Re-exports the `wslplugins_sys` crate as `sys` when the `sys` feature is enabled.
+/// Re-exports the `wslpluginapi_sys` crate as `sys` when the `sys` feature is enabled.
 #[cfg(feature = "sys")]
-pub use wslplugins_sys as sys;
+pub use wslpluginapi_sys as sys;

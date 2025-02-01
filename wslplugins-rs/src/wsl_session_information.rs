@@ -3,7 +3,7 @@
 //! This module provides a safe abstraction over the `WSLSessionInformation` structure
 //! from the WSL Plugin API, allowing access to session details in an idiomatic Rust interface.
 
-extern crate wslplugins_sys;
+extern crate wslpluginapi_sys;
 use core::hash;
 use std::fmt;
 use windows::Win32::Foundation::*;
@@ -13,7 +13,7 @@ use windows::Win32::Security::PSID;
 ///
 /// This struct wraps the `WSLSessionInformation` provided by the WSL Plugin API and
 /// provides safe, idiomatic access to its fields.
-pub struct WSLSessionInformation(wslplugins_sys::WSLSessionInformation);
+pub struct WSLSessionInformation(wslpluginapi_sys::WSLSessionInformation);
 
 impl WSLSessionInformation {
     /// Retrieves the session ID.
@@ -41,28 +41,28 @@ impl WSLSessionInformation {
     }
 }
 
-impl From<wslplugins_sys::WSLSessionInformation> for WSLSessionInformation {
-    fn from(value: wslplugins_sys::WSLSessionInformation) -> Self {
+impl From<wslpluginapi_sys::WSLSessionInformation> for WSLSessionInformation {
+    fn from(value: wslpluginapi_sys::WSLSessionInformation) -> Self {
         WSLSessionInformation(value)
     }
 }
 
-impl From<WSLSessionInformation> for wslplugins_sys::WSLSessionInformation {
+impl From<WSLSessionInformation> for wslpluginapi_sys::WSLSessionInformation {
     fn from(value: WSLSessionInformation) -> Self {
         value.0
     }
 }
 
-impl AsRef<WSLSessionInformation> for wslplugins_sys::WSLSessionInformation {
+impl AsRef<WSLSessionInformation> for wslpluginapi_sys::WSLSessionInformation {
     fn as_ref(&self) -> &WSLSessionInformation {
         unsafe {
-            &*(self as *const wslplugins_sys::WSLSessionInformation as *const WSLSessionInformation)
+            &*(self as *const wslpluginapi_sys::WSLSessionInformation as *const WSLSessionInformation)
         }
     }
 }
 
-impl AsRef<wslplugins_sys::WSLSessionInformation> for WSLSessionInformation {
-    fn as_ref(&self) -> &wslplugins_sys::WSLSessionInformation {
+impl AsRef<wslpluginapi_sys::WSLSessionInformation> for WSLSessionInformation {
+    fn as_ref(&self) -> &wslpluginapi_sys::WSLSessionInformation {
         &self.0
     }
 }
@@ -112,6 +112,6 @@ mod tests {
 
     #[test]
     fn test_layouts() {
-        test_transparence::<wslplugins_sys::WSLSessionInformation, WSLSessionInformation>();
+        test_transparence::<wslpluginapi_sys::WSLSessionInformation, WSLSessionInformation>();
     }
 }
