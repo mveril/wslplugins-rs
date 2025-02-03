@@ -14,7 +14,7 @@ heck = "0.5"
 strum = { version = "0.26.3", features = ["derive"] }
 
 [build-dependencies]
-wslpluginapi-sys = { git = "https://github.com/mveril/wslpluginapi-sys.git", branch = "main", features = [
+wslpluginapi-sys = { version = "0.1.0-beta.1+2.1.3", features = [
   "hooks-field-names",
 ] }
 quote = "*"

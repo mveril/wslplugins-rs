@@ -15,3 +15,6 @@ edition = "2021"
 license = "MIT"
 repository = "https://github.com/mveril/wslplugins-rs"
 description = "A Rust framework for developing WSL plugins using safe and idiomatic Rust."
+
+[patch.crates-io]
+wslpluginapi-sys = { git = "https://github.com/mveril/wslpluginapi-sys.git", branch = "release/0.1-beta.1+2.1.3" }
