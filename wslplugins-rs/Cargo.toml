@@ -21,7 +21,7 @@ thiserror = "2.0.7"
 typed-path = ">0.1"
 widestring = { version = "1", features = ["alloc"] }
 wslplugins-macro = { path = "../wslplugins-macro", optional = true }
-wslpluginapi-sys = { git = "https://github.com/mveril/wslpluginapi-sys.git", branch = "main" }
+wslpluginapi-sys = "0.1.0-beta.1+2.1.3"
 
 [dependencies.semver]
 version = ">0.1"
