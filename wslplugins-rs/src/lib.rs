@@ -44,6 +44,7 @@ mod core_distribution_information;
 pub(crate) mod cstring_ext;
 mod distribution_information;
 mod offline_distribution_information;
+pub mod wsl_session_information_builder;
 mod utils;
 mod wsl_context;
 mod wsl_session_information;

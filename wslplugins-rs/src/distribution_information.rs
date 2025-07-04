@@ -21,11 +21,13 @@ use crate::api::{
 use crate::core_distribution_information::CoreDistributionInformation;
 use crate::WSLContext;
 use crate::WSLVersion;
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
+use std::mem::ManuallyDrop;
 use std::os::windows::ffi::OsStringExt;
-use windows::core::GUID;
+use widestring::U16CString;
+use windows::core::{GUID, PCWSTR};
 
 /// Represents detailed information about a WSL distribution.
 ///
@@ -45,7 +47,8 @@ impl AsRef<DistributionInformation> for wslpluginapi_sys::WSLDistributionInforma
 
 impl From<DistributionInformation> for wslpluginapi_sys::WSLDistributionInformation {
     fn from(value: DistributionInformation) -> Self {
-        value.0
+        let value = ManuallyDrop::new(value);
+        unsafe { std::ptr::read(&value.0) }
     }
 }
 
@@ -62,6 +65,29 @@ impl From<wslpluginapi_sys::WSLDistributionInformation> for DistributionInformat
 }
 
 impl DistributionInformation {
+    pub fn new<S: AsRef<OsStr>>(
+        id: GUID,
+        name: S,
+        package_family_name: Option<S>,
+        init_pid: Option<u32>,
+        pid_namespace: Option<u64>,
+    ) -> Self {
+        let name_u16 = ManuallyDrop::new(U16CString::from_os_str_truncate(name.as_ref()));
+        let package_familly_name = package_family_name
+            .map(|pfn| ManuallyDrop::new(U16CString::from_os_str_truncate((pfn))));
+        let pfn_ptr = match package_familly_name {
+            Some(pfn) => PCWSTR::from_raw(pfn.as_ptr()),
+            None => PCWSTR::null(),
+        };
+        Self(wslpluginapi_sys::WSLDistributionInformation {
+            Id: id,
+            Name: PCWSTR::from_raw(name_u16.as_ptr()),
+            PackageFamilyName: pfn_ptr,
+            InitPid: init_pid.unwrap_or_default(),
+            PidNamespace: pid_namespace.unwrap_or_default(),
+        })
+    }
+
     /// Retrieves the PID of the init process.
     ///
     /// This requires API version 2.0.5 or higher. If the current API version does not meet
@@ -175,11 +201,12 @@ impl Debug for DistributionInformation {
 impl Drop for DistributionInformation {
     fn drop(&mut self) {
         unsafe {
-            widestring::U16CString::from_raw(self.0.Name.as_ptr() as *mut _);
+            let _ = widestring::U16CString::from_raw(self.0.Name.as_ptr() as *mut _);
         }
         if !self.0.PackageFamilyName.is_null() {
             unsafe {
-                widestring::U16CString::from_raw(self.0.PackageFamilyName.as_ptr() as *mut _);
+                let _ =
+                    widestring::U16CString::from_raw(self.0.PackageFamilyName.as_ptr() as *mut _);
             }
         }
     }

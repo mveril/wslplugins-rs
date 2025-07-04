@@ -20,7 +20,7 @@ pub struct WSLContext {
 }
 
 impl WSLContext {
-    /// Retrieves the current `WSLContext` instance, if it has been initialized.
+    /// Retrieves the current [WSLContext] instance, if it has been initialized.
     ///
     /// # Returns
     /// - `Some(&'static WSLContext)`: If the context has been initialized.
