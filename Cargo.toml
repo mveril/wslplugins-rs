@@ -7,6 +7,8 @@ members = [
     "wslplugins-macro-core",
     "wslplugins-macro-tests",
 ]
+[workspace.dependencies]
+wslpluginapi-sys = "0.1.0-rc.1"
 
 [workspace.package]
 authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]
@@ -17,4 +19,4 @@ repository = "https://github.com/mveril/wslplugins-rs"
 description = "A Rust framework for developing WSL plugins using safe and idiomatic Rust."
 
 [patch.crates-io]
-wslpluginapi-sys = { git = "https://github.com/mveril/wslpluginapi-sys.git", branch = "release/0.1-beta.1+2.1.3" }
+wslpluginapi-sys = { version = "0.1.0-rc.1", git = "https://github.com/mveril/wslpluginapi-sys.git", branch = "release/0.1.0-rc.1+2.4.4" }

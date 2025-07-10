@@ -10,9 +10,10 @@ publish = false
 
 [dependencies]
 wslplugins-rs = { path = "../wslplugins-rs", features = ["macro"] }
-wslpluginapi-sys = { git = "https://github.com/mveril/wslpluginapi-sys.git", branch = "main" }
+wslpluginapi-sys.workspace = true
+
 [dependencies.windows]
-version = "0.58"
+version = "0.61"
 features = ["Win32_Foundation"]
 
 [dev-dependencies]
