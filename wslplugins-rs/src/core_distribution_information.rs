@@ -9,6 +9,7 @@
 //! of a distribution. Implementing this trait allows for seamless integration with systems
 //! that need to handle multiple distributions in a consistent manner.
 
+use crate::api::errors::require_update_error::Result;
 use std::ffi::OsString;
 use windows::core::GUID;
 
@@ -36,7 +37,27 @@ pub trait CoreDistributionInformation {
     /// The package family name is applicable if the distribution is packaged.
     ///
     /// # Returns
-    /// - `Some`(OsString)`: If the distribution has a package family name.
+    /// - `Some(package_family_name)`: If the distribution has a package family name.
     /// - `None`: If the distribution is not packaged or the information is unavailable.
     fn package_family_name(&self) -> Option<OsString>;
+
+    /// Retrieves the type of distribution (ubuntu, debian, ...), if available.
+    ///
+    /// # Returns
+    /// - `Ok(Some(flavor)`: If the distribution has a flavor.
+    /// - `Ok(None)`: If the distribution does not have a falvour.
+    /// - `Err(e)`: if the API version is too low to retrieve this information.
+    /// # Errors
+    /// Returns an error if the API version is too low to retrieve this information.
+    fn flavor(&self) -> Result<Option<OsString>>;
+
+    /// Retrieves the version of the distribution, if available
+    ///
+    /// # Returns
+    /// - `Ok(Some(version)`: If the distribution version is available.
+    /// - `Ok(None)`: If the distribution does not have a specified version.
+    /// - `Err(e)`: if the API version is too low to retrieve this information.
+    /// # Errors
+    /// Returns an error if the API version is too low to retrieve this information.
+    fn version(&self) -> Result<Option<OsString>>;
 }

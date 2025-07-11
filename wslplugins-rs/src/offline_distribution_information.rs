@@ -4,7 +4,7 @@
 //! offering a safe and idiomatic Rust interface for accessing offline distribution details.
 
 extern crate wslpluginapi_sys;
-use crate::core_distribution_information::CoreDistributionInformation;
+use crate::{api::{errors::require_update_error::Result, utils::check_required_version_result_from_context}, core_distribution_information::CoreDistributionInformation, WSLContext, WSLVersion};
 use std::{
     ffi::OsString,
     fmt::{Debug, Display},
@@ -70,6 +70,36 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
                 None
             } else {
                 Some(OsString::from_wide(ptr.as_wide()))
+            }
+        }
+    }
+
+    fn flavor(&self) -> Result<Option<OsString>> {
+        check_required_version_result_from_context(
+            WSLContext::get_current(),
+            &WSLVersion::new(2, 4, 4),
+        )?;
+        unsafe {
+            let ptr = self.0.Flavor;
+            if ptr.is_null() || ptr.is_empty() {
+                Ok(None)
+            } else {
+                Ok(Some(OsString::from_wide(ptr.as_wide())))
+            }
+        }
+    }
+
+    fn version(&self) -> Result<Option<OsString>> {
+        check_required_version_result_from_context(
+            WSLContext::get_current(),
+            &WSLVersion::new(2, 4, 4),
+        )?;
+        unsafe {
+            let ptr = self.0.Flavor;
+            if ptr.is_null() || ptr.is_empty() {
+                Ok(None)
+            } else {
+                Ok(Some(OsString::from_wide(ptr.as_wide())))
             }
         }
     }
