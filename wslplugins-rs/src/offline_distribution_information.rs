@@ -4,7 +4,13 @@
 //! offering a safe and idiomatic Rust interface for accessing offline distribution details.
 
 extern crate wslpluginapi_sys;
-use crate::{api::{errors::require_update_error::Result, utils::check_required_version_result_from_context}, core_distribution_information::CoreDistributionInformation, WSLContext, WSLVersion};
+use crate::{
+    api::{
+        errors::require_update_error::Result, utils::check_required_version_result_from_context,
+    },
+    core_distribution_information::CoreDistributionInformation,
+    WSLContext, WSLVersion,
+};
 use std::{
     ffi::OsString,
     fmt::{Debug, Display},
@@ -136,11 +142,26 @@ impl Debug for OfflineDistributionInformation {
     ///
     /// The output includes the distribution's name, ID, and package family name.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("DistributionInformation")
-            .field("name", &self.name())
+        let mut dbg = f.debug_struct("DistributionInformation");
+        dbg.field("name", &self.name())
             .field("id", &self.id())
-            .field("package_family_name", &self.package_family_name())
-            .finish()
+            .field("package_family_name", &self.package_family_name());
+        let mut exhaustive = true;
+        if let Ok(flavor) = self.flavor() {
+            dbg.field("flavor", &flavor);
+        } else {
+            exhaustive = false;
+        }
+        if let Ok(version) = self.version() {
+            dbg.field("version", &version);
+        } else {
+            exhaustive = false;
+        }
+        if exhaustive {
+            dbg.finish()
+        } else {
+            dbg.finish_non_exhaustive()
+        }
     }
 }
 

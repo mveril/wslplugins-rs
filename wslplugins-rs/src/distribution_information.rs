@@ -181,8 +181,26 @@ impl Debug for DistributionInformation {
             .field("id", &self.id())
             .field("package_family_name", &self.package_family_name())
             .field("pid_namespace", &self.pid_namespace());
+        let mut exhaustive = true;
+
         if let Ok(pid) = self.init_pid() {
-            dbg.field("init_pid", &pid).finish()
+            dbg.field("init_pid", &pid);
+        } else {
+            exhaustive = false;
+        };
+        if let Ok(flavor) = self.flavor() {
+            dbg.field("flavor", &flavor);
+        } else {
+            exhaustive = false;
+        };
+        if let Ok(version) = self.version() {
+            dbg.field("version", &version);
+        } else {
+            exhaustive = false;
+        };
+
+        if exhaustive {
+            dbg.finish()
         } else {
             dbg.finish_non_exhaustive()
         }
