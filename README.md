@@ -130,7 +130,7 @@ Contributions to WSLPlugins-rs are welcome! If you have improvements or bug fixe
 
 ## License
 
-WSLPlugins-rs is released under the MIT License. For more information, please check the LICENSE file in the repository.
+WSLPlugins-rs is Licensed under either MIT or Apache-2.0, at your option. For more information, please check the LICENSE-* files in the repository.
 
 ## Contact
 

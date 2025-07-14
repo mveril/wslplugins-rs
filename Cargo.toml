@@ -14,7 +14,7 @@ wslpluginapi-sys = "0.1.0-rc.1"
 authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]
 version = "0.1.0-alpha.0"
 edition = "2021"
-license = "MIT"
+license = "Apache-2.0 OR MIT"
 repository = "https://github.com/mveril/wslplugins-rs"
 description = "A Rust framework for developing WSL plugins using safe and idiomatic Rust."
 
