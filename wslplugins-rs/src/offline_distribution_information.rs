@@ -129,18 +129,12 @@ impl Hash for OfflineDistributionInformation {
 }
 
 impl Display for OfflineDistributionInformation {
-    /// Formats the offline distribution information for display.
-    ///
-    /// The output includes the distribution's name and ID.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         unsafe { write!(f, "{:} {{{:?}}}", self.0.Name.display(), self.0.Id) }
     }
 }
 
 impl Debug for OfflineDistributionInformation {
-    /// Formats the offline distribution information for debugging.
-    ///
-    /// The output includes the distribution's name, ID, and package family name.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut dbg = f.debug_struct("DistributionInformation");
         dbg.field("name", &self.name())

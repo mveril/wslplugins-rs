@@ -158,23 +158,12 @@ impl Hash for DistributionInformation {
 }
 
 impl Display for DistributionInformation {
-    /// Formats the distribution information for display.
-    ///
-    /// The output includes the distribution's name and ID.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         unsafe { write!(f, "{:} {{{:?}}}", self.0.Name.display(), self.0.Id) }
     }
 }
 
 impl Debug for DistributionInformation {
-    /// Formats the distribution information for debugging.
-    ///
-    /// The output includes:
-    /// - Name
-    /// - ID
-    /// - Package family name (if available)
-    /// - PID namespace
-    /// - Init PID (if available and the API version supports it)
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut dbg = f.debug_struct("DistributionInformation");
         dbg.field("name", &self.name())
