@@ -24,7 +24,7 @@ fn generate_hook_fns(hooks: &[Hooks]) -> Result<Vec<TokenStream>> {
         .iter()
         .map(|&mapping| {
             let ts = c_funcs_tokens::get_c_func_tokens(mapping)?.unwrap_or_else(|| {
-                panic!("{:?} does not match with predefined C hook value", mapping)
+                panic!("{mapping:?} does not match with predefined C hook value")
             });
             Ok(ts)
         })

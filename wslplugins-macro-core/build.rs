@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Generate each enum variant
     for item in items {
-        writeln!(file, "    {},", item)?;
+        writeln!(file, "    {item},")?;
     }
 
     // End the enum definition
