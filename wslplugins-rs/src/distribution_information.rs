@@ -12,7 +12,6 @@
 //! - Process ID (PID) of the init process (requires API version 2.0.5 or higher)
 //! - PID namespace
 
-extern crate wslpluginapi_sys;
 #[cfg(doc)]
 use crate::api::errors::require_update_error::Error;
 use crate::api::{
@@ -24,8 +23,9 @@ use crate::WSLVersion;
 use std::ffi::OsString;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
+use std::mem;
 use std::os::windows::ffi::OsStringExt;
-use windows::core::GUID;
+use windows::core::{GUID, PCWSTR};
 
 /// Represents detailed information about a WSL distribution.
 ///
@@ -91,11 +91,11 @@ impl DistributionInformation {
 
 impl CoreDistributionInformation for DistributionInformation {
     fn id(&self) -> GUID {
-        self.0.Id
+        unsafe { mem::transmute(self.0.Id) }
     }
 
     fn name(&self) -> OsString {
-        unsafe { OsString::from_wide(self.0.Name.as_wide()) }
+        unsafe { OsString::from_wide(PCWSTR::from_raw(self.0.Name).as_wide()) }
     }
 
     fn package_family_name(&self) -> Option<OsString> {
@@ -104,7 +104,7 @@ impl CoreDistributionInformation for DistributionInformation {
             if ptr.is_null() {
                 None
             } else {
-                Some(OsString::from_wide(ptr.as_wide()))
+                Some(OsString::from_wide(PCWSTR::from_raw(ptr).as_wide()))
             }
         }
     }
@@ -119,7 +119,7 @@ impl CoreDistributionInformation for DistributionInformation {
             if ptr.is_null() {
                 Ok(None)
             } else {
-                Ok(Some(OsString::from_wide(ptr.as_wide())))
+                Ok(Some(OsString::from_wide(PCWSTR::from_raw(ptr).as_wide())))
             }
         }
     }
@@ -134,7 +134,7 @@ impl CoreDistributionInformation for DistributionInformation {
             if ptr.is_null() {
                 Ok(None)
             } else {
-                Ok(Some(OsString::from_wide(ptr.as_wide())))
+                Ok(Some(OsString::from_wide(PCWSTR::from_raw(ptr).as_wide())))
             }
         }
     }
@@ -159,7 +159,14 @@ impl Hash for DistributionInformation {
 
 impl Display for DistributionInformation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        unsafe { write!(f, "{:} {{{:?}}}", self.0.Name.display(), self.0.Id) }
+        unsafe {
+            write!(
+                f,
+                "{:} {{{:?}}}",
+                PCWSTR::from_raw(self.0.Name).display(),
+                self.id()
+            )
+        }
     }
 }
 

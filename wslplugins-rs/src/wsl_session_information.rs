@@ -29,7 +29,7 @@ impl WSLSessionInformation {
     /// # Returns
     /// A [HANDLE] representing the user token.
     pub fn user_token(&self) -> HANDLE {
-        self.0.UserToken
+        HANDLE(self.0.UserToken)
     }
 
     /// Retrieves the user SID (security identifier) for the session.
@@ -37,7 +37,7 @@ impl WSLSessionInformation {
     /// # Returns
     /// A [PSID] representing the user SID.
     pub fn user_sid(&self) -> PSID {
-        self.0.UserSid
+        PSID(self.0.UserSid)
     }
 }
 

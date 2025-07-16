@@ -11,15 +11,14 @@ use log_instrument::instrument;
 use std::ffi::{CString, OsStr};
 use std::fmt::Debug;
 use std::iter::once;
-use std::mem::MaybeUninit;
+use std::mem::{self, MaybeUninit};
 use std::net::TcpStream;
 use std::os::windows::io::FromRawSocket;
 use std::os::windows::raw::SOCKET;
 use std::path::Path;
 use typed_path::Utf8UnixPath;
 use widestring::U16CString;
-use windows::core::{Result as WinResult, BOOL, GUID, PCSTR, PCWSTR};
-use windows::Win32::Networking::WinSock::SOCKET as WinSocket;
+use windows::core::{Result as WinResult, BOOL, GUID, HRESULT};
 
 use wslpluginapi_sys::WSLPluginAPIV1;
 
@@ -104,13 +103,13 @@ impl ApiV1 {
         let result = unsafe {
             self.0.MountFolder.unwrap_unchecked()(
                 session.id(),
-                PCWSTR::from_raw(encoded_windows_path.as_ptr()),
-                PCWSTR::from_raw(encoded_linux_path.as_ptr()),
-                BOOL::from(read_only),
-                PCWSTR::from_raw(encoded_name.as_ptr()),
+                encoded_windows_path.as_ptr(),
+                encoded_linux_path.as_ptr(),
+                BOOL::from(read_only).0,
+                encoded_name.as_ptr(),
             )
         };
-        result.ok()
+        HRESULT(result).ok()
     }
 
     /// Execute a program in the root namespace.
@@ -162,23 +161,23 @@ impl ApiV1 {
             .iter()
             .map(|&arg| CString::from_str_truncate(arg))
             .collect();
-        let mut args_ptrs: Vec<PCSTR> = c_args
+        let mut args_ptrs: Vec<*const u8> = c_args
             .iter()
-            .map(|arg| PCSTR::from_raw(arg.as_ptr() as *const u8))
-            .chain(Some(PCSTR::null()))
+            .map(|arg| arg.as_ptr() as *const u8)
+            .chain(once(std::ptr::null::<u8>()))
             .collect();
         let args_ptr = args_ptrs.as_mut_ptr();
-        let mut socket = MaybeUninit::<WinSocket>::uninit();
+        let mut socket = MaybeUninit::<usize>::uninit();
         let stream = unsafe {
-            self.0.ExecuteBinary.unwrap_unchecked()(
+            HRESULT(self.0.ExecuteBinary.unwrap_unchecked()(
                 session.id(),
-                PCSTR::from_raw(c_path.as_ptr()),
+                c_path.as_ptr(),
                 args_ptr,
                 socket.as_mut_ptr(),
-            )
+            ))
             .ok()?;
             let socket = socket.assume_init();
-            TcpStream::from_raw_socket(socket.0 as SOCKET)
+            TcpStream::from_raw_socket(socket as SOCKET)
         };
         Ok(stream)
     }
@@ -187,9 +186,7 @@ impl ApiV1 {
     #[cfg_attr(feature = "log-instrument", instrument)]
     pub(crate) fn plugin_error(&self, error: &OsStr) -> WinResult<()> {
         let error_utf16 = U16CString::from_os_str_truncate(error);
-        unsafe {
-            self.0.PluginError.unwrap_unchecked()(PCWSTR::from_raw(error_utf16.as_ptr())).ok()
-        }
+        HRESULT(unsafe { self.0.PluginError.unwrap_unchecked()(error_utf16.as_ptr()) }).ok()
     }
 
     /// Execute a program in a user distribution
@@ -241,29 +238,29 @@ impl ApiV1 {
             .copied()
             .chain(once(0))
             .collect();
-        let path_ptr = PCSTR::from_raw(c_path.as_ptr());
+        let path_ptr = c_path.as_ptr();
         let c_args: Vec<CString> = args
             .iter()
             .map(|&arg| CString::from_str_truncate(arg))
             .collect();
-        let mut args_ptrs: Vec<PCSTR> = c_args
+        let mut args_ptrs: Vec<_> = c_args
             .iter()
-            .map(|arg| PCSTR::from_raw(arg.as_ptr() as *const u8))
-            .chain(Some(PCSTR::null()))
+            .map(|arg| arg.as_ptr() as *const u8)
+            .chain(once(std::ptr::null()))
             .collect();
         let args_ptr = args_ptrs.as_mut_ptr();
-        let mut socket = MaybeUninit::<WinSocket>::uninit();
+        let mut socket = MaybeUninit::<usize>::uninit();
         let stream = unsafe {
-            self.0.ExecuteBinaryInDistribution.unwrap_unchecked()(
+            HRESULT(self.0.ExecuteBinaryInDistribution.unwrap_unchecked()(
                 session.id(),
-                &distribution_id,
+                &mem::transmute(distribution_id),
                 path_ptr,
                 args_ptr,
                 socket.as_mut_ptr(),
-            )
+            ))
             .ok()?;
             let socket = socket.assume_init();
-            TcpStream::from_raw_socket(socket.0 as SOCKET)
+            TcpStream::from_raw_socket(socket as SOCKET)
         };
         Ok(stream)
     }

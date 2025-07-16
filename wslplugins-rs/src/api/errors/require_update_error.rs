@@ -51,7 +51,7 @@ impl From<Error> for HRESULT {
     /// # Returns
     /// - `[WSL_E_PLUGIN_REQUIRES_UPDATE]: Indicates the WSL version is insufficient for the plugin.
     fn from(_: Error) -> Self {
-        WSL_E_PLUGIN_REQUIRES_UPDATE
+        HRESULT(WSL_E_PLUGIN_REQUIRES_UPDATE)
     }
 }
 

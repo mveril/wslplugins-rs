@@ -52,7 +52,7 @@ impl From<Error> for WinError {
     /// A `WinError` representing the error.
     fn from(value: Error) -> Self {
         match value {
-            Error::RequiresUpdate { .. } => WSL_E_PLUGIN_REQUIRES_UPDATE.into(),
+            Error::RequiresUpdate { .. } => HRESULT(WSL_E_PLUGIN_REQUIRES_UPDATE).into(),
             Error::WinError(error) => error,
         }
     }

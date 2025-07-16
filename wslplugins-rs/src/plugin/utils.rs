@@ -4,7 +4,7 @@
 //! enabling smooth integration with the WSL Plugin API.
 
 use windows::{
-    core::{Error as WinError, Result as WinResult},
+    core::{Error as WinError, Result as WinResult, HRESULT},
     Win32::Foundation::ERROR_ALREADY_INITIALIZED,
 };
 use wslpluginapi_sys::WSLPluginAPIV1;
@@ -47,8 +47,13 @@ pub fn create_plugin_with_required_version<T: WSLPluginV1>(
     required_revision: u32,
 ) -> WinResult<T> {
     unsafe {
-        wslpluginapi_sys::require_version(required_major, required_minor, required_revision, api)
-            .ok()?;
+        HRESULT(wslpluginapi_sys::require_version(
+            required_major,
+            required_minor,
+            required_revision,
+            api,
+        ))
+        .ok()?;
     }
     if let Some(context) = WSLContext::init(api.as_ref()) {
         let plugin = T::try_new(context)?;

@@ -13,10 +13,10 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
             extern "C" fn #c_method_ident(
                 session: *const ::wslplugins_rs::sys::WSLSessionInformation,
                 settings: *const ::wslplugins_rs::sys::WSLVmCreationSettings,
-            ) -> ::windows::core::HRESULT {
+            ) -> i32 {
                 let session_ptr = unsafe { &*session };
                 let settings_ptr = unsafe { &*settings };
-                if let Some(plugin) = PLUGIN.get() {
+                let hresult: ::windows::core::HRESULT = if let Some(plugin) = PLUGIN.get() {
                     let result = plugin.#trait_method_ident(
                         session_ptr.as_ref(),
                         settings_ptr.as_ref(),
@@ -24,29 +24,31 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                     ::wslplugins_rs::plugin::utils::consume_to_win_result(result).into()
                 } else {
                     ::windows::Win32::Foundation::E_FAIL
-                }
+                };
+                hresult.0
             }
         }),
         Hooks::OnVMStopping => Some(quote! {
             extern "C" fn #c_method_ident(
                 session: *const ::wslplugins_rs::sys::WSLSessionInformation
-            ) -> ::windows::core::HRESULT {
+            ) -> i32 {
                 let session_ptr = unsafe { &*session };
-                if let Some(plugin) = PLUGIN.get() {
+                let hresult: ::windows::core::HRESULT = if let Some(plugin) = PLUGIN.get() {
                     plugin.#trait_method_ident(session_ptr.as_ref()).into()
                 } else {
                     ::windows::Win32::Foundation::E_FAIL
-                }
+                };
+                hresult.0
             }
         }),
         Hooks::OnDistributionStarted => Some(quote! {
             extern "C" fn #c_method_ident(
                 session: *const ::wslplugins_rs::sys::WSLSessionInformation,
                 distribution: *const ::wslplugins_rs::sys::WSLDistributionInformation,
-            ) -> ::windows::core::HRESULT {
+            ) -> i32 {
                 let session_ptr = unsafe { &*session };
                 let distribution_ptr = unsafe { &*distribution };
-                if let Some(plugin) = PLUGIN.get() {
+                let hresult: ::windows::core::HRESULT = if let Some(plugin) = PLUGIN.get() {
                     let result = plugin.#trait_method_ident(
                         session_ptr.as_ref(),
                         distribution_ptr.as_ref(),
@@ -54,58 +56,62 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                     ::wslplugins_rs::plugin::utils::consume_to_win_result(result).into()
                 } else {
                     ::windows::Win32::Foundation::E_FAIL
-                }
+                };
+                hresult.0
             }
         }),
         Hooks::OnDistributionStopping => Some(quote! {
             extern "C" fn #c_method_ident(
                 session: *const ::wslplugins_rs::sys::WSLSessionInformation,
                 distribution: *const ::wslplugins_rs::sys::WSLDistributionInformation,
-            ) -> ::windows::core::HRESULT {
+            ) -> i32 {
                 let session_ptr = unsafe { &*session };
                 let distribution_ptr = unsafe { &*distribution };
-                if let Some(plugin) = PLUGIN.get() {
+                let hresult: ::windows::core::HRESULT = if let Some(plugin) = PLUGIN.get() {
                     plugin.#trait_method_ident(
                         session_ptr.as_ref(),
                         distribution_ptr.as_ref(),
                     ).into()
                 } else {
                     ::windows::Win32::Foundation::E_FAIL
-                }
+                };
+                hresult.0
             }
         }),
         Hooks::OnDistributionRegistered => Some(quote! {
             extern "C" fn #c_method_ident(
                 session: *const ::wslplugins_rs::sys::WSLSessionInformation,
                 distribution:  *const ::wslplugins_rs::sys::WSLOfflineDistributionInformation,
-            ) -> ::windows::core::HRESULT {
+            ) -> i32 {
                 let session_ptr = unsafe { &*session };
                 let distribution_ptr = unsafe { &*distribution };
-                if let Some(plugin) = PLUGIN.get() {
+                let hresult: ::windows::core::HRESULT = if let Some(plugin) = PLUGIN.get() {
                     plugin.#trait_method_ident(
                         session_ptr.as_ref(),
                         distribution_ptr.as_ref(),
                     ).into()
                 } else {
                     ::windows::Win32::Foundation::E_FAIL
-                }
+                };
+                hresult.0
             }
         }),
         Hooks::OnDistributionUnregistered => Some(quote! {
             extern "C" fn #c_method_ident(
                 session: *const ::wslplugins_rs::sys::WSLSessionInformation,
                 distribution:  *const ::wslplugins_rs::sys::WSLOfflineDistributionInformation,
-            ) -> ::windows::core::HRESULT {
+            ) -> i32 {
                 let session_ptr = unsafe { &*session };
                 let distribution_ptr = unsafe { &*distribution };
-                if let Some(plugin) = PLUGIN.get() {
+                let hresult: ::windows::core::HRESULT = if let Some(plugin) = PLUGIN.get() {
                     plugin.#trait_method_ident(
                         session_ptr.as_ref(),
                         distribution_ptr.as_ref(),
                     ).into()
                 } else {
                     ::windows::Win32::Foundation::E_FAIL
-                }
+                };
+                hresult.0
             }
         }),
     };

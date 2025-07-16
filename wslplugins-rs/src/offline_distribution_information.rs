@@ -15,9 +15,10 @@ use std::{
     ffi::OsString,
     fmt::{Debug, Display},
     hash::Hash,
+    mem,
     os::windows::ffi::OsStringExt,
 };
-use windows::core::GUID;
+use windows::core::{GUID, PCWSTR};
 
 /// A wrapper around `WslOfflineDistributionInformation` providing a safe interface.
 ///
@@ -56,12 +57,12 @@ impl AsRef<OfflineDistributionInformation> for wslpluginapi_sys::WslOfflineDistr
 impl CoreDistributionInformation for OfflineDistributionInformation {
     /// Retrieves the [GUID] of the offline distribution.
     fn id(&self) -> GUID {
-        self.0.Id
+        unsafe { mem::transmute(self.0.Id) }
     }
 
     /// Retrieves the name of the offline distribution as an [OsString].
     fn name(&self) -> OsString {
-        unsafe { OsString::from_wide(self.0.Name.as_wide()) }
+        unsafe { OsString::from_wide(PCWSTR::from_raw(self.0.Name).as_wide()) }
     }
 
     /// Retrieves the package family name of the offline distribution, if available.
@@ -71,7 +72,7 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
     /// - `None`: If the package family name is null or empty.
     fn package_family_name(&self) -> Option<OsString> {
         unsafe {
-            let ptr = self.0.PackageFamilyName;
+            let ptr = PCWSTR::from_raw(self.0.PackageFamilyName);
             if ptr.is_null() || ptr.is_empty() {
                 None
             } else {
@@ -86,7 +87,7 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
             &WSLVersion::new(2, 4, 4),
         )?;
         unsafe {
-            let ptr = self.0.Flavor;
+            let ptr = PCWSTR::from_raw(self.0.Flavor);
             if ptr.is_null() || ptr.is_empty() {
                 Ok(None)
             } else {
@@ -101,7 +102,7 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
             &WSLVersion::new(2, 4, 4),
         )?;
         unsafe {
-            let ptr = self.0.Flavor;
+            let ptr = PCWSTR::from_raw(self.0.Flavor);
             if ptr.is_null() || ptr.is_empty() {
                 Ok(None)
             } else {
@@ -130,7 +131,14 @@ impl Hash for OfflineDistributionInformation {
 
 impl Display for OfflineDistributionInformation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        unsafe { write!(f, "{:} {{{:?}}}", self.0.Name.display(), self.0.Id) }
+        unsafe {
+            write!(
+                f,
+                "{:} {{{:?}}}",
+                PCWSTR::from_raw(self.0.Name).display(),
+                self.id()
+            )
+        }
     }
 }
 
