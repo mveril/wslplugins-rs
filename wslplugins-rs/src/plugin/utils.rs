@@ -30,7 +30,7 @@ use super::{Result, WSLPluginV1};
 /// - `required_revision`: The required revision of the API.
 ///
 /// # Returns
-/// - `Ok(T)`: The created plugin instance.
+/// - `Ok(plugin)`: The created plugin instance.
 /// - `Err(WinError)`: If the API version is insufficient or the plugin is already initialized.
 ///
 /// # Errors

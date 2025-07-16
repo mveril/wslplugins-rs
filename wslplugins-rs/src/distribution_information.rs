@@ -68,9 +68,9 @@ impl DistributionInformation {
     /// the requirement, an error is returned.
     ///
     /// # Returns
-    /// - `Ok(u32)`: The PID of the init process.
+    /// - `Ok(pid)`: The PID of the init process.
     /// # Errors
-    /// [Error]: If the runtime version version is insufficient if no [WSLContext] found we assume returned value is accessible.
+    /// [Error]: If the runtime version version is insufficient.
     pub fn init_pid(&self) -> Result<u32> {
         check_required_version_result_from_context(
             WSLContext::get_current(),
@@ -90,27 +90,14 @@ impl DistributionInformation {
 }
 
 impl CoreDistributionInformation for DistributionInformation {
-    /// Retrieves the unique ID of the distribution.
-    ///
-    /// # Returns
-    /// A reference to the [GUID] representing the distribution's unique identifier.
     fn id(&self) -> GUID {
         self.0.Id
     }
 
-    /// Retrieves the name of the distribution.
-    ///
-    /// # Returns
-    /// An [OsString] containing the display name of the distribution.
     fn name(&self) -> OsString {
         unsafe { OsString::from_wide(self.0.Name.as_wide()) }
     }
 
-    /// Retrieves the package family name of the distribution, if available.
-    ///
-    /// # Returns
-    /// - `Some(OsString)`: If the distribution has a package family name.
-    /// - `None`: If the distribution is not packaged or the information is unavailable.
     fn package_family_name(&self) -> Option<OsString> {
         unsafe {
             let ptr = self.0.PackageFamilyName;
@@ -118,6 +105,36 @@ impl CoreDistributionInformation for DistributionInformation {
                 None
             } else {
                 Some(OsString::from_wide(ptr.as_wide()))
+            }
+        }
+    }
+
+    fn flavor(&self) -> Result<Option<OsString>> {
+        check_required_version_result_from_context(
+            WSLContext::get_current(),
+            &WSLVersion::new(2, 4, 4),
+        )?;
+        unsafe {
+            let ptr = self.0.Flavor;
+            if ptr.is_null() {
+                Ok(None)
+            } else {
+                Ok(Some(OsString::from_wide(ptr.as_wide())))
+            }
+        }
+    }
+
+    fn version(&self) -> Result<Option<OsString>> {
+        check_required_version_result_from_context(
+            WSLContext::get_current(),
+            &WSLVersion::new(2, 4, 4),
+        )?;
+        unsafe {
+            let ptr = self.0.Flavor;
+            if ptr.is_null() {
+                Ok(None)
+            } else {
+                Ok(Some(OsString::from_wide(ptr.as_wide())))
             }
         }
     }
@@ -141,31 +158,38 @@ impl Hash for DistributionInformation {
 }
 
 impl Display for DistributionInformation {
-    /// Formats the distribution information for display.
-    ///
-    /// The output includes the distribution's name and ID.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         unsafe { write!(f, "{:} {{{:?}}}", self.0.Name.display(), self.0.Id) }
     }
 }
 
 impl Debug for DistributionInformation {
-    /// Formats the distribution information for debugging.
-    ///
-    /// The output includes:
-    /// - Name
-    /// - ID
-    /// - Package family name (if available)
-    /// - PID namespace
-    /// - Init PID (if available and the API version supports it)
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut dbg = f.debug_struct("DistributionInformation");
         dbg.field("name", &self.name())
             .field("id", &self.id())
             .field("package_family_name", &self.package_family_name())
             .field("pid_namespace", &self.pid_namespace());
+        let mut exhaustive = true;
+
         if let Ok(pid) = self.init_pid() {
-            dbg.field("init_pid", &pid).finish()
+            dbg.field("init_pid", &pid);
+        } else {
+            exhaustive = false;
+        };
+        if let Ok(flavor) = self.flavor() {
+            dbg.field("flavor", &flavor);
+        } else {
+            exhaustive = false;
+        };
+        if let Ok(version) = self.version() {
+            dbg.field("version", &version);
+        } else {
+            exhaustive = false;
+        };
+
+        if exhaustive {
+            dbg.finish()
         } else {
             dbg.finish_non_exhaustive()
         }

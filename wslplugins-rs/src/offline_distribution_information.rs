@@ -4,7 +4,13 @@
 //! offering a safe and idiomatic Rust interface for accessing offline distribution details.
 
 extern crate wslpluginapi_sys;
-use crate::core_distribution_information::CoreDistributionInformation;
+use crate::{
+    api::{
+        errors::require_update_error::Result, utils::check_required_version_result_from_context,
+    },
+    core_distribution_information::CoreDistributionInformation,
+    WSLContext, WSLVersion,
+};
 use std::{
     ffi::OsString,
     fmt::{Debug, Display},
@@ -73,6 +79,36 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
             }
         }
     }
+
+    fn flavor(&self) -> Result<Option<OsString>> {
+        check_required_version_result_from_context(
+            WSLContext::get_current(),
+            &WSLVersion::new(2, 4, 4),
+        )?;
+        unsafe {
+            let ptr = self.0.Flavor;
+            if ptr.is_null() || ptr.is_empty() {
+                Ok(None)
+            } else {
+                Ok(Some(OsString::from_wide(ptr.as_wide())))
+            }
+        }
+    }
+
+    fn version(&self) -> Result<Option<OsString>> {
+        check_required_version_result_from_context(
+            WSLContext::get_current(),
+            &WSLVersion::new(2, 4, 4),
+        )?;
+        unsafe {
+            let ptr = self.0.Flavor;
+            if ptr.is_null() || ptr.is_empty() {
+                Ok(None)
+            } else {
+                Ok(Some(OsString::from_wide(ptr.as_wide())))
+            }
+        }
+    }
 }
 
 impl<T> PartialEq<T> for OfflineDistributionInformation
@@ -93,24 +129,33 @@ impl Hash for OfflineDistributionInformation {
 }
 
 impl Display for OfflineDistributionInformation {
-    /// Formats the offline distribution information for display.
-    ///
-    /// The output includes the distribution's name and ID.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         unsafe { write!(f, "{:} {{{:?}}}", self.0.Name.display(), self.0.Id) }
     }
 }
 
 impl Debug for OfflineDistributionInformation {
-    /// Formats the offline distribution information for debugging.
-    ///
-    /// The output includes the distribution's name, ID, and package family name.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("DistributionInformation")
-            .field("name", &self.name())
+        let mut dbg = f.debug_struct("DistributionInformation");
+        dbg.field("name", &self.name())
             .field("id", &self.id())
-            .field("package_family_name", &self.package_family_name())
-            .finish()
+            .field("package_family_name", &self.package_family_name());
+        let mut exhaustive = true;
+        if let Ok(flavor) = self.flavor() {
+            dbg.field("flavor", &flavor);
+        } else {
+            exhaustive = false;
+        }
+        if let Ok(version) = self.version() {
+            dbg.field("version", &version);
+        } else {
+            exhaustive = false;
+        }
+        if exhaustive {
+            dbg.finish()
+        } else {
+            dbg.finish_non_exhaustive()
+        }
     }
 }
 

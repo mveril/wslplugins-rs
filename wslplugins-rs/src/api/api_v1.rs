@@ -18,11 +18,8 @@ use std::os::windows::raw::SOCKET;
 use std::path::Path;
 use typed_path::Utf8UnixPath;
 use widestring::U16CString;
+use windows::core::{Result as WinResult, BOOL, GUID, PCSTR, PCWSTR};
 use windows::Win32::Networking::WinSock::SOCKET as WinSocket;
-use windows::{
-    core::{Result as WinResult, GUID, PCSTR, PCWSTR},
-    Win32::Foundation::BOOL,
-};
 
 use wslpluginapi_sys::WSLPluginAPIV1;
 
