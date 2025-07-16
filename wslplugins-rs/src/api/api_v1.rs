@@ -20,8 +20,7 @@ use typed_path::Utf8UnixPath;
 use widestring::U16CString;
 use windows::Win32::Networking::WinSock::SOCKET as WinSocket;
 use windows::{
-    core::{Result as WinResult, GUID, PCSTR, PCWSTR},
-    Win32::Foundation::BOOL,
+    core::{Result as WinResult, GUID, PCSTR, PCWSTR, BOOL},
 };
 
 use wslpluginapi_sys::WSLPluginAPIV1;

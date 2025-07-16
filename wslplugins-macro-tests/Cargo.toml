@@ -13,7 +13,7 @@ wslplugins-rs = { path = "../wslplugins-rs", features = ["macro"] }
 wslpluginapi-sys.workspace = true
 
 [dependencies.windows]
-version = "0.61"
+workspace = true
 features = ["Win32_Foundation"]
 
 [dev-dependencies]

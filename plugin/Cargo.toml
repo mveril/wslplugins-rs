@@ -19,8 +19,8 @@ wslplugins-rs = { path = "../wslplugins-rs", features = [
 chrono = "^0.*"
 log = "0.4"
 log-instrument = "0.3"
-fern = "0.6"
+fern = "0.7"
 etc-os-release = "0.1.0"
 [dependencies.windows]
-version = "0.58"
+workspace = true
 features = ["Win32_Foundation"]

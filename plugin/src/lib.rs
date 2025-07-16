@@ -38,7 +38,7 @@ fn setup_logging() -> WinResult<()> {
         .chain(log_file(log_path)?)
         .apply()
         .map_err(|_| WinError::from(E_FAIL))?;
-    info!("Logging configured: {:}", log_level);
+    info!("Logging configured: {log_level:}");
     Ok(())
 }
 #[wsl_plugin_v1(2, 1, 2)]
@@ -57,7 +57,7 @@ impl WSLPluginV1 for Plugin {
         user_settings: &WSLVmCreationSettings,
     ) -> Result<()> {
         let flags: WSLUserConfigurationFlags = user_settings.custom_configuration_flags().into();
-        info!("User configuration {:?}", flags);
+        info!("User configuration {flags:?}");
 
         let ver_args = ["/bin/cat", "/proc/version"];
         match self
@@ -155,10 +155,10 @@ impl Plugin {
                         info!("{}", release.name())
                     }
                 }
-                Err(err) => warn!("{}", err),
+                Err(err) => warn!("{err}"),
             },
             Err(err) => {
-                warn!("Error on binary execution: {}", err)
+                warn!("Error on binary execution: {err}")
             }
         };
     }
