@@ -19,6 +19,7 @@ use std::path::Path;
 use typed_path::Utf8UnixPath;
 use widestring::U16CString;
 use windows::core::{Result as WinResult, BOOL, GUID, HRESULT};
+use wslpluginapi_sys::windows_sys::Win32::Networking::WinSock::SOCKET as WinSocket;
 
 use wslpluginapi_sys::WSLPluginAPIV1;
 
@@ -167,7 +168,7 @@ impl ApiV1 {
             .chain(once(std::ptr::null::<u8>()))
             .collect();
         let args_ptr = args_ptrs.as_mut_ptr();
-        let mut socket = MaybeUninit::<usize>::uninit();
+        let mut socket = MaybeUninit::<WinSocket>::uninit();
         let stream = unsafe {
             HRESULT(self.0.ExecuteBinary.unwrap_unchecked()(
                 session.id(),
@@ -249,7 +250,7 @@ impl ApiV1 {
             .chain(once(std::ptr::null()))
             .collect();
         let args_ptr = args_ptrs.as_mut_ptr();
-        let mut socket = MaybeUninit::<usize>::uninit();
+        let mut socket = MaybeUninit::<WinSocket>::uninit();
         let stream = unsafe {
             HRESULT(self.0.ExecuteBinaryInDistribution.unwrap_unchecked()(
                 session.id(),
