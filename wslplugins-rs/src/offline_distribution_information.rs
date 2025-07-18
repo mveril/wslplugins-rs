@@ -57,7 +57,7 @@ impl AsRef<OfflineDistributionInformation> for wslpluginapi_sys::WslOfflineDistr
 impl CoreDistributionInformation for OfflineDistributionInformation {
     /// Retrieves the [GUID] of the offline distribution.
     fn id(&self) -> GUID {
-        unsafe { mem::transmute(self.0.Id) }
+        unsafe { mem::transmute_copy(&self.0.Id) }
     }
 
     /// Retrieves the name of the offline distribution as an [OsString].

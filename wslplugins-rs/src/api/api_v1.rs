@@ -11,7 +11,7 @@ use log_instrument::instrument;
 use std::ffi::{CString, OsStr};
 use std::fmt::Debug;
 use std::iter::once;
-use std::mem::{self, MaybeUninit};
+use std::mem::MaybeUninit;
 use std::net::TcpStream;
 use std::os::windows::io::FromRawSocket;
 use std::os::windows::raw::SOCKET;
@@ -253,7 +253,8 @@ impl ApiV1 {
         let stream = unsafe {
             HRESULT(self.0.ExecuteBinaryInDistribution.unwrap_unchecked()(
                 session.id(),
-                &mem::transmute(distribution_id),
+                (&distribution_id) as *const GUID
+                    as *const wslpluginapi_sys::windows_sys::core::GUID,
                 path_ptr,
                 args_ptr,
                 socket.as_mut_ptr(),

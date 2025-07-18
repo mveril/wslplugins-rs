@@ -13,7 +13,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
             extern "C" fn #c_method_ident(
                 session: *const ::wslplugins_rs::sys::WSLSessionInformation,
                 settings: *const ::wslplugins_rs::sys::WSLVmCreationSettings,
-            ) -> i32 {
+            ) -> ::wslplugins_rs::sys::windows_sys::core::HRESULT {
                 let session_ptr = unsafe { &*session };
                 let settings_ptr = unsafe { &*settings };
                 let hresult: ::windows::core::HRESULT = if let Some(plugin) = PLUGIN.get() {
@@ -31,7 +31,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
         Hooks::OnVMStopping => Some(quote! {
             extern "C" fn #c_method_ident(
                 session: *const ::wslplugins_rs::sys::WSLSessionInformation
-            ) -> i32 {
+            ) -> ::wslplugins_rs::sys::windows_sys::core::HRESULT {
                 let session_ptr = unsafe { &*session };
                 let hresult: ::windows::core::HRESULT = if let Some(plugin) = PLUGIN.get() {
                     plugin.#trait_method_ident(session_ptr.as_ref()).into()
@@ -45,7 +45,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
             extern "C" fn #c_method_ident(
                 session: *const ::wslplugins_rs::sys::WSLSessionInformation,
                 distribution: *const ::wslplugins_rs::sys::WSLDistributionInformation,
-            ) -> i32 {
+            ) -> ::wslplugins_rs::sys::windows_sys::core::HRESULT {
                 let session_ptr = unsafe { &*session };
                 let distribution_ptr = unsafe { &*distribution };
                 let hresult: ::windows::core::HRESULT = if let Some(plugin) = PLUGIN.get() {
@@ -64,7 +64,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
             extern "C" fn #c_method_ident(
                 session: *const ::wslplugins_rs::sys::WSLSessionInformation,
                 distribution: *const ::wslplugins_rs::sys::WSLDistributionInformation,
-            ) -> i32 {
+            ) -> ::wslplugins_rs::sys::windows_sys::core::HRESULT {
                 let session_ptr = unsafe { &*session };
                 let distribution_ptr = unsafe { &*distribution };
                 let hresult: ::windows::core::HRESULT = if let Some(plugin) = PLUGIN.get() {
@@ -82,7 +82,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
             extern "C" fn #c_method_ident(
                 session: *const ::wslplugins_rs::sys::WSLSessionInformation,
                 distribution:  *const ::wslplugins_rs::sys::WSLOfflineDistributionInformation,
-            ) -> i32 {
+            ) -> ::wslplugins_rs::sys::windows_sys::core::HRESULT {
                 let session_ptr = unsafe { &*session };
                 let distribution_ptr = unsafe { &*distribution };
                 let hresult: ::windows::core::HRESULT = if let Some(plugin) = PLUGIN.get() {
@@ -100,7 +100,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
             extern "C" fn #c_method_ident(
                 session: *const ::wslplugins_rs::sys::WSLSessionInformation,
                 distribution:  *const ::wslplugins_rs::sys::WSLOfflineDistributionInformation,
-            ) -> i32 {
+            ) -> ::wslplugins_rs::sys::windows_sys::core::HRESULT {
                 let session_ptr = unsafe { &*session };
                 let distribution_ptr = unsafe { &*distribution };
                 let hresult: ::windows::core::HRESULT = if let Some(plugin) = PLUGIN.get() {

@@ -91,7 +91,7 @@ impl DistributionInformation {
 
 impl CoreDistributionInformation for DistributionInformation {
     fn id(&self) -> GUID {
-        unsafe { mem::transmute(self.0.Id) }
+        unsafe { mem::transmute_copy(&self.0.Id) }
     }
 
     fn name(&self) -> OsString {
