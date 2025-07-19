@@ -27,6 +27,9 @@ impl WSLSessionInformation {
     ///
     /// # Returns
     /// A [HANDLE] representing the user token.
+    /// # Safety
+    /// This function returns a raw handle to the user token.
+    /// The handle should be used only during the life of the session and must not be closed
     pub unsafe fn user_token(&self) -> HANDLE {
         self.0.UserToken
     }
@@ -35,6 +38,9 @@ impl WSLSessionInformation {
     ///
     /// # Returns
     /// A [PSID] representing the user SID.
+    /// # Safety
+    /// This function returns a raw pointer to the user SID.
+    /// This pointer should be used only during the life of the session and must not be freed or modified.
     pub unsafe fn user_sid(&self) -> PSID {
         self.0.UserSid
     }
