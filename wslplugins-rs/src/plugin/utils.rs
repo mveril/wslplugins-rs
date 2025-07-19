@@ -3,11 +3,8 @@
 //! This module provides utility functions for creating WSL plugins and handling results,
 //! enabling smooth integration with the WSL Plugin API.
 
-use windows::{
-    core::{Error as WinError, Result as WinResult, HRESULT},
-    Win32::Foundation::ERROR_ALREADY_INITIALIZED,
-};
-use wslpluginapi_sys::WSLPluginAPIV1;
+use windows::core::{Error as WinError, Result as WinResult, HRESULT};
+use wslpluginapi_sys::{windows_sys::Win32::Foundation::ERROR_ALREADY_INITIALIZED, WSLPluginAPIV1};
 
 use crate::WSLContext;
 
@@ -55,12 +52,11 @@ pub fn create_plugin_with_required_version<T: WSLPluginV1>(
         ))
         .ok()?;
     }
-    if let Some(context) = WSLContext::init(api.as_ref()) {
-        let plugin = T::try_new(context)?;
-        Ok(plugin)
-    } else {
-        Err(WinError::from(ERROR_ALREADY_INITIALIZED))
-    }
+    WSLContext::init(api.as_ref())
+        .ok_or(WinError::from_hresult(HRESULT::from_win32(
+            ERROR_ALREADY_INITIALIZED,
+        )))
+        .and_then(T::try_new)
 }
 
 /// Converts a generic `Result<T>` using the custom `Error` type into a `WinResult<T>`.
