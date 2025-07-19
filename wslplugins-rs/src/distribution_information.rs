@@ -25,7 +25,7 @@ use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::mem;
 use std::os::windows::ffi::OsStringExt;
-use windows::core::{GUID, PCWSTR};
+use windows_core::{GUID, PCWSTR};
 
 /// Represents detailed information about a WSL distribution.
 ///

@@ -3,7 +3,7 @@
 //! This module provides utility functions for creating WSL plugins and handling results,
 //! enabling smooth integration with the WSL Plugin API.
 
-use windows::core::{Error as WinError, Result as WinResult, HRESULT};
+use windows_core::{Error as WinError, Result as WinResult, HRESULT};
 use wslpluginapi_sys::{windows_sys::Win32::Foundation::ERROR_ALREADY_INITIALIZED, WSLPluginAPIV1};
 
 use crate::WSLContext;

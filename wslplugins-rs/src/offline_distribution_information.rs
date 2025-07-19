@@ -18,7 +18,7 @@ use std::{
     mem,
     os::windows::ffi::OsStringExt,
 };
-use windows::core::{GUID, PCWSTR};
+use windows_core::{GUID, PCWSTR};
 
 /// A wrapper around `WslOfflineDistributionInformation` providing a safe interface.
 ///

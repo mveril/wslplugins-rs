@@ -6,7 +6,7 @@
 
 use crate::WSLVersion;
 use thiserror::Error;
-use windows::core::HRESULT;
+use windows_core::HRESULT;
 use wslpluginapi_sys::WSL_E_PLUGIN_REQUIRES_UPDATE;
 
 /// Represents an error when the current WSL version is unsupported.

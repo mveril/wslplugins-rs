@@ -18,7 +18,7 @@ use std::os::windows::raw::SOCKET;
 use std::path::Path;
 use typed_path::Utf8UnixPath;
 use widestring::U16CString;
-use windows::core::{Result as WinResult, BOOL, GUID, HRESULT};
+use windows_core::{Result as WinResult, GUID, HRESULT};
 use wslpluginapi_sys::windows_sys::Win32::Networking::WinSock::SOCKET as WinSocket;
 
 use wslpluginapi_sys::WSLPluginAPIV1;
@@ -106,7 +106,7 @@ impl ApiV1 {
                 session.id(),
                 encoded_windows_path.as_ptr(),
                 encoded_linux_path.as_ptr(),
-                BOOL::from(read_only).0,
+                read_only as i32,
                 encoded_name.as_ptr(),
             )
         };

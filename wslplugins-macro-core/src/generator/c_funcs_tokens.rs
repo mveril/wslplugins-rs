@@ -21,7 +21,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                         session_ptr.as_ref(),
                         settings_ptr.as_ref(),
                     );
-                    ::windows::core::HRESULT::from(::wslplugins_rs::plugin::utils::consume_to_win_result(result)).0
+                    ::wslplugins_rs::windows_core::HRESULT::from(::wslplugins_rs::plugin::utils::consume_to_win_result(result)).0
                 }).unwrap_or(::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_FAIL)
             }
         }),

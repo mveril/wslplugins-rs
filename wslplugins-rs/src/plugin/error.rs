@@ -10,7 +10,7 @@ use log::debug;
 use std::ffi::{OsStr, OsString};
 use std::num::NonZeroI32;
 use thiserror::Error;
-use windows::core::{Error as WinError, HRESULT};
+use windows_core::{Error as WinError, HRESULT};
 
 /// A specialized result type for operations that may return a WSL plugin error.
 ///

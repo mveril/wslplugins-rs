@@ -11,7 +11,7 @@
 
 use crate::api::errors::require_update_error::Result;
 use std::ffi::OsString;
-use windows::core::GUID;
+use windows_core::GUID;
 
 /// A trait representing the core information of a WSL distribution.
 ///

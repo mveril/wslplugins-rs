@@ -7,16 +7,9 @@ repository.workspace = true
 description.workspace = true
 edition = "2021"
 
-[dependencies.windows]
-workspace = true
-features = [
-  "Win32_Foundation",
-  "Win32_System",
-  "Win32_Security",
-  "Win32_Networking_WinSock",
-]
 
 [dependencies]
+windows-core = "0.61.2"
 bitflags = { version = ">0.1.0", optional = true }
 enumflags2 = { version = ">0.5", optional = true }
 flagset = { version = ">0.1.0", optional = true }
