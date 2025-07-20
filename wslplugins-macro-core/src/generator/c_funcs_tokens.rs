@@ -33,7 +33,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                 PLUGIN.get()
                     .map(|plugin| {
                         let result = plugin.#trait_method_ident(session_ptr.as_ref());
-                        windows::core::HRESULT::from(result).0
+                        ::wslplugins_rs::windows_core::HRESULT::from(result).0
                     })
                     .unwrap_or(::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_FAIL)
             }
@@ -50,7 +50,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                         session_ptr.as_ref(),
                         distribution_ptr.as_ref(),
                     );
-                    windows::core::HRESULT::from(::wslplugins_rs::plugin::utils::consume_to_win_result(result)).0
+                    ::wslplugins_rs::windows_core::HRESULT::from(::wslplugins_rs::plugin::utils::consume_to_win_result(result)).0
                 }).unwrap_or(::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_FAIL)
             }
         }),
@@ -62,7 +62,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                 let session_ptr = unsafe { &*session };
                 let distribution_ptr = unsafe { &*distribution };
                 PLUGIN.get().map(|plugin|{
-                    windows::core::HRESULT::from(plugin.#trait_method_ident(
+                    ::wslplugins_rs::windows_core::HRESULT::from(plugin.#trait_method_ident(
                         session_ptr.as_ref(),
                         distribution_ptr.as_ref(),
                     )).0
@@ -77,7 +77,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                 let session_ptr = unsafe { &*session };
                 let distribution_ptr = unsafe { &*distribution };
                 PLUGIN.get().map(|plugin|{
-                    windows::core::HRESULT::from(plugin.#trait_method_ident(
+                    ::wslplugins_rs::windows_core::HRESULT::from(plugin.#trait_method_ident(
                         session_ptr.as_ref(),
                         distribution_ptr.as_ref(),
                     )).0
@@ -92,7 +92,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                 let session_ptr = unsafe { &*session };
                 let distribution_ptr = unsafe { &*distribution };
                 PLUGIN.get().map(|plugin|{
-                    windows::core::HRESULT::from(plugin.#trait_method_ident(
+                    ::wslplugins_rs::windows_core::HRESULT::from(plugin.#trait_method_ident(
                         session_ptr.as_ref(),
                         distribution_ptr.as_ref(),
                     )).0
