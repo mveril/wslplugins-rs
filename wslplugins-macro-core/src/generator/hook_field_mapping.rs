@@ -112,7 +112,7 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
         ) -> ::wslplugins_rs::windows_core::Result<()> {
             let plugin: #static_plugin_type = ::wslplugins_rs::plugin::create_plugin_with_required_version(api, #major, #minor, #revision)?;
             #(#hook_set)*
-            PLUGIN.set(plugin).map_err(|_| ::wslplugins_rs::windows_core::Error::from(::windows::Win32::Foundation::E_ABORT))
+            PLUGIN.set(plugin).map_err(|_| ::wslplugins_rs::windows_core::Error::from(::wslplugins_rs::windows_core::HRESULT(::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_ABORT)))
         }
     })
 }
