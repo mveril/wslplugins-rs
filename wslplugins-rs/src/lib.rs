@@ -53,6 +53,7 @@ pub use wsl_user_configuration::WSLUserConfiguration;
 mod wsl_vm_creation_settings;
 #[cfg(doc)]
 use crate::plugin::WSLPluginV1;
+pub extern crate typed_path;
 /// Tools and utilities for creating custom WSL plugins.
 pub mod plugin;
 
