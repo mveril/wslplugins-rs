@@ -98,7 +98,7 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
         pub unsafe extern "C" fn WSLPluginAPIV1_EntryPoint(
             api: *const ::wslplugins_rs::sys::WSLPluginAPIV1,
             hooks: *mut ::wslplugins_rs::sys::WSLPluginHooksV1,
-        ) -> ::windows::core::HRESULT {
+        ) -> ::wslplugins_rs::windows_core::HRESULT {
             unsafe {
                 let api_ref: &'static ::wslplugins_rs::sys::WSLPluginAPIV1 = unsafe { &*api};
                 let #hooks_ref_name: &mut ::wslplugins_rs::sys::WSLPluginHooksV1 = unsafe{ &mut *hooks };
@@ -109,10 +109,10 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
         fn create_plugin(
             api: &'static ::wslplugins_rs::sys::WSLPluginAPIV1,
             hooks_ref: &mut ::wslplugins_rs::sys::WSLPluginHooksV1,
-        ) -> ::windows::core::Result<()> {
+        ) -> ::wslplugins_rs::windows_core::Result<()> {
             let plugin: #static_plugin_type = ::wslplugins_rs::plugin::create_plugin_with_required_version(api, #major, #minor, #revision)?;
             #(#hook_set)*
-            PLUGIN.set(plugin).map_err(|_| ::windows::core::Error::from(::windows::Win32::Foundation::E_ABORT))
+            PLUGIN.set(plugin).map_err(|_| ::wslplugins_rs::windows_core::Error::from(::wslplugins_rs::windows_core::HRESULT(::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_ABORT)))
         }
     })
 }

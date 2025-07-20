@@ -23,7 +23,7 @@
 //! ```rust
 //! #[cfg(feature = "macro")]
 //! use wslplugins_rs::{plugin::WSLPluginV1, WSLContext};
-//! use windows::core::Result as WinResult;
+//! use windows_core::Result as WinResult;
 //! use wslplugins_rs::wsl_plugin_v1;
 //! pub(crate) struct MyPlugin {
 //!   context: &'static WSLContext,
@@ -42,6 +42,7 @@ pub mod api;
 // Internal modules for managing specific WSL features.
 mod core_distribution_information;
 pub(crate) mod cstring_ext;
+pub extern crate windows_core;
 mod distribution_information;
 mod offline_distribution_information;
 mod utils;
@@ -52,6 +53,7 @@ pub use wsl_user_configuration::WSLUserConfiguration;
 mod wsl_vm_creation_settings;
 #[cfg(doc)]
 use crate::plugin::WSLPluginV1;
+pub extern crate typed_path;
 /// Tools and utilities for creating custom WSL plugins.
 pub mod plugin;
 

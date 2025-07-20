@@ -3,11 +3,8 @@
 //! This module provides utility functions for creating WSL plugins and handling results,
 //! enabling smooth integration with the WSL Plugin API.
 
-use windows::{
-    core::{Error as WinError, Result as WinResult},
-    Win32::Foundation::ERROR_ALREADY_INITIALIZED,
-};
-use wslpluginapi_sys::WSLPluginAPIV1;
+use windows_core::{Error as WinError, Result as WinResult, HRESULT};
+use wslpluginapi_sys::{windows_sys::Win32::Foundation::ERROR_ALREADY_INITIALIZED, WSLPluginAPIV1};
 
 use crate::WSLContext;
 
@@ -47,22 +44,26 @@ pub fn create_plugin_with_required_version<T: WSLPluginV1>(
     required_revision: u32,
 ) -> WinResult<T> {
     unsafe {
-        wslpluginapi_sys::require_version(required_major, required_minor, required_revision, api)
-            .ok()?;
+        HRESULT(wslpluginapi_sys::require_version(
+            required_major,
+            required_minor,
+            required_revision,
+            api,
+        ))
+        .ok()?;
     }
-    if let Some(context) = WSLContext::init(api.as_ref()) {
-        let plugin = T::try_new(context)?;
-        Ok(plugin)
-    } else {
-        Err(WinError::from(ERROR_ALREADY_INITIALIZED))
-    }
+    WSLContext::init(api.as_ref())
+        .ok_or(WinError::from_hresult(HRESULT::from_win32(
+            ERROR_ALREADY_INITIALIZED,
+        )))
+        .and_then(T::try_new)
 }
 
 /// Converts a generic `Result<T>` using the custom `Error` type into a `WinResult<T>`.
 ///
 /// This function simplifies the interoperability between the custom error handling
 /// in the WSL plugin system and the Windows error system by mapping the plugin [Error]
-/// into a [windows::core::Error] using the `consume_error_message_unwrap` method.
+/// into a [windows_core::Error] using the `consume_error_message_unwrap` method.
 ///
 /// # Arguments
 /// - `result`: A [`Result<T>`] using the custom [Error] type defined in this crate.
@@ -70,13 +71,13 @@ pub fn create_plugin_with_required_version<T: WSLPluginV1>(
 /// # Returns
 /// A `WinResult<T>` where:
 /// - `Ok(value)` contains the successful result `T`.
-/// - `Err(error)` contains a [windows::core::Error] converted from the plugin [Error].
+/// - `Err(error)` contains a [windows_core::Error] converted from the plugin [Error].
 ///
 /// # Behavior
 /// - If the `result` is `Ok`, it is returned as-is.
 /// - If the `result` is `Err`, the error is consumed
 ///   and sent to WSL and is then
-///   converted into a [windows::core::Error].
+///   converted into a [windows_core::Error].
 ///
 /// # Usage
 /// This utility is intended to facilitate the transition between idiomatic Rust

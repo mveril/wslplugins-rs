@@ -18,8 +18,8 @@ use std::os::windows::raw::SOCKET;
 use std::path::Path;
 use typed_path::Utf8UnixPath;
 use widestring::U16CString;
-use windows::core::{Result as WinResult, BOOL, GUID, PCSTR, PCWSTR};
-use windows::Win32::Networking::WinSock::SOCKET as WinSocket;
+use windows_core::{Result as WinResult, GUID, HRESULT};
+use wslpluginapi_sys::windows_sys::Win32::Networking::WinSock::SOCKET as WinSocket;
 
 use wslpluginapi_sys::WSLPluginAPIV1;
 
@@ -104,13 +104,13 @@ impl ApiV1 {
         let result = unsafe {
             self.0.MountFolder.unwrap_unchecked()(
                 session.id(),
-                PCWSTR::from_raw(encoded_windows_path.as_ptr()),
-                PCWSTR::from_raw(encoded_linux_path.as_ptr()),
-                BOOL::from(read_only),
-                PCWSTR::from_raw(encoded_name.as_ptr()),
+                encoded_windows_path.as_ptr(),
+                encoded_linux_path.as_ptr(),
+                read_only as i32,
+                encoded_name.as_ptr(),
             )
         };
-        result.ok()
+        HRESULT(result).ok()
     }
 
     /// Execute a program in the root namespace.
@@ -129,7 +129,7 @@ impl ApiV1 {
     /// - **Standard Output**: Data output by the process will be readable from the stream.
     ///
     /// # Errors
-    /// This method can return the following a [`windows::core::Error`]: If the underlying Windows API call fails.
+    /// This method can return the following a [windows_core::Error]: If the underlying Windows API call fails.
     ///
     /// # Example
     /// ```rust,ignore
@@ -162,23 +162,23 @@ impl ApiV1 {
             .iter()
             .map(|&arg| CString::from_str_truncate(arg))
             .collect();
-        let mut args_ptrs: Vec<PCSTR> = c_args
+        let mut args_ptrs: Vec<*const u8> = c_args
             .iter()
-            .map(|arg| PCSTR::from_raw(arg.as_ptr() as *const u8))
-            .chain(Some(PCSTR::null()))
+            .map(|arg| arg.as_ptr() as *const u8)
+            .chain(once(std::ptr::null::<u8>()))
             .collect();
         let args_ptr = args_ptrs.as_mut_ptr();
         let mut socket = MaybeUninit::<WinSocket>::uninit();
         let stream = unsafe {
-            self.0.ExecuteBinary.unwrap_unchecked()(
+            HRESULT(self.0.ExecuteBinary.unwrap_unchecked()(
                 session.id(),
-                PCSTR::from_raw(c_path.as_ptr()),
+                c_path.as_ptr(),
                 args_ptr,
                 socket.as_mut_ptr(),
-            )
+            ))
             .ok()?;
             let socket = socket.assume_init();
-            TcpStream::from_raw_socket(socket.0 as SOCKET)
+            TcpStream::from_raw_socket(socket as SOCKET)
         };
         Ok(stream)
     }
@@ -187,9 +187,7 @@ impl ApiV1 {
     #[cfg_attr(feature = "log-instrument", instrument)]
     pub(crate) fn plugin_error(&self, error: &OsStr) -> WinResult<()> {
         let error_utf16 = U16CString::from_os_str_truncate(error);
-        unsafe {
-            self.0.PluginError.unwrap_unchecked()(PCWSTR::from_raw(error_utf16.as_ptr())).ok()
-        }
+        HRESULT(unsafe { self.0.PluginError.unwrap_unchecked()(error_utf16.as_ptr()) }).ok()
     }
 
     /// Execute a program in a user distribution
@@ -241,29 +239,30 @@ impl ApiV1 {
             .copied()
             .chain(once(0))
             .collect();
-        let path_ptr = PCSTR::from_raw(c_path.as_ptr());
+        let path_ptr = c_path.as_ptr();
         let c_args: Vec<CString> = args
             .iter()
             .map(|&arg| CString::from_str_truncate(arg))
             .collect();
-        let mut args_ptrs: Vec<PCSTR> = c_args
+        let mut args_ptrs: Vec<_> = c_args
             .iter()
-            .map(|arg| PCSTR::from_raw(arg.as_ptr() as *const u8))
-            .chain(Some(PCSTR::null()))
+            .map(|arg| arg.as_ptr() as *const u8)
+            .chain(once(std::ptr::null()))
             .collect();
         let args_ptr = args_ptrs.as_mut_ptr();
         let mut socket = MaybeUninit::<WinSocket>::uninit();
         let stream = unsafe {
-            self.0.ExecuteBinaryInDistribution.unwrap_unchecked()(
+            HRESULT(self.0.ExecuteBinaryInDistribution.unwrap_unchecked()(
                 session.id(),
-                &distribution_id,
+                (&distribution_id) as *const GUID
+                    as *const wslpluginapi_sys::windows_sys::core::GUID,
                 path_ptr,
                 args_ptr,
                 socket.as_mut_ptr(),
-            )
+            ))
             .ok()?;
             let socket = socket.assume_init();
-            TcpStream::from_raw_socket(socket.0 as SOCKET)
+            TcpStream::from_raw_socket(socket as SOCKET)
         };
         Ok(stream)
     }

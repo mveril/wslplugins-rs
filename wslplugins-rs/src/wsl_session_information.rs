@@ -5,9 +5,8 @@
 
 extern crate wslpluginapi_sys;
 use core::hash;
-use std::fmt;
-use windows::Win32::Foundation::*;
-use windows::Win32::Security::PSID;
+use std::{fmt, os::windows::raw::HANDLE};
+use wslpluginapi_sys::windows_sys::Win32::Security::PSID;
 
 /// Represents session information for a WSL instance.
 ///
@@ -28,7 +27,10 @@ impl WSLSessionInformation {
     ///
     /// # Returns
     /// A [HANDLE] representing the user token.
-    pub fn user_token(&self) -> HANDLE {
+    /// # Safety
+    /// This function returns a raw handle to the user token.
+    /// The handle should be used only during the life of the session and must not be closed
+    pub unsafe fn user_token(&self) -> HANDLE {
         self.0.UserToken
     }
 
@@ -36,7 +38,10 @@ impl WSLSessionInformation {
     ///
     /// # Returns
     /// A [PSID] representing the user SID.
-    pub fn user_sid(&self) -> PSID {
+    /// # Safety
+    /// This function returns a raw pointer to the user SID.
+    /// This pointer should be used only during the life of the session and must not be freed or modified.
+    pub unsafe fn user_sid(&self) -> PSID {
         self.0.UserSid
     }
 }

@@ -5,15 +5,14 @@
 //! for managing the state of the WSL VM, distributions, and related settings.
 
 use super::error::Result;
-use crate::WSLContext;
 use crate::{
     distribution_information::DistributionInformation,
     offline_distribution_information::OfflineDistributionInformation,
     wsl_session_information::WSLSessionInformation,
-    wsl_vm_creation_settings::WSLVmCreationSettings,
+    wsl_vm_creation_settings::WSLVmCreationSettings, WSLContext,
 };
 use std::marker::Sized;
-use windows::core::Result as WinResult;
+use windows_core::Result as WinResult;
 
 /// Trait defining synchronous notifications sent to the plugin.
 ///
@@ -27,7 +26,7 @@ use windows::core::Result as WinResult;
 /// # Example
 /// ```rust
 /// use wslplugins_rs::{plugin::{WSLPluginV1, Result}, WSLContext, WSLSessionInformation, WSLVmCreationSettings};
-/// use windows::core::Result as WinResult;
+/// use wslplugins_rs::windows_core::Result as WinResult;
 ///
 /// struct MyPlugin;
 ///
