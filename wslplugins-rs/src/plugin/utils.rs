@@ -63,7 +63,7 @@ pub fn create_plugin_with_required_version<T: WSLPluginV1>(
 ///
 /// This function simplifies the interoperability between the custom error handling
 /// in the WSL plugin system and the Windows error system by mapping the plugin [Error]
-/// into a [windows::core::Error] using the `consume_error_message_unwrap` method.
+/// into a [windows_core::Error] using the `consume_error_message_unwrap` method.
 ///
 /// # Arguments
 /// - `result`: A [`Result<T>`] using the custom [Error] type defined in this crate.
@@ -71,13 +71,13 @@ pub fn create_plugin_with_required_version<T: WSLPluginV1>(
 /// # Returns
 /// A `WinResult<T>` where:
 /// - `Ok(value)` contains the successful result `T`.
-/// - `Err(error)` contains a [windows::core::Error] converted from the plugin [Error].
+/// - `Err(error)` contains a [windows_core::Error] converted from the plugin [Error].
 ///
 /// # Behavior
 /// - If the `result` is `Ok`, it is returned as-is.
 /// - If the `result` is `Err`, the error is consumed
 ///   and sent to WSL and is then
-///   converted into a [windows::core::Error].
+///   converted into a [windows_core::Error].
 ///
 /// # Usage
 /// This utility is intended to facilitate the transition between idiomatic Rust

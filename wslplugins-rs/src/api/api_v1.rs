@@ -129,7 +129,7 @@ impl ApiV1 {
     /// - **Standard Output**: Data output by the process will be readable from the stream.
     ///
     /// # Errors
-    /// This method can return the following a [`windows::core::Error`]: If the underlying Windows API call fails.
+    /// This method can return the following a [windows_core::Error]: If the underlying Windows API call fails.
     ///
     /// # Example
     /// ```rust,ignore
