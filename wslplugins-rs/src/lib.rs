@@ -44,6 +44,7 @@ mod core_distribution_information;
 pub(crate) mod cstring_ext;
 pub extern crate windows_core;
 mod distribution_information;
+pub mod sid;
 mod offline_distribution_information;
 mod utils;
 mod wsl_context;

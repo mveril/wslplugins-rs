@@ -20,4 +20,4 @@ repository = "https://github.com/mveril/wslplugins-rs"
 description = "A Rust framework for developing WSL plugins using safe and idiomatic Rust."
 
 [patch.crates-io]
-wslpluginapi-sys = { version = "0.1.0-rc.1", git = "https://github.com/mveril/wslpluginapi-sys.git", branch = "develop" }
+wslpluginapi-sys = { version = "0.1.0-rc.1", git = "https://github.com/mveril/wslpluginapi-sys.git", branch = "feature/windows-sys-extra/windows-sys/Win32_Security_Authorization" }

@@ -13,17 +13,23 @@ windows-core = "0.61.2"
 bitflags = { version = ">0.1.0", optional = true }
 enumflags2 = { version = ">0.5", optional = true }
 flagset = { version = ">0.1.0", optional = true }
+arrayvec = "0.7"
 log = { version = "*", optional = true }
 log-instrument = { version = "*", optional = true }
 thiserror = "2.0.7"
 typed-path = ">0.1"
 widestring = { version = "1", features = ["alloc"] }
 wslplugins-macro = { path = "../wslplugins-macro", optional = true }
-wslpluginapi-sys.workspace = true
+wslpluginapi-sys = { workspace = true, features = [
+  "Windows_Win32_Security_Authorization",
+] }
 
 [dependencies.semver]
 version = ">0.1"
 optional = true
+
+[dev-dependencies]
+proptest = "1.7"
 
 [features]
 sys = []
