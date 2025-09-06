@@ -14,3 +14,6 @@ syn = "*"
 quote = "*"
 proc-macro2 = "*"
 wslplugins-macro-core = { path = "../wslplugins-macro-core" }
+
+[lints]
+workspace = true

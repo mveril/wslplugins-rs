@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 use std::{env, fs::File, io::Write, path::PathBuf};
 use struct_field_names_as_array::FieldNamesAsSlice;
 use wslpluginapi_sys::WSLPluginHooksV1;

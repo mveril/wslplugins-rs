@@ -1,3 +1,6 @@
+#![allow(missing_docs)]
+#![allow(rustdoc::missing_errors_doc)]
+#![allow(rustdoc::missing_panics_doc)]
 mod generator;
 mod hooks;
 mod parser;

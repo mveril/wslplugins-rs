@@ -1,4 +1,3 @@
-#![warn(missing_docs)]
 // Enable doc_cfg if docrs
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 

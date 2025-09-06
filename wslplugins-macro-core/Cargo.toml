@@ -17,3 +17,6 @@ strum = { version = "0.26.3", features = ["derive"] }
 wslpluginapi-sys = { workspace = true, features = ["hooks-field-names"] }
 quote = "*"
 struct-field-names-as-array = "*"
+
+[lints]
+workspace = true
