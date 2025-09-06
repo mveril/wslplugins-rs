@@ -26,6 +26,7 @@ wslpluginapi-sys = { version = "0.1.0-rc.1", git = "https://github.com/mveril/ws
 missing_docs = "warn"
 missing_errors_doc = "warn"
 missing_panics_doc = "warn"
+pub_use_of_private_imports = "allow"
 
 [workspace.lints.clippy]
 all = "warn"
