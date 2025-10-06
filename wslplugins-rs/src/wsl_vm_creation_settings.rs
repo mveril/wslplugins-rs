@@ -15,29 +15,31 @@ use crate::WSLUserConfiguration;
 pub struct WSLVmCreationSettings(wslpluginapi_sys::WSLVmCreationSettings);
 
 impl From<wslpluginapi_sys::WSLVmCreationSettings> for WSLVmCreationSettings {
+    #[inline]
     fn from(value: wslpluginapi_sys::WSLVmCreationSettings) -> Self {
-        WSLVmCreationSettings(value)
+        Self(value)
     }
 }
 
 impl From<WSLVmCreationSettings> for wslpluginapi_sys::WSLVmCreationSettings {
+    #[inline]
     fn from(value: WSLVmCreationSettings) -> Self {
         value.0
     }
 }
 
 impl AsRef<wslpluginapi_sys::WSLVmCreationSettings> for WSLVmCreationSettings {
+    #[inline]
     fn as_ref(&self) -> &wslpluginapi_sys::WSLVmCreationSettings {
         &self.0
     }
 }
 
 impl AsRef<WSLVmCreationSettings> for wslpluginapi_sys::WSLVmCreationSettings {
+    #[inline]
     fn as_ref(&self) -> &WSLVmCreationSettings {
-        unsafe {
-            &*(self as *const wslpluginapi_sys::WSLVmCreationSettings
-                as *const WSLVmCreationSettings)
-        }
+        // SAFETY: conveting this kind of ref is safe as it is transparent
+        unsafe { &*std::ptr::from_ref::<Self>(self).cast::<WSLVmCreationSettings>() }
     }
 }
 
@@ -51,6 +53,8 @@ impl WSLVmCreationSettings {
     /// - **`flagset`**: Uses the [flagset] crate for managing flags.
     /// - **`enumflags2`**: Uses the [enumflags2] crate for managing flags.
     ///
+    #[must_use]
+    #[inline]
     pub fn custom_configuration_flags(&self) -> WSLUserConfiguration {
         WSLUserConfiguration::from(self.0.CustomConfigurationFlags)
     }
@@ -60,6 +64,7 @@ impl Debug for WSLVmCreationSettings {
     /// Formats the VM creation settings for debugging.
     ///
     /// The debug output includes the custom configuration flags.
+    #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("WSLVmCreationSettings")
             .field(

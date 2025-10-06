@@ -22,19 +22,52 @@ description = "A Rust framework for developing WSL plugins using safe and idioma
 [patch.crates-io]
 wslpluginapi-sys = { version = "0.1.0-rc.1", git = "https://github.com/mveril/wslpluginapi-sys.git", branch = "develop" }
 
+
 [workspace.lints.rust]
-missing_docs = "warn"
-missing_errors_doc = "warn"
-missing_panics_doc = "warn"
-pub_use_of_private_imports = "allow"
+unused = "warn"
+future_incompatible = "deny"
 
 [workspace.lints.clippy]
-all = "warn"
+all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
-# useful lib lints
+cargo = {level = "warn", priority = -1}
+# Enable some restriction
 needless_pass_by_value = "warn"
 implicit_clone = "warn"
 unnecessary_wraps = "warn"
-unwrap_used = "warn"
-expect_used = "warn"
+missing_const_for_fn = "warn"
+missing_inline_in_public_items = "warn"
+unnecessary_safety_doc = "deny"
+
+# ---- Strong DENY (CI-breaking, catch critical bugs) ----
+unwrap_used = "deny"                      # Avoid panics in production.
+expect_used = "deny"                      # Same as unwrap, no `.expect`.
+panic = "deny"                            # No panic! in library code.
+todo = "deny"                             # No todo! in shipped code.
+print_stdout = "deny"                     # Use logging, not println.
+print_stderr = "deny"                     # Use logging, not eprintln.
+dbg_macro = "deny"                        # No dbg! in release builds.
+mem_forget = "deny"                       # Prevent memory leaks.
+await_holding_lock = "deny"               # Prevent async deadlocks with held locks.
+exit = "deny"                             # Libraries must not kill the process.
+
+# ---- Useful WARN (signal, but not blocking) ----
+undocumented_unsafe_blocks = "warn"       # Every unsafe block must be justified with SAFETY.
+missing_assert_message = "warn"           # Clear messages for all asserts.
+integer_division = "warn"                 # Be explicit about truncating integer division.
+indexing_slicing = "warn"                 # Can panic if index is wrong.
+float_arithmetic = "warn"                 # Flag nondeterministic floating arithmetic.
+mutable_key_type = "warn"                 # Prevent mutable keys in maps (subtle bugs).
+manual_non_exhaustive = "warn"            # Use #[non_exhaustive] instead of manual tricks.
+wrong_self_convention = "warn"            # Enforce idiomatic naming for as_/to_/into_ methods.
+rc_mutex = "warn" 
+use_debug = "warn"
+
+[workspace.lints.rustdoc]
+all = "warn"
+broken_intra_doc_links = "forbid"
+private_intra_doc_links = "deny"
+invalid_rust_codeblocks = "deny"
+bare_urls = "warn"
+missing_crate_level_docs = "warn"

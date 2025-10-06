@@ -6,7 +6,9 @@ license.workspace = true
 repository.workspace = true
 description.workspace = true
 edition = "2021"
-
+keywords = ["wsl", "plugin", "windows", "linux"]
+categories = ["os::windows-apis", "api-bindings", "virtualization"]
+readme.workspace = true
 
 [dependencies]
 windows-core = "0.61.2"
@@ -20,6 +22,7 @@ typed-path = ">0.1"
 widestring = { version = "1", features = ["alloc"] }
 wslplugins-macro = { path = "../wslplugins-macro", optional = true }
 wslpluginapi-sys.workspace = true
+
 
 [dependencies.semver]
 version = ">0.1"

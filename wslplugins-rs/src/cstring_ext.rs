@@ -1,17 +1,18 @@
 use std::ffi::CString;
 
-pub(crate) trait CstringExt {
+pub trait CstringExt {
     /// Creates a `CString` from a string slice, truncating at the first null byte if present.
     fn from_str_truncate(value: &str) -> Self;
 }
 
 impl CstringExt for CString {
+    #[expect(clippy::indexing_slicing, reason = "The slice is controlled")]
     fn from_str_truncate(value: &str) -> Self {
         let bytes = value.as_bytes();
-        let truncated_bytes = match bytes.iter().position(|&b| b == 0) {
-            Some(pos) => &bytes[..pos],
-            None => bytes,
-        };
+        let truncated_bytes = bytes
+            .iter()
+            .position(|&b| b == 0)
+            .map_or(bytes, |pos| &bytes[..pos]);
         // SAFETY: `truncated_bytes` is guaranteed not to contain null bytes.
         unsafe { Self::from_vec_unchecked(truncated_bytes.to_vec()) }
     }

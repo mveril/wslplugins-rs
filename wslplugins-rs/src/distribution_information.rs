@@ -21,10 +21,10 @@ use crate::core_distribution_information::CoreDistributionInformation;
 use crate::WSLContext;
 use crate::WSLVersion;
 use std::ffi::OsString;
-use std::fmt::{Debug, Display};
-use std::hash::Hash;
-use std::mem;
-use std::os::windows::ffi::OsStringExt;
+use std::fmt::{self, Debug, Display};
+use std::hash::{Hash, Hasher};
+use std::os::windows::ffi::OsStringExt as _;
+use std::{mem, ptr};
 use windows_core::{GUID, PCWSTR};
 
 /// Represents detailed information about a WSL distribution.
@@ -35,29 +35,31 @@ use windows_core::{GUID, PCWSTR};
 pub struct DistributionInformation(wslpluginapi_sys::WSLDistributionInformation);
 
 impl AsRef<DistributionInformation> for wslpluginapi_sys::WSLDistributionInformation {
+    #[inline]
     fn as_ref(&self) -> &DistributionInformation {
-        unsafe {
-            &*(self as *const wslpluginapi_sys::WSLDistributionInformation
-                as *const DistributionInformation)
-        }
+        // SAFETY: conveting this kind of ref is safe as it is transparent
+        unsafe { &*ptr::from_ref::<Self>(self).cast::<DistributionInformation>() }
     }
 }
 
 impl From<DistributionInformation> for wslpluginapi_sys::WSLDistributionInformation {
+    #[inline]
     fn from(value: DistributionInformation) -> Self {
         value.0
     }
 }
 
 impl AsRef<wslpluginapi_sys::WSLDistributionInformation> for DistributionInformation {
+    #[inline]
     fn as_ref(&self) -> &wslpluginapi_sys::WSLDistributionInformation {
         &self.0
     }
 }
 
 impl From<wslpluginapi_sys::WSLDistributionInformation> for DistributionInformation {
+    #[inline]
     fn from(value: wslpluginapi_sys::WSLDistributionInformation) -> Self {
-        DistributionInformation(value)
+        Self(value)
     }
 }
 
@@ -71,6 +73,7 @@ impl DistributionInformation {
     /// - `Ok(pid)`: The PID of the init process.
     /// # Errors
     /// [Error]: If the runtime version version is insufficient.
+    #[inline]
     pub fn init_pid(&self) -> Result<u32> {
         check_required_version_result_from_context(
             WSLContext::get_current(),
@@ -84,21 +87,29 @@ impl DistributionInformation {
     /// # Returns
     /// The PID namespace as a `u64`.
     ///
-    pub fn pid_namespace(&self) -> u64 {
+    #[inline]
+    #[must_use]
+    pub const fn pid_namespace(&self) -> u64 {
         self.0.PidNamespace
     }
 }
 
 impl CoreDistributionInformation for DistributionInformation {
+    #[inline]
     fn id(&self) -> GUID {
+        // SAFETY: Id is known to be valid GUID and windows_sys GUID and windows_core GUID has same representation
         unsafe { mem::transmute_copy(&self.0.Id) }
     }
 
+    #[inline]
     fn name(&self) -> OsString {
+        // SAFETY: Name is known to be valid
         unsafe { OsString::from_wide(PCWSTR::from_raw(self.0.Name).as_wide()) }
     }
 
+    #[inline]
     fn package_family_name(&self) -> Option<OsString> {
+        // SAFETY: check already inside
         unsafe {
             let ptr = self.0.PackageFamilyName;
             if ptr.is_null() {
@@ -109,11 +120,13 @@ impl CoreDistributionInformation for DistributionInformation {
         }
     }
 
+    #[inline]
     fn flavor(&self) -> Result<Option<OsString>> {
         check_required_version_result_from_context(
             WSLContext::get_current(),
             &WSLVersion::new(2, 4, 4),
         )?;
+        // SAFETY: check already inside and before by versionning
         unsafe {
             let ptr = self.0.Flavor;
             if ptr.is_null() {
@@ -124,11 +137,13 @@ impl CoreDistributionInformation for DistributionInformation {
         }
     }
 
+    #[inline]
     fn version(&self) -> Result<Option<OsString>> {
         check_required_version_result_from_context(
             WSLContext::get_current(),
             &WSLVersion::new(2, 4, 4),
         )?;
+        // SAFETY: check did before by versionning.
         unsafe {
             let ptr = self.0.Flavor;
             if ptr.is_null() {
@@ -145,6 +160,7 @@ where
     T: CoreDistributionInformation,
 {
     /// Compares two distributions for equality based on their IDs.
+    #[inline]
     fn eq(&self, other: &T) -> bool {
         self.id() == other.id()
     }
@@ -152,13 +168,17 @@ where
 
 impl Hash for DistributionInformation {
     /// Computes a hash based on the distribution's ID.
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    #[inline]
+    fn hash<H: Hasher>(&self, state: &mut H) {
         self.id().hash(state);
     }
 }
 
 impl Display for DistributionInformation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    #[inline]
+    #[allow(clippy::use_debug, reason = "GUID display")]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // SAFETY: Name is known to be valid
         unsafe {
             write!(
                 f,
@@ -171,7 +191,8 @@ impl Display for DistributionInformation {
 }
 
 impl Debug for DistributionInformation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut dbg = f.debug_struct("DistributionInformation");
         dbg.field("name", &self.name())
             .field("id", &self.id())
@@ -183,17 +204,17 @@ impl Debug for DistributionInformation {
             dbg.field("init_pid", &pid);
         } else {
             exhaustive = false;
-        };
+        }
         if let Ok(flavor) = self.flavor() {
             dbg.field("flavor", &flavor);
         } else {
             exhaustive = false;
-        };
+        }
         if let Ok(version) = self.version() {
             dbg.field("version", &version);
         } else {
             exhaustive = false;
-        };
+        }
 
         if exhaustive {
             dbg.finish()

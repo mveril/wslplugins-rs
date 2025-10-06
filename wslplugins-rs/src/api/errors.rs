@@ -34,6 +34,7 @@ impl From<Error> for HRESULT {
     ///
     /// # Returns
     /// An `HRESULT` code representing the error.
+    #[inline]
     fn from(value: Error) -> Self {
         match value {
             Error::RequiresUpdate(err) => err.into(),
@@ -50,6 +51,7 @@ impl From<Error> for WinError {
     ///
     /// # Returns
     /// A `WinError` representing the error.
+    #[inline]
     fn from(value: Error) -> Self {
         match value {
             Error::RequiresUpdate { .. } => HRESULT(WSL_E_PLUGIN_REQUIRES_UPDATE).into(),

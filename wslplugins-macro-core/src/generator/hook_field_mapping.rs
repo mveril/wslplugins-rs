@@ -32,7 +32,7 @@ fn generate_hook_fns(hooks: &[Hooks]) -> Result<Vec<TokenStream>> {
 }
 
 // Create a static version of the type for plugin management
-fn create_static_type(imp: &ParsedImpl) -> Result<Type> {
+fn create_static_type(imp: &ParsedImpl) -> Type {
     let mut static_type = imp.target_type.as_ref().clone();
     if let Some(lifetime) = utils::get_path_lifetime(&imp.trait_) {
         utils::replace_lifetime_in_type(
@@ -41,7 +41,7 @@ fn create_static_type(imp: &ParsedImpl) -> Result<Type> {
             &Lifetime::new("'static", Span::call_site()),
         );
     }
-    Ok(static_type)
+    static_type
 }
 
 // Prepare hooks by mapping them to their respective fields in the hook structure
@@ -83,7 +83,7 @@ fn hook_field_mapping(hooks_struct_name: &Ident, hook: Hooks) -> Result<TokenStr
 
 // Generate the plugin entry function with hook management and initialization
 fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<TokenStream> {
-    let static_plugin_type = create_static_type(imp)?;
+    let static_plugin_type = create_static_type(imp);
     let hooks_ref_name = format_ident!("hooks_ref");
     let hook_set = prepare_hooks(&hooks_ref_name, &imp.hooks)?;
     let RequiredVersion {

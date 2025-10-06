@@ -1,4 +1,4 @@
-//! Provides a [mod@bitflags] implementation for [WSLUserConfiguration] flags.
+//! Provides a [mod@bitflags] implementation for [`WSLUserConfiguration`] flags.
 use super::WSLUserConfiguration;
 use bitflags::bitflags;
 
@@ -28,20 +28,23 @@ bitflags! {
 }
 
 impl From<WSLUserConfiguration> for WSLUserConfigurationFlags {
+    #[inline]
     fn from(value: WSLUserConfiguration) -> Self {
-        WSLUserConfigurationFlags::from_bits_truncate(value.0)
+        Self::from_bits_truncate(value.0)
     }
 }
 
 impl From<WSLUserConfigurationFlags> for WSLUserConfiguration {
+    #[inline]
     fn from(value: WSLUserConfigurationFlags) -> Self {
         value.bits().into()
     }
 }
 
 impl Default for WSLUserConfigurationFlags {
+    #[inline]
     fn default() -> Self {
-        WSLUserConfigurationFlags::empty()
+        Self::empty()
     }
 }
 

@@ -12,7 +12,7 @@ pub struct RequiredVersion {
     pub revision: u32,
 }
 impl Parse for RequiredVersion {
-    fn parse(input: ParseStream) -> Result<Self> {
+    fn parse(input: ParseStream<'_>) -> Result<Self> {
         // Result of parsing the major version to u32
         let major_lit = input.parse::<LitInt>()?;
         // Result of parsing the coma version to u32
@@ -21,7 +21,7 @@ impl Parse for RequiredVersion {
         let minor_lit = input.parse::<LitInt>()?;
         // Parse the revision if it exists
         let revision_lit = if input.peek(Token![,]) {
-            input.parse::<Token![,]>().unwrap();
+            input.parse::<Token![,]>()?;
             Some(input.parse::<LitInt>()?)
         } else {
             None
@@ -33,11 +33,9 @@ impl Parse for RequiredVersion {
         }?;
         let major_result = major_lit.base10_parse::<u32>();
         let minor_result = minor_lit.base10_parse::<u32>();
-        let revision_result = revision_lit
-            .map(|lit| lit.base10_parse::<u32>())
-            .unwrap_or(Ok(0));
+        let revision_result = revision_lit.map_or(Ok(0), |lit| lit.base10_parse::<u32>());
         acc_syn_result!(major_result, minor_result, revision_result).map(
-            |(major, minor, revision)| RequiredVersion {
+            |(major, minor, revision)| Self {
                 major,
                 minor,
                 revision,

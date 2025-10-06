@@ -1,22 +1,22 @@
-use heck::ToSnakeCase;
-use strum::IntoEnumIterator;
+use heck::ToSnakeCase as _;
+use strum::IntoEnumIterator as _;
 include!(concat!(env!("OUT_DIR"), "/hooks.rs"));
 
 impl Hooks {
-    pub fn get_c_method_name(&self) -> String {
+    pub(crate) fn get_c_method_name(self) -> String {
         self.to_string().to_snake_case()
     }
 
-    pub fn get_hook_field_name(&self) -> String {
+    pub(crate) fn get_hook_field_name(self) -> String {
         self.to_string()
     }
 
-    pub fn get_trait_method_name(&self) -> String {
+    pub(crate) fn get_trait_method_name(self) -> String {
         self.to_string().to_snake_case()
     }
 
-    pub fn from_trait_method_name(trait_method_name: impl AsRef<str>) -> Option<Hooks> {
-        Hooks::iter().find(|hook| hook.get_trait_method_name() == trait_method_name.as_ref())
+    pub(crate) fn from_trait_method_name(trait_method_name: impl AsRef<str>) -> Option<Self> {
+        Self::iter().find(|hook| hook.get_trait_method_name() == trait_method_name.as_ref())
     }
 }
 

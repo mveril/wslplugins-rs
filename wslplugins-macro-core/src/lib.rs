@@ -1,6 +1,8 @@
-#![allow(missing_docs)]
-#![allow(rustdoc::missing_errors_doc)]
-#![allow(rustdoc::missing_panics_doc)]
+#![allow(rustdoc::missing_doc)]
+#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::missing_panics_doc)]
+#![allow(clippy::panic)]
+#![allow(clippy::panic_in_result_fn)]
 mod generator;
 mod hooks;
 mod parser;
@@ -12,8 +14,8 @@ use quote::quote;
 use syn::{parse2, Result};
 
 use crate::parser::{ParsedImpl, RequiredVersion};
-
-pub fn wsl_plugin_v1(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
+#[inline]
+pub fn wsl_plugin_v1(attr: TokenStream, item: &TokenStream) -> Result<TokenStream> {
     let parsed_impl_result = parse2::<ParsedImpl>(item.clone());
     let required_version_result = parse2::<RequiredVersion>(attr);
     let (parsed_impl, required_version) =
