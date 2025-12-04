@@ -1,4 +1,4 @@
-//! Provides an [enumflags2] implementation for [WSLUserConfiguration] flags.
+//! Provides an [enumflags2] implementation for [`WSLUserConfiguration`] flags.
 use super::WSLUserConfiguration;
 use enumflags2::{bitflags, BitFlags};
 
@@ -31,14 +31,16 @@ pub enum WSLUserConfigurationFlags {
 }
 
 impl From<WSLUserConfiguration> for BitFlags<WSLUserConfigurationFlags> {
+    #[inline]
     fn from(value: WSLUserConfiguration) -> Self {
-        BitFlags::from_bits_truncate(value.0 as u32)
+        BitFlags::from_bits_truncate(value.0.cast_unsigned())
     }
 }
 
 impl From<BitFlags<WSLUserConfigurationFlags>> for WSLUserConfiguration {
+    #[inline]
     fn from(value: BitFlags<WSLUserConfigurationFlags>) -> Self {
-        (value.bits() as i32).into()
+        (value.bits().cast_signed()).into()
     }
 }
 

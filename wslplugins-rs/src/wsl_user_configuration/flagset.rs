@@ -1,4 +1,4 @@
-//! Provides an [flagset] implementation for [WSLUserConfiguration] flags.
+//! Provides an [`flagset`] implementation for [`WSLUserConfiguration`] flags.
 use super::WSLUserConfiguration;
 use flagset::{flags, FlagSet};
 
@@ -29,14 +29,16 @@ flags! {
 }
 
 impl From<WSLUserConfiguration> for FlagSet<WSLUserConfigurationFlags> {
+    #[inline]
     fn from(value: WSLUserConfiguration) -> Self {
-        FlagSet::new_truncated(value.0)
+        Self::new_truncated(value.0)
     }
 }
 
 impl From<FlagSet<WSLUserConfigurationFlags>> for WSLUserConfiguration {
+    #[inline]
     fn from(value: FlagSet<WSLUserConfigurationFlags>) -> Self {
-        WSLUserConfiguration::from(value.bits())
+        Self::from(value.bits())
     }
 }
 
