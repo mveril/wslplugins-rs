@@ -1,3 +1,4 @@
+///! Sample WSL plugin implemented in Rust.
 use chrono::Local;
 use etc_os_release::OsRelease;
 use fern::{log_file, Dispatch};
