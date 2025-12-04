@@ -133,10 +133,9 @@ mod tests {
             hooks: Box::new([]),
         };
         let result = create_static_type(&imp);
-        assert!(result.is_ok());
         let expected_output: Type = parse_quote! { SomeType<'static> };
         assert_eq!(
-            result.unwrap().to_token_stream().to_string(),
+            result.to_token_stream().to_string(),
             expected_output.to_token_stream().to_string()
         );
     }

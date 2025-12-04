@@ -37,15 +37,11 @@ mod tests {
         let result2: Result<String> = Ok("Success".to_string());
         let result3: Result<f64> = Ok(0.5);
 
-        let combined_result = acc_syn_result!(result1, result2, result3);
-        match combined_result {
-            Ok((val1, val2, val3)) => {
-                assert_eq!(val1, 10);
-                assert_eq!(val2, "Success".to_string());
-                assert_eq!(val3, 0.5);
-            }
-            Err(_) => panic!("Expected all Ok results"),
-        }
+        let (val1, val2, val3) =
+            acc_syn_result!(result1, result2, result3).expect("Expected Ok result");
+        assert_eq!(val1, 10);
+        assert_eq!(val2, "Success".to_string());
+        assert_eq!(val3, 0.5);
     }
 
     #[test]

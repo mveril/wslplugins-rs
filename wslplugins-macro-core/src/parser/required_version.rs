@@ -45,6 +45,7 @@ impl Parse for RequiredVersion {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used, reason = "Test code")]
 mod tests {
     use super::*;
     use quote::quote;

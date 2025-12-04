@@ -1,4 +1,4 @@
-#![allow(rustdoc::missing_doc)]
+#![allow(missing_docs)]
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::missing_panics_doc)]
 #![allow(clippy::panic)]
@@ -35,6 +35,10 @@ mod test {
     use crate::wsl_plugin_v1;
 
     #[test]
+    #[expect(
+        clippy::too_many_lines,
+        reason = "Test contains long example implementation"
+    )]
     fn test_wsl_plugin_v1() {
         let attr = quote! {1,0,5};
         let item = quote! {
@@ -140,8 +144,7 @@ mod test {
                 }
             }
         };
-        let result = wsl_plugin_v1(attr, item);
+        let result = wsl_plugin_v1(attr, &item);
         assert!(result.is_ok());
-        eprint!("{}", result.unwrap())
     }
 }
