@@ -3,6 +3,7 @@
 #![allow(clippy::missing_panics_doc)]
 #![allow(clippy::panic)]
 #![allow(clippy::panic_in_result_fn)]
+///! Core implementation for the WSL plugin procedural macros.
 mod generator;
 mod hooks;
 mod parser;
