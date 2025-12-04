@@ -1,6 +1,5 @@
-#![warn(missing_docs)]
 // Enable doc_cfg if docrs
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 //! # WSLPlugin-rs
 //!
@@ -42,18 +41,18 @@ pub mod api;
 // Internal modules for managing specific WSL features.
 mod core_distribution_information;
 pub(crate) mod cstring_ext;
-pub extern crate windows_core;
+pub use windows_core;
 mod distribution_information;
 mod offline_distribution_information;
 mod utils;
 mod wsl_context;
 mod wsl_session_information;
-pub mod wsl_user_configuration;
-pub use wsl_user_configuration::WSLUserConfiguration;
 mod wsl_vm_creation_settings;
 #[cfg(doc)]
 use crate::plugin::WSLPluginV1;
-pub extern crate typed_path;
+pub mod wsl_user_configuration;
+pub use typed_path;
+pub use wsl_user_configuration::WSLUserConfiguration;
 /// Tools and utilities for creating custom WSL plugins.
 pub mod plugin;
 
@@ -68,7 +67,7 @@ mod wsl_version;
 pub use wsl_version::WSLVersion;
 
 /// Re-exports procedural macros when the `macro` feature is enabled.
-/// It allow to mark a plugin struct (that implement [WSLPluginV1] trait) to be easely integrated to the WSL plugin system without writing manually C code for entry point or hooks.
+/// It allow to mark a plugin struct (that implement [`WSLPluginV1`] trait) to be easely integrated to the WSL plugin system without writing manually C code for entry point or hooks.
 #[cfg(feature = "macro")]
 pub use wslplugins_macro::wsl_plugin_v1;
 

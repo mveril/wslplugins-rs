@@ -29,7 +29,7 @@ pub trait CoreDistributionInformation {
     /// Retrieves the name of the distribution.
     ///
     /// # Returns
-    /// An [OsString] containing the display name of the distribution.
+    /// An [`OsString`] containing the display name of the distribution.
     fn name(&self) -> OsString;
 
     /// Retrieves the package family name of the distribution, if available.

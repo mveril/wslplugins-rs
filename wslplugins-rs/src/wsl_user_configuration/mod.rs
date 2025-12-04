@@ -10,9 +10,9 @@
 //! for additional details on WSL user configurations.
 //! # Features
 //!
-//! - **`bitflags`**: Provides a [bitflags]-based implementation for handling user configuration flags.
-//! - **`enumflags2`**: Provides an [enumflags2]-based implementation for handling user configuration flags.
-//! - **`flagset`**: Provides a [flagset]-based implementation for handling user configuration flags.
+//! - **`bitflags`**: Provides a [`bitflags`]-based implementation for handling user configuration flags.
+//! - **`enumflags2`**: Provides an [`enumflags2`]-based implementation for handling user configuration flags.
+//! - **`flagset`**: Provides a [`flagset`]-based implementation for handling user configuration flags.
 
 #[cfg(feature = "bitflags")]
 pub mod bitflags;
@@ -31,12 +31,14 @@ pub mod flagset;
 pub struct WSLUserConfiguration(i32);
 
 impl From<i32> for WSLUserConfiguration {
+    #[inline]
     fn from(value: i32) -> Self {
         Self(value)
     }
 }
 
 impl From<WSLUserConfiguration> for i32 {
+    #[inline]
     fn from(value: WSLUserConfiguration) -> Self {
         value.0
     }

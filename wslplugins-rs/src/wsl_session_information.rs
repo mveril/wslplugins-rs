@@ -3,7 +3,6 @@
 //! This module provides a safe abstraction over the `WSLSessionInformation` structure
 //! from the WSL Plugin API, allowing access to session details in an idiomatic Rust interface.
 
-extern crate wslpluginapi_sys;
 use core::hash;
 use std::{fmt, os::windows::raw::HANDLE};
 use wslpluginapi_sys::windows_sys::Win32::Security::PSID;
@@ -19,7 +18,9 @@ impl WSLSessionInformation {
     ///
     /// # Returns
     /// The unique session ID as a [u32].
-    pub fn id(&self) -> u32 {
+    #[must_use]
+    #[inline]
+    pub const fn id(&self) -> u32 {
         self.0.SessionId
     }
 
@@ -30,7 +31,9 @@ impl WSLSessionInformation {
     /// # Safety
     /// This function returns a raw handle to the user token.
     /// The handle should be used only during the life of the session and must not be closed
-    pub unsafe fn user_token(&self) -> HANDLE {
+    #[must_use]
+    #[inline]
+    pub const unsafe fn user_token(&self) -> HANDLE {
         self.0.UserToken
     }
 
@@ -41,33 +44,37 @@ impl WSLSessionInformation {
     /// # Safety
     /// This function returns a raw pointer to the user SID.
     /// This pointer should be used only during the life of the session and must not be freed or modified.
-    pub unsafe fn user_sid(&self) -> PSID {
+    #[must_use]
+    #[inline]
+    pub const unsafe fn user_sid(&self) -> PSID {
         self.0.UserSid
     }
 }
 
 impl From<wslpluginapi_sys::WSLSessionInformation> for WSLSessionInformation {
+    #[inline]
     fn from(value: wslpluginapi_sys::WSLSessionInformation) -> Self {
-        WSLSessionInformation(value)
+        Self(value)
     }
 }
 
 impl From<WSLSessionInformation> for wslpluginapi_sys::WSLSessionInformation {
+    #[inline]
     fn from(value: WSLSessionInformation) -> Self {
         value.0
     }
 }
 
 impl AsRef<WSLSessionInformation> for wslpluginapi_sys::WSLSessionInformation {
+    #[inline]
     fn as_ref(&self) -> &WSLSessionInformation {
-        unsafe {
-            &*(self as *const wslpluginapi_sys::WSLSessionInformation
-                as *const WSLSessionInformation)
-        }
+        // SAFETY: conveting this kind of ref is safe as it is transparent
+        unsafe { &*std::ptr::from_ref::<Self>(self).cast::<WSLSessionInformation>() }
     }
 }
 
 impl AsRef<wslpluginapi_sys::WSLSessionInformation> for WSLSessionInformation {
+    #[inline]
     fn as_ref(&self) -> &wslpluginapi_sys::WSLSessionInformation {
         &self.0
     }
@@ -78,6 +85,7 @@ impl hash::Hash for WSLSessionInformation {
     ///
     /// # Arguments
     /// - `state`: The hasher state to update with the session ID.
+    #[inline]
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.0.SessionId.hash(state);
     }
@@ -91,6 +99,7 @@ impl PartialEq for WSLSessionInformation {
     ///
     /// # Returns
     /// `true` if the session IDs are equal, `false` otherwise.
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.0.SessionId == other.0.SessionId
     }
@@ -101,6 +110,7 @@ impl fmt::Debug for WSLSessionInformation {
     /// Formats the session information for debugging.
     ///
     /// The output includes the session ID, user token, and user SID.
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("WSLSessionInformation")
             .field("sessionId", &self.0.SessionId)

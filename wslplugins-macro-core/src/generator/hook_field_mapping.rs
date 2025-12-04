@@ -32,7 +32,7 @@ fn generate_hook_fns(hooks: &[Hooks]) -> Result<Vec<TokenStream>> {
 }
 
 // Create a static version of the type for plugin management
-fn create_static_type(imp: &ParsedImpl) -> Result<Type> {
+fn create_static_type(imp: &ParsedImpl) -> Type {
     let mut static_type = imp.target_type.as_ref().clone();
     if let Some(lifetime) = utils::get_path_lifetime(&imp.trait_) {
         utils::replace_lifetime_in_type(
@@ -41,7 +41,7 @@ fn create_static_type(imp: &ParsedImpl) -> Result<Type> {
             &Lifetime::new("'static", Span::call_site()),
         );
     }
-    Ok(static_type)
+    static_type
 }
 
 // Prepare hooks by mapping them to their respective fields in the hook structure
@@ -83,7 +83,7 @@ fn hook_field_mapping(hooks_struct_name: &Ident, hook: Hooks) -> Result<TokenStr
 
 // Generate the plugin entry function with hook management and initialization
 fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<TokenStream> {
-    let static_plugin_type = create_static_type(imp)?;
+    let static_plugin_type = create_static_type(imp);
     let hooks_ref_name = format_ident!("hooks_ref");
     let hook_set = prepare_hooks(&hooks_ref_name, &imp.hooks)?;
     let RequiredVersion {
@@ -116,7 +116,8 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
         }
     })
 }
-
+// test
+#[allow(clippy::expect_used, clippy::unwrap_used, reason = "Tests")]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -133,10 +134,9 @@ mod tests {
             hooks: Box::new([]),
         };
         let result = create_static_type(&imp);
-        assert!(result.is_ok());
         let expected_output: Type = parse_quote! { SomeType<'static> };
         assert_eq!(
-            result.unwrap().to_token_stream().to_string(),
+            result.to_token_stream().to_string(),
             expected_output.to_token_stream().to_string()
         );
     }
@@ -151,7 +151,7 @@ mod tests {
         assert_eq!(
             result.unwrap().to_string(),
             quote!(hooks_struct.OnVMStarted = Some(on_vm_started);).to_string()
-        )
+        );
     }
 
     // Test for hook field mapping with version condition
@@ -174,7 +174,7 @@ mod tests {
                 );
             })
             .to_string()
-        )
+        );
     }
 
     // Test for preparing hooks

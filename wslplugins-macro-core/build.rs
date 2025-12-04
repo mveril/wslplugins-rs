@@ -1,5 +1,6 @@
-use std::{env, fs::File, io::Write, path::PathBuf};
-use struct_field_names_as_array::FieldNamesAsSlice;
+#![allow(missing_docs)]
+use std::{env, fs::File, io::Write as _, path::PathBuf};
+use struct_field_names_as_array::FieldNamesAsSlice as _;
 use wslpluginapi_sys::WSLPluginHooksV1;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

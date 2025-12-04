@@ -1,4 +1,7 @@
-use syn::*;
+use syn::{
+    GenericArgument, Lifetime, Path, PathArguments, Type, TypeBareFn, TypePath, TypeReference,
+    TypeTuple,
+};
 
 pub(super) fn replace_lifetime_in_type(
     ty: &mut Type,

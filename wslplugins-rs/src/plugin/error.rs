@@ -7,6 +7,7 @@
 use crate::WSLContext;
 #[cfg(feature = "log")]
 use log::debug;
+use std::borrow::ToOwned;
 use std::ffi::{OsStr, OsString};
 use std::num::NonZeroI32;
 use thiserror::Error;
@@ -35,6 +36,7 @@ impl std::fmt::Display for Error {
     ///
     /// If an error message is present, it is included in the output.
     /// Otherwise, only the error code is displayed.
+    #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.message {
             Some(message) => write!(
@@ -57,17 +59,20 @@ impl Error {
     ///
     /// # Returns
     /// A new instance of `Error`.
+    #[must_use]
+    #[inline]
     pub fn new(code: HRESULT, message: Option<&OsStr>) -> Self {
         let code = if code.is_ok() {
             WinError::from_hresult(code).code()
         } else {
             code
         };
+        // SAFETY: the code getted from WinError is guaranteed to be valid
         let code = unsafe { NonZeroI32::new_unchecked(code.0) };
 
         Self {
             code,
-            message: message.map(|m| m.to_owned()),
+            message: message.map(ToOwned::to_owned),
         }
     }
 
@@ -78,6 +83,8 @@ impl Error {
     ///
     /// # Returns
     /// A new instance of `Error` without an associated message.
+    #[must_use]
+    #[inline]
     pub fn with_code(code: HRESULT) -> Self {
         Self::new(code, None)
     }
@@ -90,6 +97,8 @@ impl Error {
     ///
     /// # Returns
     /// A new instance of `Error`.
+    #[must_use]
+    #[inline]
     pub fn with_message(code: HRESULT, message: &OsStr) -> Self {
         Self::new(code, Some(message))
     }
@@ -98,7 +107,8 @@ impl Error {
     ///
     /// # Returns
     /// The error code wrapped in an `HRESULT`.
-    pub fn code(&self) -> HRESULT {
+    #[inline]
+    pub const fn code(&self) -> HRESULT {
         HRESULT(self.code.get())
     }
 
@@ -106,6 +116,8 @@ impl Error {
     ///
     /// # Returns
     /// A reference to the error message, if present.
+    #[must_use]
+    #[inline]
     pub fn message(&self) -> Option<&OsStr> {
         self.message.as_deref()
     }
@@ -120,14 +132,15 @@ impl Error {
     pub(crate) fn consume_error_message_unwrap<R: From<Self>>(self) -> R {
         if let Some(ref mess) = self.message {
             if let Some(context) = WSLContext::get_current() {
-                let _plugin_error_result = context.api.plugin_error(mess.as_os_str());
+                #[cfg_attr(not(feature = "log"), expect(unused_variables))]
+                let plugin_error_result = context.api.plugin_error(mess.as_os_str());
                 #[cfg(feature = "log")]
-                if let Err(err) = _plugin_error_result {
+                if let Err(err) = plugin_error_result {
                     debug!(
                         "Unable to set plugin error message {} due to error: {}",
                         mess.to_string_lossy(),
                         err
-                    )
+                    );
                 }
             }
         }
@@ -140,14 +153,16 @@ impl From<Error> for WinError {
     ///
     /// # Returns
     /// A `WinError` constructed from the error's code and message.
+    #[inline]
     fn from(value: Error) -> Self {
-        match value.message {
-            Some(ref message) => {
+        let code = value.code();
+        value.message.as_ref().map_or_else(
+            || Self::from_hresult(code),
+            |message| {
                 let msg_string = message.to_string_lossy();
-                WinError::new(value.code(), &msg_string)
-            }
-            None => WinError::from_hresult(value.code()),
-        }
+                Self::new(code, &msg_string)
+            },
+        )
     }
 }
 
@@ -156,14 +171,16 @@ impl From<WinError> for Error {
     ///
     /// # Returns
     /// An `Error` containing the code and message from the `WinError`.
+    #[inline]
     fn from(value: WinError) -> Self {
-        let os_message = if !value.message().is_empty() {
-            Some(OsString::from(value.message()))
-        } else {
+        let os_message = if value.message().is_empty() {
             None
+        } else {
+            Some(OsString::from(value.message()))
         };
 
         Self {
+            // SAFETY: As we have a valid WinError, we can safely extract the code.
             code: unsafe { NonZeroI32::new_unchecked(value.code().0) },
             message: os_message,
         }
@@ -175,6 +192,7 @@ impl From<HRESULT> for Error {
     ///
     /// # Returns
     /// An `Error` containing the `HRESULT` as its code.
+    #[inline]
     fn from(value: HRESULT) -> Self {
         Self::new(value, None)
     }

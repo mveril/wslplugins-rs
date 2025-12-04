@@ -11,17 +11,13 @@ pub struct ParsedImpl {
 }
 
 impl Parse for ParsedImpl {
-    fn parse(input: ParseStream) -> Result<Self> {
+    fn parse(input: ParseStream<'_>) -> Result<Self> {
         let plugin_impl: ItemImpl = input.parse()?;
-        let p =
-            plugin_impl
-                .trait_
-                .as_ref()
-                .map(|(_, path, _)| path)
-                .ok_or(syn::Error::new_spanned(
-                    plugin_impl.impl_token,
-                    "Expected a trait.",
-                ))?;
+        let p = plugin_impl
+            .trait_
+            .as_ref()
+            .map(|(_, path, _)| path)
+            .ok_or_else(|| syn::Error::new_spanned(plugin_impl.impl_token, "Expected a trait."))?;
         let hook_vec: Vec<Hooks> = plugin_impl
             .items
             .iter()
@@ -31,7 +27,7 @@ impl Parse for ParsedImpl {
             })
             .collect();
 
-        Ok(ParsedImpl {
+        Ok(Self {
             target_type: plugin_impl.self_ty.clone(),
             hooks: hook_vec.into_boxed_slice(),
             trait_: p.clone(),
@@ -39,6 +35,7 @@ impl Parse for ParsedImpl {
     }
 }
 
+#[allow(clippy::expect_used, clippy::unwrap_used, reason = "Tests")]
 #[cfg(test)]
 mod tests {
 

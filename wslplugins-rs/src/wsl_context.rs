@@ -36,10 +36,11 @@ impl WSLContext {
     ///     eprintln!("WSL context is not initialized.");
     /// }
     /// ```
-    pub fn get_current() -> Option<&'static WSLContext> {
+    #[inline]
+    pub fn get_current() -> Option<&'static Self> {
         CURRENT_CONTEXT.get()
     }
-
+    #[expect(clippy::expect_used)]
     /// Retrieves the current `WSLContext` instance or panics if it is not initialized.
     ///
     /// # Panics
@@ -47,20 +48,23 @@ impl WSLContext {
     ///
     /// # Returns
     /// A reference to the current `WSLContext`.
-    pub fn get_current_or_panic() -> &'static WSLContext {
+    #[must_use]
+    #[inline]
+    pub fn get_current_or_panic() -> &'static Self {
         Self::get_current().expect("WSL context is not initialised.")
     }
 
     /// Initializes the global `WSLContext` with the provided `ApiV1` instance.
     ///
     /// # Arguments
-    /// - `api`: The [ApiV1] instance to associate with the context.
+    /// - `api`: The [`ApiV1`] instance to associate with the context.
     ///
     /// # Returns
     /// - `Some(&'static WSLContext)`: If the context was successfully initialized.
     /// - `None`: If the context has already been initialized.
+    #[inline]
     pub fn init(api: &'static ApiV1) -> Option<&'static Self> {
-        CURRENT_CONTEXT.set(WSLContext { api }).ok()?;
+        CURRENT_CONTEXT.set(Self { api }).ok()?;
         CURRENT_CONTEXT.get()
     }
 }

@@ -1,3 +1,9 @@
+#![allow(missing_docs)]
+#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::missing_panics_doc)]
+#![allow(clippy::panic)]
+#![allow(clippy::panic_in_result_fn)]
+//! Core implementation for the WSL plugin procedural macros.
 mod generator;
 mod hooks;
 mod parser;
@@ -9,8 +15,8 @@ use quote::quote;
 use syn::{parse2, Result};
 
 use crate::parser::{ParsedImpl, RequiredVersion};
-
-pub fn wsl_plugin_v1(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
+#[inline]
+pub fn wsl_plugin_v1(attr: TokenStream, item: &TokenStream) -> Result<TokenStream> {
     let parsed_impl_result = parse2::<ParsedImpl>(item.clone());
     let required_version_result = parse2::<RequiredVersion>(attr);
     let (parsed_impl, required_version) =
@@ -30,6 +36,10 @@ mod test {
     use crate::wsl_plugin_v1;
 
     #[test]
+    #[expect(
+        clippy::too_many_lines,
+        reason = "Test contains long example implementation"
+    )]
     fn test_wsl_plugin_v1() {
         let attr = quote! {1,0,5};
         let item = quote! {
@@ -135,8 +145,7 @@ mod test {
                 }
             }
         };
-        let result = wsl_plugin_v1(attr, item);
+        let result = wsl_plugin_v1(attr, &item);
         assert!(result.is_ok());
-        eprint!("{}", result.unwrap())
     }
 }

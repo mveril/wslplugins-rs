@@ -1,4 +1,3 @@
-extern crate wslpluginapi_sys;
 #[cfg(doc)]
 use super::Error;
 use super::Result;
@@ -9,49 +8,57 @@ use crate::WSLVersion;
 #[cfg(feature = "log-instrument")]
 use log_instrument::instrument;
 use std::ffi::{CString, OsStr};
-use std::fmt::Debug;
+use std::fmt::{self, Debug};
 use std::iter::once;
 use std::mem::MaybeUninit;
 use std::net::TcpStream;
-use std::os::windows::io::FromRawSocket;
+use std::os::windows::io::FromRawSocket as _;
 use std::os::windows::raw::SOCKET;
 use std::path::Path;
+use std::ptr;
 use typed_path::Utf8UnixPath;
 use widestring::U16CString;
 use windows_core::{Result as WinResult, GUID, HRESULT};
+use wslpluginapi_sys;
 use wslpluginapi_sys::windows_sys::Win32::Networking::WinSock::SOCKET as WinSocket;
 
 use wslpluginapi_sys::WSLPluginAPIV1;
 
 use super::utils::check_required_version_result;
 
-/// Represents a structured interface for interacting with the WSLPluginAPIV1 API.
-/// This struct encapsulates the methods provided by the WSLPluginAPIV1 API, allowing
+/// Represents a structured interface for interacting with the `WSLPluginAPIV1` API.
+///
+/// This struct encapsulates the methods provided by the `WSLPluginAPIV1` API, allowing
 /// idiomatic interaction with the Windows Subsystem for Linux (WSL).
 #[repr(transparent)]
 pub struct ApiV1(WSLPluginAPIV1);
 
 impl From<ApiV1> for WSLPluginAPIV1 {
+    #[inline]
     fn from(value: ApiV1) -> Self {
         value.0
     }
 }
 
 impl From<WSLPluginAPIV1> for ApiV1 {
+    #[inline]
     fn from(value: WSLPluginAPIV1) -> Self {
-        ApiV1(value)
+        Self(value)
     }
 }
 
 impl AsRef<WSLPluginAPIV1> for ApiV1 {
+    #[inline]
     fn as_ref(&self) -> &WSLPluginAPIV1 {
         &self.0
     }
 }
 
 impl AsRef<ApiV1> for WSLPluginAPIV1 {
+    #[inline]
     fn as_ref(&self) -> &ApiV1 {
-        unsafe { &*(self as *const WSLPluginAPIV1 as *const ApiV1) }
+        // SAFETY: The layout of ApiV1 is transparent over WSLPluginAPIV1, so this cast is safe.
+        unsafe { &*std::ptr::from_ref::<Self>(self).cast::<ApiV1>() }
     }
 }
 
@@ -69,6 +76,8 @@ impl ApiV1 {
     ///     version.Major, version.Minor, version.Revision
     /// );
     #[cfg_attr(feature = "log-instrument", instrument)]
+    #[must_use]
+    #[inline]
     pub fn version(&self) -> &WSLVersion {
         self.0.Version.as_ref()
     }
@@ -82,13 +91,15 @@ impl ApiV1 {
     /// - `linux_path`: The Linux path where the folder will be mounted.
     /// - `read_only`: Whether the mount should be read-only.
     /// - `name`: A custom name for the mount.
-    ///
+    /// # Errors
+    /// This function returns a windows error when the mount fails.
     /// # Example
     /// ``` rust,ignore
     /// api.mount_folder(&session, "C:\\path", "/mnt/path", false, "MyMount")?;
     /// ```
     #[doc(alias = "MountFolder")]
     #[cfg_attr(feature = "log-instrument", instrument)]
+    #[inline]
     pub fn mount_folder<WP: AsRef<Path>, UP: AsRef<Utf8UnixPath>>(
         &self,
         session: &WSLSessionInformation,
@@ -101,12 +112,24 @@ impl ApiV1 {
             U16CString::from_os_str_truncate(windows_path.as_ref().as_os_str());
         let encoded_linux_path = U16CString::from_str_truncate(linux_path.as_ref().as_str());
         let encoded_name = U16CString::from_os_str_truncate(name);
+        // SAFETY:
+        // - `self.0.MountFolder` comes from the validated `WSLPluginAPIV1` struct provided by WSL.
+        //   The API guarantees that this function pointer is non-null for supported versions.
+        // - All `U16CString` instances (`encoded_windows_path`, `encoded_linux_path`, `encoded_name`)
+        //   ensure null-termination and valid UTF-16 encoding, so the raw pointers passed to the FFI
+        //   are valid for the duration of the call.
+        // - `session.id()` returns a valid `WSLSessionId` provided by WSL; it remains valid while the
+        //   session is active.
+        // - No aliasing or mutation of memory occurs while the function pointer is called.
+        //
+        // The only `unsafe` operation is the FFI call, which is trusted because it is executed under
+        // WSL's documented plugin API contract.
         let result = unsafe {
             self.0.MountFolder.unwrap_unchecked()(
                 session.id(),
                 encoded_windows_path.as_ptr(),
                 encoded_linux_path.as_ptr(),
-                read_only as i32,
+                i32::from(read_only),
                 encoded_name.as_ptr(),
             )
         };
@@ -129,7 +152,7 @@ impl ApiV1 {
     /// - **Standard Output**: Data output by the process will be readable from the stream.
     ///
     /// # Errors
-    /// This method can return the following a [windows_core::Error]: If the underlying Windows API call fails.
+    /// This method can return the following a [`windows_core::Error`]: If the underlying Windows API call fails.
     ///
     /// # Example
     /// ```rust,ignore
@@ -144,6 +167,7 @@ impl ApiV1 {
     /// ```
     #[cfg_attr(feature = "log-instrument", instrument)]
     #[doc(alias = "ExecuteBinary")]
+    #[inline]
     pub fn execute_binary<P: AsRef<Utf8UnixPath>>(
         &self,
         session: &WSLSessionInformation,
@@ -164,11 +188,26 @@ impl ApiV1 {
             .collect();
         let mut args_ptrs: Vec<*const u8> = c_args
             .iter()
-            .map(|arg| arg.as_ptr() as *const u8)
-            .chain(once(std::ptr::null::<u8>()))
+            .map(|arg| arg.as_ptr().cast::<u8>())
+            .chain(once(ptr::null::<u8>()))
             .collect();
         let args_ptr = args_ptrs.as_mut_ptr();
         let mut socket = MaybeUninit::<WinSocket>::uninit();
+        // SAFETY:
+        // - `ExecuteBinaryInDistribution` is guaranteed to be non-null because we first checked
+        //   the API version (>= 2.1.2) before calling `unwrap_unchecked()`.
+        // - `session.id()` returns a valid integer identifying a WSLSessionInformation`, which comes from
+        //   a live session reference owned by the caller.
+        // - `path_ptr` points to a null-terminated buffer (`c_path`) that is kept alive for the
+        //   duration of the call.
+        // - `args_ptr` points to a null-terminated array of pointers (`args_ptrs`), each pointing
+        //   to a valid C string buffer (`c_args`). All these buffers live until after the call.
+        // - `socket.as_mut_ptr()` is a valid, writable pointer to uninitialized memory. The
+        //   function is documented to write a valid SOCKET there on success.
+        // - We only call `assume_init()` if `HRESULT::ok()` reports success, ensuring the socket
+        //   field has been properly initialized by the callee.
+        // - `TcpStream::from_raw_socket` takes ownership of the returned socket; no double-close
+        //   occurs because we never manually close it.
         let stream = unsafe {
             HRESULT(self.0.ExecuteBinary.unwrap_unchecked()(
                 session.id(),
@@ -187,7 +226,11 @@ impl ApiV1 {
     #[cfg_attr(feature = "log-instrument", instrument)]
     pub(crate) fn plugin_error(&self, error: &OsStr) -> WinResult<()> {
         let error_utf16 = U16CString::from_os_str_truncate(error);
-        HRESULT(unsafe { self.0.PluginError.unwrap_unchecked()(error_utf16.as_ptr()) }).ok()
+        HRESULT(
+            // SAFETY: We know the pointer is always valid if the API ref is valid
+            unsafe { self.0.PluginError.unwrap_unchecked()(error_utf16.as_ptr()) },
+        )
+        .ok()
     }
 
     /// Execute a program in a user distribution
@@ -223,6 +266,7 @@ impl ApiV1 {
     /// ```
     #[doc(alias = "ExecuteBinaryInDistribution")]
     #[cfg_attr(feature = "log-instrument", instrument)]
+    #[inline]
     pub fn execute_binary_in_distribution<P: AsRef<Utf8UnixPath>>(
         &self,
         session: &WSLSessionInformation,
@@ -246,16 +290,33 @@ impl ApiV1 {
             .collect();
         let mut args_ptrs: Vec<_> = c_args
             .iter()
-            .map(|arg| arg.as_ptr() as *const u8)
-            .chain(once(std::ptr::null()))
+            .map(|arg| arg.as_ptr().cast::<u8>())
+            .chain(once(ptr::null()))
             .collect();
         let args_ptr = args_ptrs.as_mut_ptr();
         let mut socket = MaybeUninit::<WinSocket>::uninit();
+        // SAFETY:
+        // - `ExecuteBinaryInDistribution` is guaranteed to be non-null because we first checked
+        //   the API version (>= 2.1.2) before calling `unwrap_unchecked()`.
+        // - `session.id()` returns a valid integer identifying a WSLSessionInformation`, which comes from
+        //   a live session reference owned by the caller.
+        // - `distribution_id` is passed by reference as a properly aligned and sized GUID, cast
+        //   to the expected FFI type.
+        // - `path_ptr` points to a null-terminated buffer (`c_path`) that is kept alive for the
+        //   duration of the call.
+        // - `args_ptr` points to a null-terminated array of pointers (`args_ptrs`), each pointing
+        //   to a valid C string buffer (`c_args`). All these buffers live until after the call.
+        // - `socket.as_mut_ptr()` is a valid, writable pointer to uninitialized memory. The
+        //   function is documented to write a valid SOCKET there on success.
+        // - We only call `assume_init()` if `HRESULT::ok()` reports success, ensuring the socket
+        //   field has been properly initialized by the callee.
+        // - `TcpStream::from_raw_socket` takes ownership of the returned socket; no double-close
+        //   occurs because we never manually close it.
+        #[allow(clippy::absolute_paths)]
         let stream = unsafe {
             HRESULT(self.0.ExecuteBinaryInDistribution.unwrap_unchecked()(
                 session.id(),
-                (&distribution_id) as *const GUID
-                    as *const wslpluginapi_sys::windows_sys::core::GUID,
+                (&raw const distribution_id).cast::<wslpluginapi_sys::windows_sys::core::GUID>(),
                 path_ptr,
                 args_ptr,
                 socket.as_mut_ptr(),
@@ -273,7 +334,8 @@ impl ApiV1 {
 }
 
 impl Debug for ApiV1 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ApiV1")
             .field("version", self.version())
             .finish()

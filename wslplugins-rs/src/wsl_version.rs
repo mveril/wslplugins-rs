@@ -1,6 +1,7 @@
 use std::{
-    fmt::{Debug, Display},
+    fmt::{self, Debug, Display},
     hash::Hash,
+    ptr,
 };
 
 /// Represents a WSL version number.
@@ -16,7 +17,7 @@ use std::{
 /// assert_eq!(version.revision(), 0);
 /// ```
 #[repr(transparent)]
-#[derive(Clone, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct WSLVersion(wslpluginapi_sys::WSLVersion);
 
 impl WSLVersion {
@@ -27,110 +28,102 @@ impl WSLVersion {
     /// - `revision`: The revision number.
     /// # Returns
     /// The new `WSLVersion` instance.
-    pub fn new(major: u32, minor: u32, revision: u32) -> Self {
-        wslpluginapi_sys::WSLVersion {
+    #[must_use]
+    #[inline]
+    pub const fn new(major: u32, minor: u32, revision: u32) -> Self {
+        Self(wslpluginapi_sys::WSLVersion {
             Major: major,
             Minor: minor,
             Revision: revision,
-        }
-        .into()
+        })
     }
 
     /// Retrieves the major version number.
-    pub fn major(&self) -> u32 {
+    #[must_use]
+    #[inline]
+    pub const fn major(&self) -> u32 {
         self.0.Major
     }
 
     /// Set the major version number.
-    pub fn set_major(&mut self, major: u32) {
-        self.0.Major = major
+    #[inline]
+    pub const fn set_major(&mut self, major: u32) {
+        self.0.Major = major;
     }
 
     /// Retrieves the minor version number.
-    pub fn minor(&self) -> u32 {
+    #[must_use]
+    #[inline]
+    pub const fn minor(&self) -> u32 {
         self.0.Minor
     }
 
     /// Set the minor version number.
-    pub fn set_minor(&mut self, minor: u32) {
-        self.0.Minor = minor
+    #[inline]
+    pub const fn set_minor(&mut self, minor: u32) {
+        self.0.Minor = minor;
     }
 
     /// Retrieves the revision version number.
-    pub fn revision(&self) -> u32 {
+    #[must_use]
+    #[inline]
+    pub const fn revision(&self) -> u32 {
         self.0.Revision
     }
 
     /// Set the revision version number.
-    pub fn set_revision(&mut self, revision: u32) {
-        self.0.Revision = revision
+    #[inline]
+    pub const fn set_revision(&mut self, revision: u32) {
+        self.0.Revision = revision;
     }
 }
 
 impl From<wslpluginapi_sys::WSLVersion> for WSLVersion {
+    #[inline]
     fn from(value: wslpluginapi_sys::WSLVersion) -> Self {
-        WSLVersion(value)
+        Self(value)
     }
 }
 
 impl From<WSLVersion> for wslpluginapi_sys::WSLVersion {
+    #[inline]
     fn from(value: WSLVersion) -> Self {
         value.0
     }
 }
 
 impl AsRef<WSLVersion> for wslpluginapi_sys::WSLVersion {
+    #[inline]
     fn as_ref(&self) -> &WSLVersion {
-        unsafe { &*(self as *const wslpluginapi_sys::WSLVersion as *const WSLVersion) }
+        // SAFETY: conveting this kind of ref is safe as it is transparent
+        unsafe { &*ptr::from_ref::<Self>(self).cast::<WSLVersion>() }
     }
 }
 
 impl AsRef<wslpluginapi_sys::WSLVersion> for WSLVersion {
+    #[inline]
     fn as_ref(&self) -> &wslpluginapi_sys::WSLVersion {
         &self.0
     }
 }
 
-impl Hash for WSLVersion {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.major().hash(state);
-        self.minor().hash(state);
-        self.revision().hash(state);
-    }
-}
-
 impl Default for WSLVersion {
+    #[inline]
     fn default() -> Self {
         Self::new(1, 0, 0)
     }
 }
 
-impl PartialEq for WSLVersion {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
-    }
-}
-
-impl PartialOrd for WSLVersion {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for WSLVersion {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.cmp(&other.0)
-    }
-}
-
 impl Display for WSLVersion {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}.{}.{}", self.major(), self.minor(), self.revision())
     }
 }
 
 impl Debug for WSLVersion {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(stringify!(WSLVersion))
             .field("major", &self.major())
             .field("minor", &self.minor())

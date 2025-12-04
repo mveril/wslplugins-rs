@@ -35,7 +35,9 @@ impl Error {
     ///
     /// # Returns
     /// A new instance of `Error`.
-    pub fn new(current_version: WSLVersion, required_version: WSLVersion) -> Self {
+    #[must_use]
+    #[inline]
+    pub const fn new(current_version: WSLVersion, required_version: WSLVersion) -> Self {
         Self {
             current_version,
             required_version,
@@ -44,14 +46,15 @@ impl Error {
 }
 
 impl From<Error> for HRESULT {
-    /// Converts the `Error` into an `HRESULT` error code.
+    /// Converts the `Error` into the corresponding `HRESULT` error code.
     ///
     /// This implementation maps the custom `Error` to the `WSL_E_PLUGIN_REQUIRES_UPDATE` HRESULT.
     ///
-    /// # Returns
-    /// - `[WSL_E_PLUGIN_REQUIRES_UPDATE]: Indicates the WSL version is insufficient for the plugin.
+    /// # Note
+    /// [`WSL_E_PLUGIN_REQUIRES_UPDATE`]: Indicates the WSL version is insufficient for the plugin.
+    #[inline]
     fn from(_: Error) -> Self {
-        HRESULT(WSL_E_PLUGIN_REQUIRES_UPDATE)
+        Self(WSL_E_PLUGIN_REQUIRES_UPDATE)
     }
 }
 

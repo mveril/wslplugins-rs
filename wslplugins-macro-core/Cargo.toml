@@ -5,6 +5,9 @@ version.workspace = true
 license.workspace = true
 repository.workspace = true
 edition = "2021"
+description = "internal core implementation of for wslplugins-macro"
+keywords = ["wsl", "plugin", "windows", "linux", "internal"]
+categories = ["os::windows-apis", "api-bindings", "virtualization"]
 
 [dependencies]
 syn = { version = "*", features = ["full", "extra-traits"] }
@@ -17,3 +20,6 @@ strum = { version = "0.26.3", features = ["derive"] }
 wslpluginapi-sys = { workspace = true, features = ["hooks-field-names"] }
 quote = "*"
 struct-field-names-as-array = "*"
+
+[lints]
+workspace = true

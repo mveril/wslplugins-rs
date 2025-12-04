@@ -6,10 +6,12 @@ license.workspace = true
 repository.workspace = true
 description.workspace = true
 edition = "2021"
-
+keywords = ["wsl", "plugin", "windows", "linux"]
+categories = ["os::windows-apis", "api-bindings", "virtualization"]
+readme.workspace = true
 
 [dependencies]
-windows-core = "0.61.2"
+windows-core = { workspace = true }
 bitflags = { version = ">0.1.0", optional = true }
 enumflags2 = { version = ">0.5", optional = true }
 flagset = { version = ">0.1.0", optional = true }
@@ -20,6 +22,7 @@ typed-path = ">0.1"
 widestring = { version = "1", features = ["alloc"] }
 wslplugins-macro = { path = "../wslplugins-macro", optional = true }
 wslpluginapi-sys.workspace = true
+
 
 [dependencies.semver]
 version = ">0.1"
@@ -33,3 +36,6 @@ macro = ["dep:wslplugins-macro", "sys"]
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[lints]
+workspace = true

@@ -3,7 +3,6 @@
 //! This module provides an abstraction over `WslOfflineDistributionInformation` from the WSL Plugin API,
 //! offering a safe and idiomatic Rust interface for accessing offline distribution details.
 
-extern crate wslpluginapi_sys;
 use crate::{
     api::{
         errors::require_update_error::Result, utils::check_required_version_result_from_context,
@@ -13,10 +12,11 @@ use crate::{
 };
 use std::{
     ffi::OsString,
-    fmt::{Debug, Display},
-    hash::Hash,
+    fmt::{self, Debug, Display},
+    hash::{Hash, Hasher},
     mem,
-    os::windows::ffi::OsStringExt,
+    os::windows::ffi::OsStringExt as _,
+    ptr,
 };
 use windows_core::{GUID, PCWSTR};
 
@@ -28,40 +28,46 @@ use windows_core::{GUID, PCWSTR};
 pub struct OfflineDistributionInformation(wslpluginapi_sys::WslOfflineDistributionInformation);
 
 impl From<OfflineDistributionInformation> for wslpluginapi_sys::WslOfflineDistributionInformation {
+    #[inline]
     fn from(value: OfflineDistributionInformation) -> Self {
         value.0
     }
 }
 
 impl From<wslpluginapi_sys::WslOfflineDistributionInformation> for OfflineDistributionInformation {
+    #[inline]
     fn from(value: wslpluginapi_sys::WslOfflineDistributionInformation) -> Self {
-        OfflineDistributionInformation(value)
+        Self(value)
     }
 }
 
 impl AsRef<wslpluginapi_sys::WslOfflineDistributionInformation> for OfflineDistributionInformation {
+    #[inline]
     fn as_ref(&self) -> &wslpluginapi_sys::WslOfflineDistributionInformation {
         &self.0
     }
 }
 
 impl AsRef<OfflineDistributionInformation> for wslpluginapi_sys::WslOfflineDistributionInformation {
+    #[inline]
     fn as_ref(&self) -> &OfflineDistributionInformation {
-        unsafe {
-            &*(self as *const wslpluginapi_sys::WslOfflineDistributionInformation
-                as *const OfflineDistributionInformation)
-        }
+        // SAFETY: This conversion is safe because of transparency.
+        unsafe { &*ptr::from_ref::<Self>(self).cast::<OfflineDistributionInformation>() }
     }
 }
 
 impl CoreDistributionInformation for OfflineDistributionInformation {
     /// Retrieves the [GUID] of the offline distribution.
+    #[inline]
     fn id(&self) -> GUID {
+        // SAFETY: Id is known to be valid GUID and windows_sys GUID and windows_core GUID has same representation
         unsafe { mem::transmute_copy(&self.0.Id) }
     }
 
-    /// Retrieves the name of the offline distribution as an [OsString].
+    /// Retrieves the name of the offline distribution as an [`OsString`].
+    #[inline]
     fn name(&self) -> OsString {
+        // SAFETY: name is known to be valid
         unsafe { OsString::from_wide(PCWSTR::from_raw(self.0.Name).as_wide()) }
     }
 
@@ -70,7 +76,9 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
     /// # Returns
     /// - `Some(OsString)`: If the package family name is set.
     /// - `None`: If the package family name is null or empty.
+    #[inline]
     fn package_family_name(&self) -> Option<OsString> {
+        // SAFETY: check already inside
         unsafe {
             let ptr = PCWSTR::from_raw(self.0.PackageFamilyName);
             if ptr.is_null() || ptr.is_empty() {
@@ -81,11 +89,14 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
         }
     }
 
+    #[inline]
     fn flavor(&self) -> Result<Option<OsString>> {
         check_required_version_result_from_context(
             WSLContext::get_current(),
             &WSLVersion::new(2, 4, 4),
         )?;
+
+        // SAFETY: check already inside
         unsafe {
             let ptr = PCWSTR::from_raw(self.0.Flavor);
             if ptr.is_null() || ptr.is_empty() {
@@ -96,11 +107,13 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
         }
     }
 
+    #[inline]
     fn version(&self) -> Result<Option<OsString>> {
         check_required_version_result_from_context(
             WSLContext::get_current(),
             &WSLVersion::new(2, 4, 4),
         )?;
+        // SAFETY: check already inside
         unsafe {
             let ptr = PCWSTR::from_raw(self.0.Flavor);
             if ptr.is_null() || ptr.is_empty() {
@@ -117,6 +130,7 @@ where
     T: CoreDistributionInformation,
 {
     /// Compares two distributions by their IDs for equality.
+    #[inline]
     fn eq(&self, other: &T) -> bool {
         self.id() == other.id()
     }
@@ -124,13 +138,17 @@ where
 
 impl Hash for OfflineDistributionInformation {
     /// Computes a hash based on the distribution's ID.
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    #[inline]
+    fn hash<H: Hasher>(&self, state: &mut H) {
         self.id().hash(state);
     }
 }
 
 impl Display for OfflineDistributionInformation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    #[inline]
+    #[expect(clippy::use_debug, reason = "GUID display")]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // SAFETY: Name is known to be valid
         unsafe {
             write!(
                 f,
@@ -143,6 +161,7 @@ impl Display for OfflineDistributionInformation {
 }
 
 impl Debug for OfflineDistributionInformation {
+    #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut dbg = f.debug_struct("DistributionInformation");
         dbg.field("name", &self.name())

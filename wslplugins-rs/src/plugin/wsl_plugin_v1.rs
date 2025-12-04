@@ -4,6 +4,8 @@
 //! synchronous notifications sent to a WSL plugin. The trait defines lifecycle events
 //! for managing the state of the WSL VM, distributions, and related settings.
 
+#[cfg(doc)]
+use super::error::Error;
 use super::error::Result;
 use crate::{
     distribution_information::DistributionInformation,
@@ -12,6 +14,8 @@ use crate::{
     wsl_vm_creation_settings::WSLVmCreationSettings, WSLContext,
 };
 use std::marker::Sized;
+#[cfg(doc)]
+use windows_core::Error as WinError;
 use windows_core::Result as WinResult;
 
 /// Trait defining synchronous notifications sent to the plugin.
@@ -51,9 +55,8 @@ pub trait WSLPluginV1: Sized + Sync {
     /// # Arguments
     /// - `context`: A reference to the `WSLContext` providing access to the plugin API.
     ///
-    /// # Returns
-    /// - `Ok(Self)`: If the plugin was successfully initialized.
-    /// - `Err(WinError)`: If initialization fails.
+    /// # Errors
+    /// - [`WinError`]: If initialization fails.
     fn try_new(context: &'static WSLContext) -> WinResult<Self>;
 
     /// Called when the VM has started.
@@ -62,10 +65,13 @@ pub trait WSLPluginV1: Sized + Sync {
     /// - `session`: Information about the current session.
     /// - `user_settings`: Custom user settings for the VM creation.
     ///
-    /// # Returns
-    /// - `Ok(())`: If the plugin successfully handled the event.
-    /// - `Err(`Error`)`: If the event handling failed.
-    #[allow(unused_variables)]
+    /// # Errors
+    /// - [`Error`]: If the event handling failed.
+    #[expect(
+        unused_variables,
+        reason = "We are on a treit with default methods that return just Ok(())"
+    )]
+    #[inline]
     fn on_vm_started(
         &self,
         session: &WSLSessionInformation,
@@ -79,10 +85,13 @@ pub trait WSLPluginV1: Sized + Sync {
     /// # Arguments
     /// - `session`: Information about the current session.
     ///
-    /// # Returns
-    /// - `Ok(())`: If the plugin successfully handled the event.
-    /// - `Err(WinError)`: If the event handling failed.
-    #[allow(unused_variables)]
+    /// # Errors
+    /// - `Errors`: If the event handling failed.
+    #[expect(
+        unused_variables,
+        reason = "We are on a treit with default methods that return just Ok(())"
+    )]
+    #[inline]
     fn on_vm_stopping(&self, session: &WSLSessionInformation) -> WinResult<()> {
         Ok(())
     }
@@ -93,10 +102,13 @@ pub trait WSLPluginV1: Sized + Sync {
     /// - `session`: Information about the current session.
     /// - `distribution`: Information about the distribution.
     ///
-    /// # Returns
-    /// - `Ok(())`: If the plugin successfully handled the event.
-    /// - `Err(Error)`: If the event handling failed.
-    #[allow(unused_variables)]
+    /// # Errors
+    /// - `Errors`: If the event handling failed.
+    #[expect(
+        unused_variables,
+        reason = "We are on a treit with default methods that return just Ok(())"
+    )]
+    #[inline]
     fn on_distribution_started(
         &self,
         session: &WSLSessionInformation,
@@ -111,13 +123,16 @@ pub trait WSLPluginV1: Sized + Sync {
     /// - `session`: Information about the current session.
     /// - `distribution`: Information about the distribution.
     ///
-    /// # Returns
-    /// - `Ok(())`: If the plugin successfully handled the event.
-    /// - `Err(WinError)`: If the event handling failed.
+    /// # Errors
+    /// - `WinError`: If the event handling failed.
     ///
     /// # Notes
     /// - This method might be called multiple times for the same distribution if stopping fails.
-    #[allow(unused_variables)]
+    #[expect(
+        unused_variables,
+        reason = "We are on a treit with default methods that return just Ok(())"
+    )]
+    #[inline]
     fn on_distribution_stopping(
         &self,
         session: &WSLSessionInformation,
@@ -132,13 +147,15 @@ pub trait WSLPluginV1: Sized + Sync {
     /// - `session`: Information about the current session.
     /// - `distribution`: Offline information about the distribution.
     ///
-    /// # Returns
-    /// - `Ok(())`: If the plugin successfully handled the event.
-    /// - `Err(WinError)`: If the event handling failed.
-    ///
+    /// # Errors
+    /// - `WinError`: If the event handling failed.
     /// # Notes
     /// - Introduced in API version 2.1.2.
-    #[allow(unused_variables)]
+    #[expect(
+        unused_variables,
+        reason = "We are on a treit with default methods that return just Ok(())"
+    )]
+    #[inline]
     fn on_distribution_registered(
         &self,
         session: &WSLSessionInformation,
@@ -153,13 +170,17 @@ pub trait WSLPluginV1: Sized + Sync {
     /// - `session`: Information about the current session.
     /// - `distribution`: Offline information about the distribution.
     ///
-    /// # Returns
-    /// - `Ok(())`: If the plugin successfully handled the event.
-    /// - `Err(WinError)`: If the event handling failed.
+    /// # Errors
+    /// - `WinError`: If the event handling failed.
     ///
     /// # Notes
     /// - Introduced in API version 2.1.2.
-    #[allow(unused_variables)]
+    #[expect(
+        unused_variables,
+        reason = "We are on a treit with default methods that return just 
+    Ok(())"
+    )]
+    #[inline]
     fn on_distribution_unregistered(
         &self,
         session: &WSLSessionInformation,
