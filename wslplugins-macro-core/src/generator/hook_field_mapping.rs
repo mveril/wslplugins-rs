@@ -116,7 +116,7 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
         }
     })
 }
-
+// test
 #[allow(clippy::expect_used, clippy::unwrap_used, reason = "Tests")]
 #[cfg(test)]
 mod tests {
