@@ -69,8 +69,8 @@ jobs:
       - name: Generate Documentation (${{ matrix.DOCTYPE }}, ${{ matrix.toolchain }})
         run: cargo doc --no-deps --all-features
 
-      - name: Install and Run Security Audit (Nightly Only)
+      - name: Install and Run cargo deny (Nightly Only)
         if: matrix.toolchain == 'nightly'
         run: |
-          cargo install cargo-audit
-          cargo audit
+          cargo install cargo-deny || echo "cargo-deny already installed"
+          cargo deny check --show-stats
