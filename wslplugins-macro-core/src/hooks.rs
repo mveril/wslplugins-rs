@@ -20,6 +20,7 @@ impl Hooks {
     }
 }
 
+#[allow(clippy::expect_used, clippy::unwrap_used, reason = "Tests")]
 #[cfg(test)]
 mod tests {
     use super::*;

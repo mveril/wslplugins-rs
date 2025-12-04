@@ -117,6 +117,7 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
     })
 }
 
+#[allow(clippy::expect_used, clippy::unwrap_used, reason = "Tests")]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -150,7 +151,7 @@ mod tests {
         assert_eq!(
             result.unwrap().to_string(),
             quote!(hooks_struct.OnVMStarted = Some(on_vm_started);).to_string()
-        )
+        );
     }
 
     // Test for hook field mapping with version condition
@@ -173,7 +174,7 @@ mod tests {
                 );
             })
             .to_string()
-        )
+        );
     }
 
     // Test for preparing hooks

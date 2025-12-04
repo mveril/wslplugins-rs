@@ -27,6 +27,7 @@ macro_rules! acc_syn_result {
     }};
 }
 
+#[allow(clippy::expect_used, clippy::unwrap_in_result, reason = "Tests")]
 #[cfg(test)]
 mod tests {
     use syn::{Error, Result};
@@ -41,7 +42,10 @@ mod tests {
             acc_syn_result!(result1, result2, result3).expect("Expected Ok result");
         assert_eq!(val1, 10);
         assert_eq!(val2, "Success".to_string());
-        assert_eq!(val3, 0.5);
+        #[allow(clippy::float_cmp, reason = "Test comparison")]
+        {
+            assert_eq!(val3, 0.5);
+        }
     }
 
     #[test]

@@ -17,7 +17,7 @@ impl CstringExt for CString {
         unsafe { Self::from_vec_unchecked(truncated_bytes.to_vec()) }
     }
 }
-
+#[allow(clippy::expect_used, clippy::unwrap_used, reason = "Tests")]
 #[cfg(test)]
 mod tests {
     use super::*;
