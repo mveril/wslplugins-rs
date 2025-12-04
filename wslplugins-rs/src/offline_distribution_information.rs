@@ -146,7 +146,7 @@ impl Hash for OfflineDistributionInformation {
 
 impl Display for OfflineDistributionInformation {
     #[inline]
-    #[expect(clippy::use_debug,  reason = "GUID display")]
+    #[expect(clippy::use_debug, reason = "GUID display")]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // SAFETY: Name is known to be valid
         unsafe {

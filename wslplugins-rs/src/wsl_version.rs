@@ -114,7 +114,6 @@ impl Default for WSLVersion {
     }
 }
 
-
 impl Display for WSLVersion {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
