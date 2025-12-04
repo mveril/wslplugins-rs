@@ -1,6 +1,6 @@
 #![allow(missing_docs)]
 #![allow(clippy::missing_inline_in_public_items, reason = "Macros")]
-///! Provides procedural macros for WSL plugin development.
+//! Provides procedural macros for WSL plugin development.
 use proc_macro::TokenStream;
 /// Attribute macro for WSL plugin V1.
 /// This macro should be used on impl block of `WSLPluginV1` in order to register the plugin that implement this interface
