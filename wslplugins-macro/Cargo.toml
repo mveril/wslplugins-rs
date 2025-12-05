@@ -13,9 +13,9 @@ categories = ["os::windows-apis", "api-bindings", "virtualization"]
 proc-macro = true
 
 [dependencies]
-syn = "*"
-quote = "*"
-proc-macro2 = "*"
-wslplugins-macro-core = { path = "../wslplugins-macro-core" }
+wslplugins-macro-core = { path = "../wslplugins-macro-core", version = "0.1.0-alpha.0"}
+syn = { workspace = true }
+quote = { workspace = true }
+proc-macro2 = { workspace = true }
 [lints]
 workspace = true

@@ -11,6 +11,9 @@ members = [
 wslpluginapi-sys = "0.1.0-rc.1"
 windows-core = ">=0.57.0"
 windows = ">=0.57.0"
+quote = "1"
+syn = "2"
+proc-macro2 = "1"
 
 [workspace.package]
 authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]
