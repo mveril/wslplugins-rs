@@ -10,16 +10,16 @@ keywords = ["wsl", "plugin", "windows", "linux", "internal"]
 categories = ["os::windows-apis", "api-bindings", "virtualization"]
 
 [dependencies]
-syn = { version = "*", features = ["full", "extra-traits"] }
-quote = "*"
-"proc-macro2" = "*"
+syn = { workspace = true, features = ["full", "extra-traits"] }
+quote = { workspace = true }
+"proc-macro2" = { workspace = true }
 heck = "0.5"
 strum = { version = "0.26.3", features = ["derive"] }
 
 [build-dependencies]
 wslpluginapi-sys = { workspace = true, features = ["hooks-field-names"] }
-quote = "*"
-struct-field-names-as-array = "*"
+quote = "1"
+struct-field-names-as-array = "0.3"
 
 [lints]
 workspace = true

@@ -15,7 +15,7 @@ wslplugins-rs = { path = "../wslplugins-rs", features = [
   "macro",
   "bitflags",
   "log-full",
-] }
+], version = "0.1.0-alpha.0" }
 chrono = "^0.*"
 log = "0.4"
 log-instrument = "0.3"

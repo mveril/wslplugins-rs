@@ -9,7 +9,9 @@ edition = "2021"
 publish = false
 
 [dependencies]
-wslplugins-rs = { path = "../wslplugins-rs", features = ["macro"] }
+wslplugins-rs = { path = "../wslplugins-rs", features = [
+  "macro",
+], version = "0.1.0-alpha.0" }
 wslpluginapi-sys.workspace = true
 
 [dependencies.windows]
