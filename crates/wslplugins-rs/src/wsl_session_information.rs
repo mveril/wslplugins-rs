@@ -6,7 +6,7 @@
 use crate::{HasSessionId, SessionID};
 use core::hash;
 use std::{fmt, os::windows::raw::HANDLE};
-use wslpluginapi_sys::windows_sys::Win32::Security::PSID;
+use win_security_identifier::Sid;
 
 /// Represents session information for a WSL instance.
 ///
@@ -48,8 +48,8 @@ impl WSLSessionInformation {
     /// This pointer should be used only during the life of the session and must not be freed or modified.
     #[must_use]
     #[inline]
-    pub const unsafe fn user_sid(&self) -> PSID {
-        self.0.UserSid
+    pub const unsafe fn user_sid(&self) -> &Sid {
+        Sid::from_raw(self.0.UserSid)
     }
 }
 
