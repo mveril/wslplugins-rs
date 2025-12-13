@@ -3,6 +3,7 @@
 //! This module provides a safe abstraction over the `WSLSessionInformation` structure
 //! from the WSL Plugin API, allowing access to session details in an idiomatic Rust interface.
 
+use crate::SessionID;
 use core::hash;
 use std::{fmt, os::windows::raw::HANDLE};
 use wslpluginapi_sys::windows_sys::Win32::Security::PSID;
@@ -17,11 +18,11 @@ impl WSLSessionInformation {
     /// Retrieves the session ID.
     ///
     /// # Returns
-    /// The unique session ID as a [u32].
+    /// The unique session ID as a [`SessionID`].
     #[must_use]
     #[inline]
-    pub const fn id(&self) -> u32 {
-        self.0.SessionId
+    pub const fn id(&self) -> SessionID {
+        SessionID(self.0.SessionId)
     }
 
     /// Retrieves the user token for the session.
