@@ -36,7 +36,7 @@ mod test {
     use crate::wsl_plugin_v1;
 
     #[test]
-    #[expect(
+    #[allow(
         clippy::too_many_lines,
         reason = "Test contains long example implementation"
     )]

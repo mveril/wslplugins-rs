@@ -5,12 +5,12 @@
 //! and provides utility methods for error creation and consumption.
 
 use crate::WSLContext;
-#[cfg(feature = "tracing")]
-use tracing::debug;
 use std::borrow::ToOwned;
 use std::ffi::{OsStr, OsString};
 use std::num::NonZeroI32;
 use thiserror::Error;
+#[cfg(feature = "tracing")]
+use tracing::debug;
 use windows_core::{Error as WinError, HRESULT};
 
 /// A specialized result type for operations that may return a WSL plugin error.
