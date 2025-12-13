@@ -50,7 +50,6 @@ mod test {
                     Ok(plugin)
                 }
 
-                #[instrument]
                 fn on_vm_started(
                     &self,
                     session: &WSLSessionInformation,
@@ -101,7 +100,6 @@ mod test {
                     Ok(())
                 }
 
-                #[instrument]
                 fn on_distribution_started(
                     &self,
                     session: &WSLSessionInformation,
@@ -120,13 +118,11 @@ mod test {
                     Ok(())
                 }
 
-                #[instrument]
                 fn on_vm_stopping(&self, session: &WSLSessionInformation) -> Result<()> {
                     info!("VM Stopping. SessionId={:?}", session.id());
                     Ok(())
                 }
 
-                #[instrument]
                 fn on_distribution_stopping(
                     &self,
                     session: &WSLSessionInformation,
