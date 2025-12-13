@@ -42,14 +42,14 @@ fn setup_logging() -> WinResult<()> {
     Box::leak(Box::new(guard));
 
     tracing_subscriber::fmt()
-        .with_max_level(log_level)
+        .with_env_filter(log_level)
         .with_writer(non_blocking)
         .with_ansi(false) // log file, no ANSI colors
         .with_span_events(FmtSpan::NONE)
         .try_init()
         .map_err(|_| WinError::from(E_FAIL))?;
 
-    info!(level = ?log_level, path = %log_path, "Logging configured");
+    info!("Logging configured to path {}", log_path);
     panic::set_hook(Box::new(|info| {
         // This will be called for *every* panic before unwinding
         error!("panic: {info}");
