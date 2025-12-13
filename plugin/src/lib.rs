@@ -45,7 +45,7 @@ fn setup_logging() -> WinResult<()> {
         .with_env_filter(log_level)
         .with_writer(non_blocking)
         .with_ansi(false) // log file, no ANSI colors
-        .with_span_events(FmtSpan::NONE)
+        .with_span_events(FmtSpan::ACTIVE)
         .try_init()
         .map_err(|_| WinError::from(E_FAIL))?;
 
