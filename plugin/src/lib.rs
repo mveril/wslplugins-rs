@@ -2,7 +2,7 @@
 use etc_os_release::OsRelease;
 use plugin::{Result, WSLPluginV1};
 use std::{env, fs::OpenOptions, io::Read, panic};
-use tracing::{error, info, instrument, level_filters::LevelFilter, warn};
+use tracing::{error, info, instrument, warn};
 use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
 use windows::{
     core::{Error as WinError, Result as WinResult, GUID},
