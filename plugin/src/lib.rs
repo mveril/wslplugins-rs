@@ -1,11 +1,9 @@
 //! Sample WSL plugin implemented in Rust.
-use chrono::Local;
 use etc_os_release::OsRelease;
-use fern::{log_file, Dispatch};
-use log::{info, warn, LevelFilter};
-use log_instrument::instrument;
 use plugin::{Result, WSLPluginV1};
-use std::{env, io::Read};
+use std::{env, fs::OpenOptions, io::Read, panic};
+use tracing::{error, info, instrument, warn};
+use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
 use windows::{
     core::{Error as WinError, Result as WinResult, GUID},
     Win32::Foundation::E_FAIL,
@@ -13,35 +11,52 @@ use windows::{
 use wslplugins_rs::wsl_user_configuration::bitflags::WSLUserConfigurationFlags;
 use wslplugins_rs::*;
 
+#[derive(Debug)]
 pub(crate) struct Plugin {
     context: &'static WSLContext,
 }
 
 fn setup_logging() -> WinResult<()> {
-    let log_level = env::var("RUST_WSL_LOGLEVEL")
-        .ok()
-        .and_then(|val| val.parse().ok())
-        .unwrap_or(LevelFilter::Info);
+    // Read log level from environment first from RUST_WSL_LOGLEVEL
+    let log_level = EnvFilter::try_from_env("RUST_WSL_LOGLEVEL")
+        // else try default RUST_LOG
+        .or_else(|_| EnvFilter::try_from_default_env())
+        // fallback default if both fail
+        .unwrap_or_else(|_| EnvFilter::new("info"));
 
+    // Read log path from environment, default to C:\wsl-plugin.log
     let log_path =
         env::var("RUST_WSL_LOG_PATH").unwrap_or_else(|_| "C:\\wsl-plugin.log".to_string());
 
-    Dispatch::new()
-        .format(|out, message, record| {
-            out.finish(format_args!(
-                "{} [{}] {}",
-                Local::now().format("%Y-%m-%d %H:%M:%S"),
-                record.level(),
-                message
-            ))
-        })
-        .level(log_level)
-        .chain(log_file(log_path)?)
-        .apply()
+    // Open (or create) the log file in append mode
+    let file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&log_path)
         .map_err(|_| WinError::from(E_FAIL))?;
-    info!("Logging configured: {log_level:}");
+
+    // Non-blocking writer so logging does not block the main thread
+    let (non_blocking, guard) = tracing_appender::non_blocking(file);
+
+    // Leak the guard so it lives for the whole process lifetime
+    Box::leak(Box::new(guard));
+
+    tracing_subscriber::fmt()
+        .with_env_filter(log_level)
+        .with_writer(non_blocking)
+        .with_ansi(false) // log file, no ANSI colors
+        .with_span_events(FmtSpan::ACTIVE)
+        .try_init()
+        .map_err(|_| WinError::from(E_FAIL))?;
+
+    info!("Logging configured to path {}", log_path);
+    panic::set_hook(Box::new(|info| {
+        // This will be called for *every* panic before unwinding
+        error!("panic: {info}");
+    }));
     Ok(())
 }
+
 #[wsl_plugin_v1(2, 1, 2)]
 impl WSLPluginV1 for Plugin {
     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
@@ -51,7 +66,7 @@ impl WSLPluginV1 for Plugin {
         Ok(plugin)
     }
 
-    #[instrument]
+    #[instrument(level = "trace")]
     fn on_vm_started(
         &self,
         session: &WSLSessionInformation,
@@ -86,7 +101,7 @@ impl WSLPluginV1 for Plugin {
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(level = "trace")]
     fn on_distribution_started(
         &self,
         session: &WSLSessionInformation,
@@ -106,13 +121,13 @@ impl WSLPluginV1 for Plugin {
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(level = "trace")]
     fn on_vm_stopping(&self, session: &WSLSessionInformation) -> WinResult<()> {
         info!("VM Stopping. SessionId={:?}", session.id());
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(level = "trace")]
     fn on_distribution_stopping(
         &self,
         session: &WSLSessionInformation,

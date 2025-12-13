@@ -14,12 +14,11 @@ crate-type = ["cdylib"]
 wslplugins-rs = { path = "../wslplugins-rs", features = [
   "macro",
   "bitflags",
-  "log-full",
+  "tracing",
 ], version = "0.1.0-alpha.0" }
-chrono = "^0.*"
-log = "0.4"
-log-instrument = "0.3"
-fern = "0.7"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
 etc-os-release = "0.1.0"
 [dependencies.windows]
 workspace = true

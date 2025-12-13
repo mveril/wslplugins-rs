@@ -96,7 +96,7 @@ impl AsRef<WSLVersion> for wslpluginapi_sys::WSLVersion {
     #[inline]
     fn as_ref(&self) -> &WSLVersion {
         // SAFETY: conveting this kind of ref is safe as it is transparent
-        unsafe { &*ptr::from_ref::<Self>(self).cast::<WSLVersion>() }
+        unsafe { &*ptr::from_ref(self).cast::<WSLVersion>() }
     }
 }
 
