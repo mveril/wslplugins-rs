@@ -3,7 +3,7 @@ use etc_os_release::OsRelease;
 use plugin::{Result, WSLPluginV1};
 use std::{env, fs::OpenOptions, io::Read, panic};
 use tracing::{error, info, instrument, level_filters::LevelFilter, warn};
-use tracing_subscriber::fmt::format::FmtSpan;
+use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
 use windows::{
     core::{Error as WinError, Result as WinResult, GUID},
     Win32::Foundation::E_FAIL,
@@ -17,11 +17,12 @@ pub(crate) struct Plugin {
 }
 
 fn setup_logging() -> WinResult<()> {
-    // Read log level from environment, default to INFO if missing/invalid
-    let log_level = env::var("RUST_WSL_LOGLEVEL")
-        .ok()
-        .and_then(|val| val.parse::<LevelFilter>().ok())
-        .unwrap_or(LevelFilter::INFO);
+    // Read log level from environment first from RUST_WSL_LOGLEVEL
+    let log_level = EnvFilter::try_from_env("RUST_WSL_LOGLEVEL")
+        // else try default RUST_LOG
+        .or_else(|_| EnvFilter::try_from_default_env())
+        // fallback default if both fail
+        .unwrap_or_else(|_| EnvFilter::new("info"));
 
     // Read log path from environment, default to C:\wsl-plugin.log
     let log_path =
