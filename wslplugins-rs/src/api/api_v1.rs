@@ -5,8 +5,6 @@ use crate::api::errors::require_update_error::Result as UpReqResult;
 use crate::cstring_ext::CstringExt;
 use crate::wsl_session_information::WSLSessionInformation;
 use crate::WSLVersion;
-#[cfg(feature = "log-instrument")]
-use log_instrument::instrument;
 use std::ffi::{CString, OsStr};
 use std::fmt::{self, Debug};
 use std::iter::once;
@@ -16,6 +14,8 @@ use std::os::windows::io::FromRawSocket as _;
 use std::os::windows::raw::SOCKET;
 use std::path::Path;
 use std::ptr;
+#[cfg(feature = "tracing")]
+use tracing::instrument;
 use typed_path::Utf8UnixPath;
 use widestring::U16CString;
 use windows_core::{Result as WinResult, GUID, HRESULT};
@@ -63,7 +63,7 @@ impl AsRef<ApiV1> for WSLPluginAPIV1 {
 }
 
 impl ApiV1 {
-    /// Returns the current version of the WSL API being used.
+    /// Retpurns the current version of the WSL API being used.
     ///
     /// This is useful for checking compatibility with specific API features.
     ///
@@ -75,7 +75,6 @@ impl ApiV1 {
     ///     "WSL API version: {}.{}.{}",
     ///     version.Major, version.Minor, version.Revision
     /// );
-    #[cfg_attr(feature = "log-instrument", instrument)]
     #[must_use]
     #[inline]
     pub fn version(&self) -> &WSLVersion {
@@ -98,9 +97,12 @@ impl ApiV1 {
     /// api.mount_folder(&session, "C:\\path", "/mnt/path", false, "MyMount")?;
     /// ```
     #[doc(alias = "MountFolder")]
-    #[cfg_attr(feature = "log-instrument", instrument)]
+    #[cfg_attr(feature = "tracing", instrument)]
     #[inline]
-    pub fn mount_folder<WP: AsRef<Path>, UP: AsRef<Utf8UnixPath>>(
+    pub fn mount_folder<
+        WP: AsRef<Path> + std::fmt::Debug,
+        UP: AsRef<Utf8UnixPath> + std::fmt::Debug,
+    >(
         &self,
         session: &WSLSessionInformation,
         windows_path: WP,
@@ -165,10 +167,10 @@ impl ApiV1 {
     /// stream.read_to_string(&mut buffer).unwrap();
     /// println!("Process output: {}", buffer);
     /// ```
-    #[cfg_attr(feature = "log-instrument", instrument)]
+    #[cfg_attr(feature = "tracing", instrument)]
     #[doc(alias = "ExecuteBinary")]
     #[inline]
-    pub fn execute_binary<P: AsRef<Utf8UnixPath>>(
+    pub fn execute_binary<P: AsRef<Utf8UnixPath> + std::fmt::Debug>(
         &self,
         session: &WSLSessionInformation,
         path: P,
@@ -223,7 +225,7 @@ impl ApiV1 {
     }
 
     /// Set the error message to display to the user if the VM or distribution creation fails.
-    #[cfg_attr(feature = "log-instrument", instrument)]
+    #[cfg_attr(feature = "tracing", instrument)]
     pub(crate) fn plugin_error(&self, error: &OsStr) -> WinResult<()> {
         let error_utf16 = U16CString::from_os_str_truncate(error);
         HRESULT(
@@ -265,9 +267,9 @@ impl ApiV1 {
     /// println!("Process output: {}", buffer);
     /// ```
     #[doc(alias = "ExecuteBinaryInDistribution")]
-    #[cfg_attr(feature = "log-instrument", instrument)]
+    #[cfg_attr(feature = "tracing", instrument)]
     #[inline]
-    pub fn execute_binary_in_distribution<P: AsRef<Utf8UnixPath>>(
+    pub fn execute_binary_in_distribution<P: AsRef<Utf8UnixPath> + std::fmt::Debug>(
         &self,
         session: &WSLSessionInformation,
         distribution_id: GUID,

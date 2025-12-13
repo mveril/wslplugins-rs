@@ -14,6 +14,7 @@ static CURRENT_CONTEXT: OnceLock<WSLContext> = OnceLock::new();
 ///
 /// The `WSLContext` contains the API interface (`ApiV1`) and ensures safe, global access
 /// throughout the plugin's lifecycle.
+#[derive(Debug)]
 pub struct WSLContext {
     /// The API interface used for interacting with the WSL plugin API.
     pub api: &'static ApiV1,

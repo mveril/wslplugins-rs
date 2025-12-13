@@ -5,8 +5,8 @@
 //! and provides utility methods for error creation and consumption.
 
 use crate::WSLContext;
-#[cfg(feature = "log")]
-use log::debug;
+#[cfg(feature = "tracing")]
+use tracing::debug;
 use std::borrow::ToOwned;
 use std::ffi::{OsStr, OsString};
 use std::num::NonZeroI32;
@@ -132,9 +132,9 @@ impl Error {
     pub(crate) fn consume_error_message_unwrap<R: From<Self>>(self) -> R {
         if let Some(ref mess) = self.message {
             if let Some(context) = WSLContext::get_current() {
-                #[cfg_attr(not(feature = "log"), expect(unused_variables))]
+                #[cfg_attr(not(feature = "tracing"), expect(unused_variables))]
                 let plugin_error_result = context.api.plugin_error(mess.as_os_str());
-                #[cfg(feature = "log")]
+                #[cfg(feature = "tracing")]
                 if let Err(err) = plugin_error_result {
                     debug!(
                         "Unable to set plugin error message {} due to error: {}",
