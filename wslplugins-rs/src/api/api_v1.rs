@@ -97,7 +97,7 @@ impl ApiV1 {
     /// api.mount_folder(&session, "C:\\path", "/mnt/path", false, "MyMount")?;
     /// ```
     #[doc(alias = "MountFolder")]
-    #[cfg_attr(feature = "tracing", instrument)]
+    #[cfg_attr(feature = "tracing", instrument(level = "trace"))]
     #[inline]
     pub fn mount_folder<
         WP: AsRef<Path> + std::fmt::Debug,
@@ -167,7 +167,7 @@ impl ApiV1 {
     /// stream.read_to_string(&mut buffer).unwrap();
     /// println!("Process output: {}", buffer);
     /// ```
-    #[cfg_attr(feature = "tracing", instrument)]
+    #[cfg_attr(feature = "tracing", instrument(level = "trace"))]
     #[doc(alias = "ExecuteBinary")]
     #[inline]
     pub fn execute_binary<P: AsRef<Utf8UnixPath> + std::fmt::Debug>(
@@ -225,7 +225,7 @@ impl ApiV1 {
     }
 
     /// Set the error message to display to the user if the VM or distribution creation fails.
-    #[cfg_attr(feature = "tracing", instrument)]
+    #[cfg_attr(feature = "tracing", instrument(level = "trace"))]
     pub(crate) fn plugin_error(&self, error: &OsStr) -> WinResult<()> {
         let error_utf16 = U16CString::from_os_str_truncate(error);
         HRESULT(
@@ -267,7 +267,7 @@ impl ApiV1 {
     /// println!("Process output: {}", buffer);
     /// ```
     #[doc(alias = "ExecuteBinaryInDistribution")]
-    #[cfg_attr(feature = "tracing", instrument)]
+    #[cfg_attr(feature = "tracing", instrument(level = "trace"))]
     #[inline]
     pub fn execute_binary_in_distribution<P: AsRef<Utf8UnixPath> + std::fmt::Debug>(
         &self,

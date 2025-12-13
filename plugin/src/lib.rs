@@ -66,7 +66,7 @@ impl WSLPluginV1 for Plugin {
         Ok(plugin)
     }
 
-    #[instrument]
+    #[instrument(level = "trace")]
     fn on_vm_started(
         &self,
         session: &WSLSessionInformation,
@@ -101,7 +101,7 @@ impl WSLPluginV1 for Plugin {
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(level = "trace")]
     fn on_distribution_started(
         &self,
         session: &WSLSessionInformation,
@@ -121,13 +121,13 @@ impl WSLPluginV1 for Plugin {
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(level = "trace")]
     fn on_vm_stopping(&self, session: &WSLSessionInformation) -> WinResult<()> {
         info!("VM Stopping. SessionId={:?}", session.id());
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(level = "trace")]
     fn on_distribution_stopping(
         &self,
         session: &WSLSessionInformation,
