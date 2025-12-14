@@ -10,7 +10,7 @@ pub use parse_error::ParseError;
 mod uuid_impl;
 
 #[repr(transparent)]
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct UserDistributionID(pub windows_core::GUID);
 
 impl From<windows_core::GUID> for UserDistributionID {
@@ -51,7 +51,7 @@ impl From<UserDistributionID> for windows_core::GUID {
 impl UpperHex for UserDistributionID {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        LowerHex::fmt(&DefaultFormatter::from(*self), f)
+        UpperHex::fmt(&DefaultFormatter::from(*self), f)
     }
 }
 
@@ -59,6 +59,18 @@ impl LowerHex for UserDistributionID {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         LowerHex::fmt(&DefaultFormatter::from(*self), f)
+    }
+}
+
+impl Debug for UserDistributionID {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if f.alternate() {
+            f.debug_tuple(stringify!(UserDistributionID))
+                .field(&self.0)
+                .finish()
+        } else {
+            write!(f, "{}", self)
+        }
     }
 }
 

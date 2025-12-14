@@ -1,4 +1,6 @@
-use std::fmt::Debug;
+use std::{
+    fmt::{self, Debug, Display},
+};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SessionID(pub u32);
@@ -21,5 +23,11 @@ impl Debug for SessionID {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         Debug::fmt(&self.0, f)
+    }
+}
+
+impl Display for SessionID {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Display::fmt(&self.0, f)
     }
 }
