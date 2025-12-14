@@ -1,11 +1,13 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use std::hint::black_box;
+use std::{hint::black_box, str::FromStr};
 
 // Replace `my_crate` with your real crate name (the one in Cargo.toml).
 use wslplugins_rs::user_distribution_id::fmt::GuidFormatter;
 #[cfg(feature = "uuid")]
 use wslplugins_rs::user_distribution_id::fmt::UuidFormatter;
 use wslplugins_rs::UserDistributionID;
+
+const DISTRIBUTION_ID_STRING: &str = "00112233-4455-6677-8899-AABBCCDDEEFF";
 
 /// Returns a sample `UserDistributionID` used for all benchmarks.
 ///
@@ -14,7 +16,7 @@ use wslplugins_rs::UserDistributionID;
 /// construct it from a GUID / `uuid::Uuid` / bytes instead.
 #[allow(clippy::expect_used, reason = "the GUID is corect")]
 fn sample_user_distribution_id() -> UserDistributionID {
-    "00112233-4455-6677-8899-AABBCCDDEEFF"
+    DISTRIBUTION_ID_STRING
         .parse()
         .expect("valid UserDistributionID")
 }
@@ -77,5 +79,30 @@ fn bench_upper_hex(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_lower_hex, bench_upper_hex);
+fn bench_from_str(c: &mut Criterion) {
+    let mut group = c.benchmark_group("user_distribution_id_from_str");
+
+    // UuidFormatter + {:X}
+    #[cfg(feature = "uuid")]
+    group.bench_function("uuid_formatter_from_str", |b| {
+        b.iter(|| {
+            let formatter = UuidFormatter::from_str(black_box(DISTRIBUTION_ID_STRING));
+            let id = UserDistributionID::from(formatter.expect("Invalid GUID"));
+            black_box(id);
+        });
+    });
+
+    // GuidFormatter + {:X}
+    group.bench_function("guid_formatter_from_str", |b| {
+        b.iter(|| {
+            let formatter = GuidFormatter::from_str(black_box(DISTRIBUTION_ID_STRING));
+            let id = UserDistributionID::from(formatter.expect("Invalid GUID"));
+            black_box(id);
+        });
+    });
+
+    group.finish();
+}
+
+criterion_group!(benches, bench_lower_hex, bench_upper_hex, bench_from_str);
 criterion_main!(benches);

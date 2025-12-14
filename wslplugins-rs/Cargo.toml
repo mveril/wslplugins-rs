@@ -47,5 +47,5 @@ workspace = true
 
 
 [[bench]]
-name = "user_distribution_id_formating"
+name = "user_distribution_id_formatting"
 harness = false
