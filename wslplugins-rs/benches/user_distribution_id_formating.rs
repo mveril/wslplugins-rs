@@ -27,7 +27,7 @@ fn bench_lower_hex(c: &mut Criterion) {
     // UuidFormatter + {:x}
     group.bench_function("uuid_formatter_lower_hex", |b| {
         b.iter(|| {
-            let formatter = UuidFormatter::from(black_box(&id));
+            let formatter = UuidFormatter::from(black_box(id));
             // Format into a String so work is really performed.
             let s = format!("{:x}", formatter);
             black_box(s);
@@ -37,7 +37,7 @@ fn bench_lower_hex(c: &mut Criterion) {
     // GuidFormatter + {:x}
     group.bench_function("guid_formatter_lower_hex", |b| {
         b.iter(|| {
-            let formatter = GuidFormatter::from(black_box(&id));
+            let formatter = GuidFormatter::from(black_box(id));
             let s = format!("{:x}", formatter);
             black_box(s);
         })
@@ -55,7 +55,7 @@ fn bench_upper_hex(c: &mut Criterion) {
     // UuidFormatter + {:X}
     group.bench_function("uuid_formatter_upper_hex", |b| {
         b.iter(|| {
-            let formatter = UuidFormatter::from(black_box(&id));
+            let formatter = UuidFormatter::from(black_box(id));
             let s = format!("{:X}", formatter);
             black_box(s);
         })
@@ -64,7 +64,7 @@ fn bench_upper_hex(c: &mut Criterion) {
     // GuidFormatter + {:X}
     group.bench_function("guid_formatter_upper_hex", |b| {
         b.iter(|| {
-            let formatter = GuidFormatter::from(black_box(&id));
+            let formatter = GuidFormatter::from(black_box(id));
             let s = format!("{:X}", formatter);
             black_box(s);
         })
