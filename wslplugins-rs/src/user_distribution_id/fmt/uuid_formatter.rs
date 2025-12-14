@@ -25,9 +25,8 @@ impl UpperHex for UuidFormatter {
 
 impl From<&UserDistributionID> for UuidFormatter {
     #[inline]
-    fn from(value: &UserDistributionID) -> Self {
-        let uuid: uuid::Uuid = (*value).into();
-        Self(uuid)
+    fn from(value: UserDistributionID) -> Self {
+        Self(Uuid::from(valid))
     }
 }
 

@@ -14,10 +14,10 @@ impl GuidFormatter {
     const ENCODE_BUFFER: [u8; 36] = [0u8; 36];
 }
 
-impl From<&UserDistributionID> for GuidFormatter {
+impl From<UserDistributionID> for GuidFormatter {
     #[inline]
-    fn from(value: &UserDistributionID) -> Self {
-        Self(value.clone().into())
+    fn from(value: UserDistributionID) -> Self {
+        GUID::from(value).into()
     }
 }
 
