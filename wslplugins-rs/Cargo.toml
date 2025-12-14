@@ -33,7 +33,6 @@ proptest = "1.9.0"
 criterion = "0.8"
 
 [features]
-default = []
 sys = []
 macro = ["dep:wslplugins-macro", "sys"]
 tracing = ["dep:tracing"]
