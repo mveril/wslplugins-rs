@@ -9,7 +9,7 @@
 //! of a distribution. Implementing this trait allows for seamless integration with systems
 //! that need to handle multiple distributions in a consistent manner.
 
-use crate::{UserDistributionID, api::errors::require_update_error::Result};
+use crate::{api::errors::require_update_error::Result, UserDistributionID};
 use std::ffi::OsString;
 
 /// A trait representing the core information of a WSL distribution.

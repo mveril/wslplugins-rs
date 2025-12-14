@@ -15,7 +15,6 @@ impl From<Uuid> for UserDistributionID {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -33,4 +32,3 @@ mod tests {
         }
     }
 }
-
