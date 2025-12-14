@@ -10,6 +10,10 @@ use windows_core::GUID;
 use crate::{user_distribution_id::fmt::formatter::Formatter, UserDistributionID};
 pub struct GuidFormatter(GUID);
 
+impl GuidFormatter {
+    const ENCODE_BUFFER: [u8; 36] = [0u8; 36];
+}
+
 impl From<&UserDistributionID> for GuidFormatter {
     #[inline]
     fn from(value: &UserDistributionID) -> Self {
@@ -36,7 +40,7 @@ impl UpperHex for GuidFormatter {
 impl LowerHex for GuidFormatter {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut buffer = [0u8; 36];
+        let mut buffer = Self::ENCODE_BUFFER;
         write!(&mut buffer[..], "{:?}", self.0).map_err(|_| std::fmt::Error)?;
         for b in &mut buffer {
             *b = b.to_ascii_lowercase();
