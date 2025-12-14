@@ -63,13 +63,14 @@ impl LowerHex for UserDistributionID {
 }
 
 impl Debug for UserDistributionID {
+    #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if f.alternate() {
             f.debug_tuple(stringify!(UserDistributionID))
                 .field(&self.0)
                 .finish()
         } else {
-            write!(f, "{}", self)
+            write!(f, "{self}")
         }
     }
 }
