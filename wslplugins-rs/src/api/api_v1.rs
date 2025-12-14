@@ -4,8 +4,6 @@ use super::Result;
 use crate::api::errors::require_update_error::Result as UpReqResult;
 use crate::cstring_ext::CstringExt;
 use crate::{SessionID, UserDistributionID, WSLVersion};
-#[cfg(feature = "log-instrument")]
-use log_instrument::instrument;
 use std::ffi::{CString, OsStr};
 use std::fmt::{self, Debug};
 use std::iter::once;

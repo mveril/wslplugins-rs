@@ -4,7 +4,7 @@ use std::{
     fmt::{LowerHex, Result, UpperHex},
     str::FromStr,
 };
-use uuid::{fmt::Hyphenated, Uuid};
+use uuid::Uuid;
 pub struct UuidFormatter(Uuid);
 
 impl Formatter for UuidFormatter {}
@@ -23,22 +23,24 @@ impl UpperHex for UuidFormatter {
     }
 }
 
-impl From<&UserDistributionID> for UuidFormatter {
+impl From<UserDistributionID> for UuidFormatter {
     #[inline]
     fn from(value: UserDistributionID) -> Self {
-        Self(Uuid::from(valid))
+        Self(Uuid::from(value))
     }
 }
 
-impl From<Uuid> for UuidFormatter {
-    fn from(value: Uuid) -> Self {
-        Self(value)
+impl From<UuidFormatter> for UserDistributionID {
+    #[inline]
+    fn from(value: UuidFormatter) -> Self {
+        value.0.into()
     }
 }
 
 impl FromStr for UuidFormatter {
     type Err = ParseError;
+    #[inline]
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        Ok(Uuid::parse_str(s).map(|uuid| Self(uuid))?)
+        Ok(Uuid::parse_str(s).map(Self)?)
     }
 }

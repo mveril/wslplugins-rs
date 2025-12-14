@@ -14,24 +14,11 @@ impl GuidFormatter {
     const ENCODE_BUFFER: [u8; 36] = [0u8; 36];
 }
 
-impl From<UserDistributionID> for GuidFormatter {
-    #[inline]
-    fn from(value: UserDistributionID) -> Self {
-        GUID::from(value).into()
-    }
-}
-
-impl From<GUID> for GuidFormatter {
-    #[inline]
-    fn from(value: GUID) -> Self {
-        Self(value)
-    }
-}
-
 impl Formatter for GuidFormatter {}
 
 impl UpperHex for GuidFormatter {
     #[inline]
+    #[expect(clippy::use_debug, reason = "Guid debug format is what we expect")]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self.0)
     }
@@ -39,6 +26,7 @@ impl UpperHex for GuidFormatter {
 
 impl LowerHex for GuidFormatter {
     #[inline]
+    #[expect(clippy::use_debug, reason = "Guid debug format is what we expect")]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut buffer = Self::ENCODE_BUFFER;
         write!(&mut buffer[..], "{:?}", self.0).map_err(|_| std::fmt::Error)?;
@@ -51,10 +39,24 @@ impl LowerHex for GuidFormatter {
     }
 }
 
+impl From<GuidFormatter> for UserDistributionID {
+    #[inline]
+    fn from(value: GuidFormatter) -> Self {
+        value.0.into()
+    }
+}
+
+impl From<UserDistributionID> for GuidFormatter {
+    #[inline]
+    fn from(value: UserDistributionID) -> Self {
+        Self(GUID::from(value))
+    }
+}
+
 impl FromStr for GuidFormatter {
     type Err = ParseError;
-
+    #[inline]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(GUID::try_from(s).map(|guid| Self(guid))?)
+        Ok(GUID::try_from(s).map(Self)?)
     }
 }

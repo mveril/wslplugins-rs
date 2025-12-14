@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use super::UserDistributionID;
 use uuid::Uuid;
 

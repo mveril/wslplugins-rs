@@ -51,14 +51,14 @@ impl From<UserDistributionID> for windows_core::GUID {
 impl UpperHex for UserDistributionID {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        LowerHex::fmt(&DefaultFormatter::from(self), f)
+        LowerHex::fmt(&DefaultFormatter::from(*self), f)
     }
 }
 
 impl LowerHex for UserDistributionID {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        LowerHex::fmt(&DefaultFormatter::from(self), f)
+        LowerHex::fmt(&DefaultFormatter::from(*self), f)
     }
 }
 
@@ -72,7 +72,7 @@ impl Display for UserDistributionID {
 #[cfg(any(windows, feature = "uuid"))]
 impl FromStr for UserDistributionID {
     type Err = ParseError;
-
+    #[inline]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         DefaultFormatter::from_str(s).map(Self::from)
     }
