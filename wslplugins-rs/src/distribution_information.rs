@@ -180,7 +180,7 @@ impl Display for DistributionInformation {
         unsafe {
             write!(
                 f,
-                "{:} {{{:?}}}",
+                "{} {{{}}}",
                 PCWSTR::from_raw(self.0.Name).display(),
                 self.id()
             )
