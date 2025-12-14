@@ -90,7 +90,7 @@ mod tests {
             prop_assert_eq!(format!("{:?}", guid), format!("{:X}", user_dist_id));
             prop_assert_eq!(format!("{:X}", user_dist_id), format!("{:}", user_dist_id));
             prop_assert_eq!(format!("{:X}", user_dist_id), format!("{:?}", user_dist_id));
-            prop_assert_eq!(format!("{:x}", user_dist_id), format!("{:X}", user_dist_id).to_ascii_lowercase());
+            prop_assert_eq!(format!("{:x}", user_dist_id), format!("{user_dist_id:X}").to_ascii_lowercase());
         }
     }
 }
