@@ -97,7 +97,6 @@ impl DistributionInformation {
 impl CoreDistributionInformation for DistributionInformation {
     #[inline]
     fn id(&self) -> UserDistributionID {
-        // SAFETY: Id is known to be valid GUID and windows_sys GUID and windows_core GUID has same representation
         self.0.Id.into()
     }
 
@@ -176,7 +175,6 @@ impl Hash for DistributionInformation {
 
 impl Display for DistributionInformation {
     #[inline]
-    #[allow(clippy::use_debug, reason = "GUID display")]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // SAFETY: Name is known to be valid
         unsafe {

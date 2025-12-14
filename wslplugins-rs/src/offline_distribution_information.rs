@@ -56,10 +56,8 @@ impl AsRef<OfflineDistributionInformation> for wslpluginapi_sys::WslOfflineDistr
 }
 
 impl CoreDistributionInformation for OfflineDistributionInformation {
-    /// Retrieves the [GUID] of the offline distribution.
     #[inline]
     fn id(&self) -> UserDistributionID {
-        // SAFETY: Id is known to be valid GUID and windows_sys GUID and windows_core GUID has same representation
         self.0.Id.into()
     }
 
@@ -145,13 +143,12 @@ impl Hash for OfflineDistributionInformation {
 
 impl Display for OfflineDistributionInformation {
     #[inline]
-    #[expect(clippy::use_debug, reason = "GUID display")]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // SAFETY: Name is known to be valid
         unsafe {
             write!(
                 f,
-                "{:} {{{:?}}}",
+                "{} {{{}}}",
                 PCWSTR::from_raw(self.0.Name).display(),
                 self.id()
             )
