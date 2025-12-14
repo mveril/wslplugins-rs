@@ -41,6 +41,8 @@ pub mod api;
 // Internal modules for managing specific WSL features.
 mod core_distribution_information;
 pub(crate) mod cstring_ext;
+mod session_id;
+pub mod user_distribution_id;
 pub use windows_core;
 mod distribution_information;
 mod offline_distribution_information;
@@ -74,3 +76,6 @@ pub use wslplugins_macro::wsl_plugin_v1;
 /// Re-exports the `wslpluginapi_sys` crate as `sys` when the `sys` feature is enabled.
 #[cfg(feature = "sys")]
 pub use wslpluginapi_sys as sys;
+
+pub use session_id::SessionID;
+pub use user_distribution_id::UserDistributionID;

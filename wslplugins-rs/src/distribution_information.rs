@@ -18,14 +18,14 @@ use crate::api::{
     errors::require_update_error::Result, utils::check_required_version_result_from_context,
 };
 use crate::core_distribution_information::CoreDistributionInformation;
-use crate::WSLContext;
 use crate::WSLVersion;
+use crate::{UserDistributionID, WSLContext};
 use std::ffi::OsString;
 use std::fmt::{self, Debug, Display};
 use std::hash::{Hash, Hasher};
 use std::os::windows::ffi::OsStringExt as _;
-use std::{mem, ptr};
-use windows_core::{GUID, PCWSTR};
+use std::ptr;
+use windows_core::PCWSTR;
 
 /// Represents detailed information about a WSL distribution.
 ///
@@ -96,9 +96,8 @@ impl DistributionInformation {
 
 impl CoreDistributionInformation for DistributionInformation {
     #[inline]
-    fn id(&self) -> GUID {
-        // SAFETY: Id is known to be valid GUID and windows_sys GUID and windows_core GUID has same representation
-        unsafe { mem::transmute_copy(&self.0.Id) }
+    fn id(&self) -> UserDistributionID {
+        self.0.Id.into()
     }
 
     #[inline]
@@ -176,13 +175,12 @@ impl Hash for DistributionInformation {
 
 impl Display for DistributionInformation {
     #[inline]
-    #[allow(clippy::use_debug, reason = "GUID display")]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // SAFETY: Name is known to be valid
         unsafe {
             write!(
                 f,
-                "{:} {{{:?}}}",
+                "{} {{{}}}",
                 PCWSTR::from_raw(self.0.Name).display(),
                 self.id()
             )

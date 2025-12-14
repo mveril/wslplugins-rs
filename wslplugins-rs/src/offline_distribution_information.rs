@@ -8,17 +8,16 @@ use crate::{
         errors::require_update_error::Result, utils::check_required_version_result_from_context,
     },
     core_distribution_information::CoreDistributionInformation,
-    WSLContext, WSLVersion,
+    UserDistributionID, WSLContext, WSLVersion,
 };
 use std::{
     ffi::OsString,
     fmt::{self, Debug, Display},
     hash::{Hash, Hasher},
-    mem,
     os::windows::ffi::OsStringExt as _,
     ptr,
 };
-use windows_core::{GUID, PCWSTR};
+use windows_core::PCWSTR;
 
 /// A wrapper around `WslOfflineDistributionInformation` providing a safe interface.
 ///
@@ -57,11 +56,9 @@ impl AsRef<OfflineDistributionInformation> for wslpluginapi_sys::WslOfflineDistr
 }
 
 impl CoreDistributionInformation for OfflineDistributionInformation {
-    /// Retrieves the [GUID] of the offline distribution.
     #[inline]
-    fn id(&self) -> GUID {
-        // SAFETY: Id is known to be valid GUID and windows_sys GUID and windows_core GUID has same representation
-        unsafe { mem::transmute_copy(&self.0.Id) }
+    fn id(&self) -> UserDistributionID {
+        self.0.Id.into()
     }
 
     /// Retrieves the name of the offline distribution as an [`OsString`].
@@ -146,13 +143,12 @@ impl Hash for OfflineDistributionInformation {
 
 impl Display for OfflineDistributionInformation {
     #[inline]
-    #[expect(clippy::use_debug, reason = "GUID display")]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // SAFETY: Name is known to be valid
         unsafe {
             write!(
                 f,
-                "{:} {{{:?}}}",
+                "{} {{{}}}",
                 PCWSTR::from_raw(self.0.Name).display(),
                 self.id()
             )

@@ -3,8 +3,7 @@ use super::Error;
 use super::Result;
 use crate::api::errors::require_update_error::Result as UpReqResult;
 use crate::cstring_ext::CstringExt;
-use crate::wsl_session_information::WSLSessionInformation;
-use crate::WSLVersion;
+use crate::{SessionID, UserDistributionID, WSLVersion};
 use std::ffi::{CString, OsStr};
 use std::fmt::{self, Debug};
 use std::iter::once;
@@ -18,7 +17,7 @@ use std::ptr;
 use tracing::instrument;
 use typed_path::Utf8UnixPath;
 use widestring::U16CString;
-use windows_core::{Result as WinResult, GUID, HRESULT};
+use windows_core::{Result as WinResult, HRESULT};
 use wslpluginapi_sys;
 use wslpluginapi_sys::windows_sys::Win32::Networking::WinSock::SOCKET as WinSocket;
 
@@ -104,7 +103,7 @@ impl ApiV1 {
         UP: AsRef<Utf8UnixPath> + std::fmt::Debug,
     >(
         &self,
-        session: &WSLSessionInformation,
+        session_id: SessionID,
         windows_path: WP,
         linux_path: UP,
         read_only: bool,
@@ -128,7 +127,7 @@ impl ApiV1 {
         // WSL's documented plugin API contract.
         let result = unsafe {
             self.0.MountFolder.unwrap_unchecked()(
-                session.id(),
+                u32::from(session_id),
                 encoded_windows_path.as_ptr(),
                 encoded_linux_path.as_ptr(),
                 i32::from(read_only),
@@ -172,7 +171,7 @@ impl ApiV1 {
     #[inline]
     pub fn execute_binary<P: AsRef<Utf8UnixPath> + std::fmt::Debug>(
         &self,
-        session: &WSLSessionInformation,
+        session_id: SessionID,
         path: P,
         args: &[&str],
     ) -> WinResult<TcpStream> {
@@ -212,7 +211,7 @@ impl ApiV1 {
         //   occurs because we never manually close it.
         let stream = unsafe {
             HRESULT(self.0.ExecuteBinary.unwrap_unchecked()(
-                session.id(),
+                u32::from(session_id),
                 c_path.as_ptr(),
                 args_ptr,
                 socket.as_mut_ptr(),
@@ -271,8 +270,8 @@ impl ApiV1 {
     #[inline]
     pub fn execute_binary_in_distribution<P: AsRef<Utf8UnixPath> + std::fmt::Debug>(
         &self,
-        session: &WSLSessionInformation,
-        distribution_id: GUID,
+        session_id: SessionID,
+        distribution_id: UserDistributionID,
         path: P,
         args: &[&str],
     ) -> Result<TcpStream> {
@@ -297,6 +296,7 @@ impl ApiV1 {
             .collect();
         let args_ptr = args_ptrs.as_mut_ptr();
         let mut socket = MaybeUninit::<WinSocket>::uninit();
+        let guid: wslpluginapi_sys::windows_sys::core::GUID = distribution_id.into();
         // SAFETY:
         // - `ExecuteBinaryInDistribution` is guaranteed to be non-null because we first checked
         //   the API version (>= 2.1.2) before calling `unwrap_unchecked()`.
@@ -317,8 +317,8 @@ impl ApiV1 {
         #[allow(clippy::absolute_paths)]
         let stream = unsafe {
             HRESULT(self.0.ExecuteBinaryInDistribution.unwrap_unchecked()(
-                session.id(),
-                (&raw const distribution_id).cast::<wslpluginapi_sys::windows_sys::core::GUID>(),
+                u32::from(session_id),
+                (&raw const guid),
                 path_ptr,
                 args_ptr,
                 socket.as_mut_ptr(),

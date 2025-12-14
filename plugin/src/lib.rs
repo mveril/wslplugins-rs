@@ -5,7 +5,7 @@ use std::{env, fs::OpenOptions, io::Read, panic};
 use tracing::{error, info, instrument, warn};
 use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
 use windows::{
-    core::{Error as WinError, Result as WinResult, GUID},
+    core::{Error as WinError, Result as WinResult},
     Win32::Foundation::E_FAIL,
 };
 use wslplugins_rs::wsl_user_configuration::bitflags::WSLUserConfigurationFlags;
@@ -79,7 +79,7 @@ impl WSLPluginV1 for Plugin {
         match self
             .context
             .api
-            .execute_binary(session, ver_args[0], &ver_args)
+            .execute_binary(session.id(), ver_args[0], &ver_args)
         {
             Ok(mut stream) => {
                 let mut buf = String::new();
@@ -97,7 +97,7 @@ impl WSLPluginV1 for Plugin {
                 )
             }
         };
-        self.log_os_release(session, None);
+        self.log_os_release(session.id(), None);
         Ok(())
     }
 
@@ -108,7 +108,7 @@ impl WSLPluginV1 for Plugin {
         distribution: &DistributionInformation,
     ) -> Result<()> {
         info!(
-            "Distribution started. Sessionid= {:}, Id={:?} Name={:}, Package={}, PidNs={}, InitPid={}",
+            "Distribution started. Sessionid= {:?}, Id={:?} Name={:}, Package={}, PidNs={}, InitPid={}",
             session.id(),
             distribution.id(),
             distribution.name().to_string_lossy(),
@@ -117,7 +117,7 @@ impl WSLPluginV1 for Plugin {
             // Use unknow if init_pid not available
             distribution.init_pid().map(|res| res.to_string()).unwrap_or("Unknow".to_string())
         );
-        self.log_os_release(session, Some(distribution.id()));
+        self.log_os_release(session.id(), Some(distribution.id()));
         Ok(())
     }
 
@@ -134,7 +134,7 @@ impl WSLPluginV1 for Plugin {
         distribution: &DistributionInformation,
     ) -> WinResult<()> {
         info!(
-            "Distribution Stopping. SessionId={}, Id={:?} name={}, package={}, PidNs={}, InitPid={}",
+            "Distribution Stopping. SessionId={:?}, Id={:?} name={}, package={}, PidNs={}, InitPid={}",
             session.id(),
             distribution.id(),
             distribution.name().to_string_lossy(),
@@ -148,17 +148,17 @@ impl WSLPluginV1 for Plugin {
 }
 
 impl Plugin {
-    fn log_os_release(&self, session: &WSLSessionInformation, distro_id: Option<GUID>) {
+    fn log_os_release(&self, session_id: SessionID, distro_id: Option<UserDistributionID>) {
         let args: [&str; 2] = ["/bin/cat", "/etc/os-release"];
         let tcp_stream: std::result::Result<std::net::TcpStream, api::Error> = match distro_id {
             Some(dist_id) => self
                 .context
                 .api
-                .execute_binary_in_distribution(session, dist_id, args[0], &args),
+                .execute_binary_in_distribution(session_id, dist_id, args[0], &args),
             None => self
                 .context
                 .api
-                .execute_binary(session, args[0], &args)
+                .execute_binary(session_id, args[0], &args)
                 .map_err(Into::into),
         };
         let result = tcp_stream;

@@ -9,9 +9,8 @@
 //! of a distribution. Implementing this trait allows for seamless integration with systems
 //! that need to handle multiple distributions in a consistent manner.
 
-use crate::api::errors::require_update_error::Result;
+use crate::{api::errors::require_update_error::Result, UserDistributionID};
 use std::ffi::OsString;
-use windows_core::GUID;
 
 /// A trait representing the core information of a WSL distribution.
 ///
@@ -23,8 +22,8 @@ pub trait CoreDistributionInformation {
     /// The ID is guaranteed to remain the same across reboots.
     ///
     /// # Returns
-    /// The [GUID] representing the distribution's unique identifier.
-    fn id(&self) -> GUID;
+    /// The [`UserDistributionID`] representing the distribution's unique identifier.
+    fn id(&self) -> UserDistributionID;
 
     /// Retrieves the name of the distribution.
     ///
