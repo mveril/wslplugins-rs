@@ -77,7 +77,7 @@ impl WSLPluginV1 for Plugin {
         match self
             .context
             .api
-            .new_command(session, "/bin/cat")
+            .new_command(session.id(), "/bin/cat")
             .arg("/proc/version")
             .execute()
         {
@@ -97,7 +97,7 @@ impl WSLPluginV1 for Plugin {
                 )
             }
         };
-        self.log_os_release(session, DistributionID::System);
+        self.log_os_release(session.id(), DistributionID::System);
         Ok(())
     }
 
@@ -117,7 +117,7 @@ impl WSLPluginV1 for Plugin {
             // Use unknow if init_pid not available
             distribution.init_pid().map(|res| res.to_string()).unwrap_or("Unknow".to_string())
         );
-        self.log_os_release(session, DistributionID::User(distribution.id().0));
+        self.log_os_release(session.id(), distribution.id().into());
         Ok(())
     }
 
@@ -148,11 +148,11 @@ impl WSLPluginV1 for Plugin {
 }
 
 impl Plugin {
-    fn log_os_release(&self, session: &WSLSessionInformation, distro_id: DistributionID) {
+    fn log_os_release(&self, session_id: SessionID, distro_id: DistributionID) {
         match self
             .context
             .api
-            .new_command(session, "/bin/cat")
+            .new_command(session_id, "/bin/cat")
             .arg("/etc/os-release")
             .distribution_id(distro_id)
             .execute()

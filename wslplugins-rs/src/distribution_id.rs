@@ -17,15 +17,14 @@
 //! distribution and a user-specific distribution is necessary. The associated functions
 //! and conversions simplify integration with APIs like those defined in `WslPluginApi`.
 
-use crate::CoreDistributionInformation;
+use crate::{CoreDistributionInformation, UserDistributionID};
 use std::{convert::TryFrom, fmt::Display};
 use thiserror::Error;
-use windows_core::GUID;
 
 /// Represents a distribution identifier in the Windows Subsystem for Linux (WSL).
 ///
 /// A distribution can either be the system-level distribution or a user-specific distribution
-/// identified by a [GUID].
+/// identified by a [`UserDistributionID`].
 ///
 /// ## Variants
 ///
@@ -33,9 +32,9 @@ use windows_core::GUID;
 ///   for managing low-level functionalities such as audio and graphical interaction.
 ///   Refer to the [WSLg Architecture blogpost](https://devblogs.microsoft.com/commandline/wslg-architecture/#system-distro).
 ///
-/// - `User(GUID)`: Represents an individual distribution installed by a user. Each distribution
-///   is uniquely identified by a [GUID], which is consistent across reboots. This GUID
-///   corresponds to the identifier used by WSL for managing the distribution.
+/// - `User(UserDistributionID)`: Represents an individual distribution installed by a user. Each distribution
+///   is uniquely identified by a [`UserDistributionID`], which is consistent across reboots. This [`UserDistributionID`]
+///   corresponds to the [`GUID`] used by WSL for managing the distribution.
 ///
 /// ## Note
 ///
@@ -48,8 +47,8 @@ pub enum DistributionID {
     /// Represents the system-level distribution.
     /// For more info about the system distribution please check the [WSLg architecture blogpost](https://devblogs.microsoft.com/commandline/wslg-architecture/#system-distro)
     System,
-    /// Represents an installed user-specific distribution identified by a [GUID].
-    User(GUID),
+    /// Represents an installed user-specific distribution identified by a [`UserDistributionID`].
+    User(UserDistributionID),
 }
 
 /// Error type for conversion failures between `DistributionID` and GUID.
@@ -57,13 +56,8 @@ pub enum DistributionID {
 #[error("Cannot convert System distribution to GUID.")]
 pub struct ConversionError;
 
-impl TryFrom<DistributionID> for GUID {
+impl TryFrom<DistributionID> for UserDistributionID {
     type Error = ConversionError;
-
-    /// Attempts to convert a `DistributionID` into a GUID.
-    ///
-    /// # Errors
-    /// Returns `ConversionError` if the `DistributionID` is `System`.
     #[inline]
     fn try_from(value: DistributionID) -> Result<Self, Self::Error> {
         match value {
@@ -73,10 +67,9 @@ impl TryFrom<DistributionID> for GUID {
     }
 }
 
-impl From<GUID> for DistributionID {
-    /// Converts a GUID into a `DistributionID`.
+impl From<UserDistributionID> for DistributionID {
     #[inline]
-    fn from(value: GUID) -> Self {
+    fn from(value: UserDistributionID) -> Self {
         Self::User(value)
     }
 }
@@ -85,19 +78,19 @@ impl<T: CoreDistributionInformation> From<T> for DistributionID {
     /// Converts a type implementing `CoreDistributionInformation` into a `DistributionID`.
     #[inline]
     fn from(value: T) -> Self {
-        windows_core::GUID::from(value.id()).into()
+        value.id().into()
     }
 }
 
-impl From<Option<GUID>> for DistributionID {
+impl From<Option<UserDistributionID>> for DistributionID {
     /// Converts an `Option<GUID>` into a `DistributionID`, defaulting to `System` if `None`.
     #[inline]
-    fn from(value: Option<GUID>) -> Self {
+    fn from(value: Option<UserDistributionID>) -> Self {
         value.map_or(Self::System, Self::User)
     }
 }
 
-impl From<DistributionID> for Option<GUID> {
+impl From<DistributionID> for Option<UserDistributionID> {
     /// Converts a `DistributionID` into an `Option<GUID>`.
     #[inline]
     fn from(value: DistributionID) -> Self {
@@ -116,7 +109,7 @@ impl Display for DistributionID {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::System => f.write_str("System"),
-            Self::User(id) => std::fmt::Debug::fmt(id, f),
+            Self::User(id) => std::fmt::Display::fmt(id, f),
         }
     }
 }

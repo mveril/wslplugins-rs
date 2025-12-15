@@ -3,7 +3,7 @@ use super::Error;
 use super::{Result, WSLCommand};
 use crate::api::errors::require_update_error::Result as UpReqResult;
 use crate::cstring_ext::CstringExt;
-use crate::{SessionID, UserDistributionID, WSLSessionInformation, WSLVersion};
+use crate::{SessionID, UserDistributionID, WSLVersion};
 use std::ffi::{CString, OsStr};
 use std::fmt::{self, Debug};
 use std::iter::once;
@@ -349,10 +349,10 @@ impl ApiV1 {
     #[inline]
     pub fn new_command<'a, T: AsRef<Utf8UnixPath> + ?Sized>(
         &'a self,
-        session: &'a WSLSessionInformation,
+        session_id: SessionID,
         program: &'a T,
     ) -> WSLCommand<'a> {
-        WSLCommand::new(self, session, program)
+        WSLCommand::new(self, session_id, program)
     }
 
     fn check_required_version(&self, version: &WSLVersion) -> UpReqResult<()> {

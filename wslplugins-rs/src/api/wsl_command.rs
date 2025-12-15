@@ -3,10 +3,10 @@ use typed_path::Utf8UnixPath;
 #[cfg(doc)]
 use super::super::api::Error as ApiError;
 use super::super::api::{ApiV1, Result as ApiResult};
-use crate::{DistributionID, WSLSessionInformation};
-use std::net::TcpStream;
 #[cfg(doc)]
-use windows_core::GUID;
+use crate::UserDistributionID;
+use crate::{DistributionID, SessionID};
+use std::net::TcpStream;
 
 /// Represents a command to be executed in WSL.
 ///
@@ -23,7 +23,7 @@ pub struct WSLCommand<'a> {
     /// The distribution ID under which the command is executed.
     distribution_id: DistributionID,
     /// Session information for the current WSL session.
-    session: &'a WSLSessionInformation,
+    session_id: SessionID,
 }
 
 impl<'a> WSLCommand<'a> {
@@ -45,7 +45,7 @@ impl<'a> WSLCommand<'a> {
     /// - `T`: A type that implements `AsRef<Utf8UnixPath>`.
     pub(crate) fn new<T: AsRef<Utf8UnixPath> + ?Sized>(
         api: &'a ApiV1,
-        session: &'a WSLSessionInformation,
+        session_id: SessionID,
         program: &'a T,
     ) -> Self {
         let my_program = program.as_ref();
@@ -55,7 +55,7 @@ impl<'a> WSLCommand<'a> {
             args: vec![program_str],
             path: my_program,
             distribution_id: DistributionID::System,
-            session,
+            session_id,
         }
     }
 
@@ -215,7 +215,7 @@ impl<'a> WSLCommand<'a> {
     /// This method determines the API call to be used based on the [`DistributionID`]:
     /// - If [`DistributionID::System`], the method invokes [`execute_binary`](super::ApiV1::execute_binary).
     /// - If [`DistributionID::User`], it invokes [`execute_binary_in_distribution`](super::ApiV1::execute_binary_in_distribution)
-    ///   with the associated [GUID].
+    ///   with the associated [`UserDistributionID`].
     ///
     /// # Returns
     /// - On success, it returns a [`TcpStream`] connected to the executed process, enabling interaction
@@ -242,11 +242,11 @@ impl<'a> WSLCommand<'a> {
         let stream = match self.distribution_id {
             DistributionID::System => {
                 self.api
-                    .execute_binary(self.session.id(), self.path, self.args.as_slice())?
+                    .execute_binary(self.session_id, self.path, self.args.as_slice())?
             }
             DistributionID::User(id) => self.api.execute_binary_in_distribution(
-                self.session.id(),
-                crate::UserDistributionID(id),
+                self.session_id,
+                id,
                 self.path,
                 self.args.as_slice(),
             )?,
