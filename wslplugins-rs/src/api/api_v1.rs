@@ -2,6 +2,7 @@
 use super::Error;
 use super::{Result, WSLCommand};
 use crate::api::errors::require_update_error::Result as UpReqResult;
+use crate::api::wsl_command::IntoCowUtf8UnixPath;
 use crate::cstring_ext::CstringExt;
 use crate::{SessionID, UserDistributionID, WSLVersion};
 use std::ffi::{CString, OsStr};
@@ -166,15 +167,20 @@ impl ApiV1 {
     /// stream.read_to_string(&mut buffer).unwrap();
     /// println!("Process output: {}", buffer);
     /// ```
-    #[cfg_attr(feature = "tracing", instrument(level = "trace"))]
+    #[cfg_attr(feature = "tracing", instrument(skip(args), level = "trace"))]
     #[doc(alias = "ExecuteBinary")]
     #[inline]
-    pub fn execute_binary<P: AsRef<Utf8UnixPath> + std::fmt::Debug>(
+    pub fn execute_binary<P, I>(
         &self,
         session_id: SessionID,
         path: P,
-        args: &[&str],
-    ) -> WinResult<TcpStream> {
+        args: I,
+    ) -> WinResult<TcpStream>
+    where
+        P: AsRef<Utf8UnixPath> + std::fmt::Debug,
+        I: IntoIterator,
+        I::Item: AsRef<str>,
+    {
         let c_path: Vec<u8> = path
             .as_ref()
             .as_str()
@@ -184,8 +190,8 @@ impl ApiV1 {
             .chain(once(0))
             .collect();
         let c_args: Vec<CString> = args
-            .iter()
-            .map(|&arg| CString::from_str_truncate(arg))
+            .into_iter()
+            .map(|arg| CString::from_str_truncate(arg.as_ref()))
             .collect();
         let mut args_ptrs: Vec<*const u8> = c_args
             .iter()
@@ -266,15 +272,20 @@ impl ApiV1 {
     /// println!("Process output: {}", buffer);
     /// ```
     #[doc(alias = "ExecuteBinaryInDistribution")]
-    #[cfg_attr(feature = "tracing", instrument(level = "trace"))]
+    #[cfg_attr(feature = "tracing", instrument(skip(args), level = "trace"))]
     #[inline]
-    pub fn execute_binary_in_distribution<P: AsRef<Utf8UnixPath> + std::fmt::Debug>(
+    pub fn execute_binary_in_distribution<P, I>(
         &self,
         session_id: SessionID,
         distribution_id: UserDistributionID,
         path: P,
-        args: &[&str],
-    ) -> Result<TcpStream> {
+        args: I,
+    ) -> Result<TcpStream>
+    where
+        P: AsRef<Utf8UnixPath> + std::fmt::Debug,
+        I: IntoIterator,
+        I::Item: AsRef<str>,
+    {
         self.check_required_version(&WSLVersion::new(2, 1, 2))?;
         let c_path: Vec<u8> = path
             .as_ref()
@@ -286,8 +297,8 @@ impl ApiV1 {
             .collect();
         let path_ptr = c_path.as_ptr();
         let c_args: Vec<CString> = args
-            .iter()
-            .map(|&arg| CString::from_str_truncate(arg))
+            .into_iter()
+            .map(|arg| CString::from_str_truncate(arg.as_ref()))
             .collect();
         let mut args_ptrs: Vec<_> = c_args
             .iter()
@@ -347,10 +358,10 @@ impl ApiV1 {
     /// # Type Parameters
     /// - `T`: A type that implements `AsRef<Utf8UnixPath>`.
     #[inline]
-    pub fn new_command<'a, T: AsRef<Utf8UnixPath> + ?Sized>(
+    pub fn new_command<'a, P: IntoCowUtf8UnixPath<'a>>(
         &'a self,
         session_id: SessionID,
-        program: &'a T,
+        program: P,
     ) -> WSLCommand<'a> {
         WSLCommand::new(self, session_id, program)
     }

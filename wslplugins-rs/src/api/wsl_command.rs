@@ -6,24 +6,28 @@ use super::super::api::{ApiV1, Result as ApiResult};
 #[cfg(doc)]
 use crate::UserDistributionID;
 use crate::{DistributionID, SessionID};
-use std::net::TcpStream;
+use std::{borrow::Cow, net::TcpStream};
+mod into_cow_utf8_unix_path;
+pub use into_cow_utf8_unix_path::IntoCowUtf8UnixPath;
 
 /// Represents a command to be executed in WSL.
 ///
 /// The `WSLCommand` struct encapsulates details such as the program path, arguments,
 /// and the associated distribution ID for execution.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WSLCommand<'a> {
     /// The WSL context associated with the command.
     api: &'a ApiV1,
-    /// Arguments for the command.
-    args: Vec<&'a str>,
-    /// Path to the program being executed.
-    path: &'a Utf8UnixPath,
-    /// The distribution ID under which the command is executed.
-    distribution_id: DistributionID,
     /// Session information for the current WSL session.
     session_id: SessionID,
+    /// The distribution ID under which the command is executed.
+    distribution_id: DistributionID,
+    /// Path to the program being executed.
+    path: Cow<'a, Utf8UnixPath>,
+    /// Optional argv[0] override.
+    arg0: Option<Cow<'a, str>>,
+    /// Arguments for the command.
+    args: Vec<Cow<'a, str>>,
 }
 
 impl<'a> WSLCommand<'a> {
@@ -43,17 +47,16 @@ impl<'a> WSLCommand<'a> {
     ///
     /// # Type Parameters
     /// - `T`: A type that implements `AsRef<Utf8UnixPath>`.
-    pub(crate) fn new<T: AsRef<Utf8UnixPath> + ?Sized>(
+    pub(crate) fn new<P: IntoCowUtf8UnixPath<'a>>(
         api: &'a ApiV1,
         session_id: SessionID,
-        program: &'a T,
+        program: P,
     ) -> Self {
-        let my_program = program.as_ref();
-        let program_str = my_program.as_str();
         Self {
             api,
-            args: vec![program_str],
-            path: my_program,
+            arg0: None,
+            args: Vec::new(),
+            path: program.into_cow_utf8_unix_path(),
             distribution_id: DistributionID::System,
             session_id,
         }
@@ -62,8 +65,8 @@ impl<'a> WSLCommand<'a> {
     /// Returns the path of the command.
     #[inline]
     #[must_use]
-    pub const fn get_path(&self) -> &'a Utf8UnixPath {
-        self.path
+    pub fn get_path(&self) -> &Utf8UnixPath {
+        self.path.as_ref()
     }
 
     /// Sets the first argument (arg0) of the command.
@@ -75,37 +78,29 @@ impl<'a> WSLCommand<'a> {
         clippy::indexing_slicing,
         reason = "The vec is known to have at least one value (the arg0)"
     )]
-    pub fn arg0<T: AsRef<str> + ?Sized>(&mut self, arg0: &'a T) -> &mut Self {
-        self.args[0] = arg0.as_ref();
+    pub fn arg0<T: Into<Cow<'a, str>> + ?Sized>(&mut self, arg0: T) -> &mut Self {
+        self.arg0 = Some(arg0.into());
         self
     }
 
     /// Gets the first argument (arg0) of the command.
     #[inline]
-    #[expect(
-        clippy::indexing_slicing,
-        reason = "The vec is known to have at least one value (the arg0)"
-    )]
     #[must_use]
     pub fn get_arg0(&self) -> &str {
-        self.args[0]
+        self.arg0.as_deref().unwrap_or_else(|| self.path.as_str())
     }
 
     /// Checks if the first argument is the standard argument (the path).
     #[inline]
     #[must_use]
     pub fn is_standard_arg_0(&self) -> bool {
-        self.path == self.get_arg0()
+        self.arg0.is_none()
     }
 
     /// Resets the first argument to the path of the command.
     #[inline]
-    #[expect(
-        clippy::indexing_slicing,
-        reason = "The vec is known to have at least one value (the arg0)"
-    )]
     pub fn reset_arg0(&mut self) -> &mut Self {
-        self.args[0] = self.path.as_str();
+        self.arg0 = None;
         self
     }
 
@@ -114,8 +109,8 @@ impl<'a> WSLCommand<'a> {
     /// # Parameters
     /// - `arg`: The argument to add.
     #[inline]
-    pub fn arg<T: AsRef<str> + ?Sized>(&mut self, arg: &'a T) -> &mut Self {
-        self.args.push(arg.as_ref());
+    pub fn arg<T: Into<Cow<'a, str>> + ?Sized>(&mut self, arg: T) -> &mut Self {
+        self.args.push(arg.into());
         self
     }
 
@@ -124,12 +119,12 @@ impl<'a> WSLCommand<'a> {
     /// # Parameters
     /// - `args`: An iterator of arguments to add.
     #[inline]
-    pub fn args<I, T>(&mut self, args: I) -> &mut Self
+    pub fn args<I>(&mut self, args: I) -> &mut Self
     where
-        I: IntoIterator<Item = &'a T>,
-        T: 'a + AsRef<str> + ?Sized,
+        I: IntoIterator,
+        I::Item: Into<Cow<'a, str>>,
     {
-        self.args.extend(args.into_iter().map(AsRef::as_ref));
+        self.args.extend(args.into_iter().map(Into::into));
         self
     }
 
@@ -137,11 +132,7 @@ impl<'a> WSLCommand<'a> {
     #[inline]
     #[must_use]
     pub fn get_args(&self) -> impl ExactSizeIterator<Item = &str> {
-        #[expect(
-            clippy::indexing_slicing,
-            reason = "The vec is known to have at least one value (the arg0)"
-        )]
-        self.args[1..].iter().copied()
+        self.args.iter().map(AsRef::as_ref)
     }
 
     /// Clears all arguments except arg0.
@@ -159,8 +150,8 @@ impl<'a> WSLCommand<'a> {
     /// assert_eq!(command.get_args().count(), 0)
     /// ```
     #[inline]
-    pub fn crear_args(&mut self) -> &mut Self {
-        self.truncate_args(0);
+    pub fn clear_args(&mut self) -> &mut Self {
+        self.args.clear();
         self
     }
 
@@ -182,7 +173,7 @@ impl<'a> WSLCommand<'a> {
     /// ```
     #[inline]
     pub fn truncate_args(&mut self, i: usize) -> &mut Self {
-        self.args.truncate(i + 1);
+        self.args.truncate(i);
         self
     }
 
@@ -238,17 +229,20 @@ impl<'a> WSLCommand<'a> {
     /// }
     /// ```
     #[inline]
-    pub fn execute(&mut self) -> ApiResult<TcpStream> {
+    pub fn execute(&self) -> ApiResult<TcpStream> {
+        let all_args_iter = std::iter::once(self.get_arg0())
+            .into_iter()
+            .chain(self.args.iter().map(|item| item.as_ref()));
         let stream = match self.distribution_id {
             DistributionID::System => {
                 self.api
-                    .execute_binary(self.session_id, self.path, self.args.as_slice())?
+                    .execute_binary(self.session_id, &self.path, all_args_iter)?
             }
             DistributionID::User(id) => self.api.execute_binary_in_distribution(
                 self.session_id,
                 id,
-                self.path,
-                self.args.as_slice(),
+                &self.path,
+                all_args_iter,
             )?,
         };
         Ok(stream)
