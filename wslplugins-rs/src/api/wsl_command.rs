@@ -9,6 +9,14 @@ use crate::{DistributionID, SessionID};
 use std::{borrow::Cow, net::TcpStream};
 mod into_cow_utf8_unix_path;
 pub use into_cow_utf8_unix_path::IntoCowUtf8UnixPath;
+#[cfg(feature = "smallvec")]
+use smallvec::SmallVec;
+
+#[cfg(not(feature = "smallvec"))]
+type ArgVec<'a> = Vec<Cow<'a, str>>;
+
+#[cfg(feature = "smallvec")]
+type ArgVec<'a> = SmallVec<[Cow<'a, str>; 8]>;
 
 /// Represents a command to be executed in WSL.
 ///
@@ -27,7 +35,7 @@ pub struct WSLCommand<'a> {
     /// Optional argv[0] override.
     arg0: Option<Cow<'a, str>>,
     /// Arguments for the command.
-    args: Vec<Cow<'a, str>>,
+    args: ArgVec<'a>,
 }
 
 impl<'a> WSLCommand<'a> {
