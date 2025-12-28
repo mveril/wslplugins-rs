@@ -7,7 +7,6 @@ use crate::cstring_ext::CstringExt;
 use crate::{SessionID, UserDistributionID, WSLVersion};
 use std::ffi::{CString, OsStr};
 use std::fmt::{self, Debug};
-use std::iter::once;
 use std::mem::MaybeUninit;
 use std::net::TcpStream;
 use std::os::windows::io::FromRawSocket as _;
@@ -63,6 +62,41 @@ impl AsRef<ApiV1> for WSLPluginAPIV1 {
 }
 
 impl ApiV1 {
+    #[inline]
+    fn encode_c_path(path: &Utf8UnixPath) -> Vec<u8> {
+        let bytes = path.as_str().as_bytes();
+        let mut out = Vec::with_capacity(bytes.len() + 1);
+        out.extend_from_slice(bytes);
+        out.push(0);
+        out
+    }
+
+    #[allow(clippy::similar_names, reason = "naming is clear")]
+    fn encode_c_argv<I>(args: I) -> (Vec<CString>, Vec<*const u8>)
+    where
+        I: IntoIterator,
+        I::Item: AsRef<str>,
+    {
+        let iter = args.into_iter();
+        let (lower, upper) = iter.size_hint();
+        let count = upper.unwrap_or(lower);
+
+        let mut c_args = Vec::<CString>::with_capacity(count);
+        let mut argv = Vec::<*const u8>::with_capacity(count + 1);
+
+        for arg in iter {
+            let c = CString::from_str_truncate(arg.as_ref());
+            // Pointer is stable: moving CString does not move its internal buffer.
+            argv.push(c.as_ptr().cast::<u8>());
+            c_args.push(c);
+        }
+
+        // NULL-terminated list as required by the API contract.
+        argv.push(ptr::null());
+
+        (c_args, argv)
+    }
+
     /// Retpurns the current version of the WSL API being used.
     ///
     /// This is useful for checking compatibility with specific API features.
@@ -170,6 +204,7 @@ impl ApiV1 {
     #[cfg_attr(feature = "tracing", instrument(skip(args), level = "trace"))]
     #[doc(alias = "ExecuteBinary")]
     #[inline]
+    #[allow(clippy::similar_names, reason = "naming is clear")]
     pub fn execute_binary<P, I>(
         &self,
         session_id: SessionID,
@@ -181,24 +216,12 @@ impl ApiV1 {
         I: IntoIterator,
         I::Item: AsRef<str>,
     {
-        let c_path: Vec<u8> = path
-            .as_ref()
-            .as_str()
-            .as_bytes()
-            .iter()
-            .copied()
-            .chain(once(0))
-            .collect();
-        let c_args: Vec<CString> = args
-            .into_iter()
-            .map(|arg| CString::from_str_truncate(arg.as_ref()))
-            .collect();
-        let mut args_ptrs: Vec<*const u8> = c_args
-            .iter()
-            .map(|arg| arg.as_ptr().cast::<u8>())
-            .chain(once(ptr::null::<u8>()))
-            .collect();
-        let args_ptr = args_ptrs.as_mut_ptr();
+        let path_ref = path.as_ref();
+        let c_path = Self::encode_c_path(path_ref);
+
+        let (_c_args, mut argv) = Self::encode_c_argv(args);
+        let argv_ptr = argv.as_mut_ptr(); // API expects LPCSTR* (not const-qualified)
+
         let mut socket = MaybeUninit::<WinSocket>::uninit();
         // SAFETY:
         // - `ExecuteBinaryInDistribution` is guaranteed to be non-null because we first checked
@@ -219,7 +242,7 @@ impl ApiV1 {
             HRESULT(self.0.ExecuteBinary.unwrap_unchecked()(
                 u32::from(session_id),
                 c_path.as_ptr(),
-                args_ptr,
+                argv_ptr,
                 socket.as_mut_ptr(),
             ))
             .ok()?;
@@ -274,6 +297,7 @@ impl ApiV1 {
     #[doc(alias = "ExecuteBinaryInDistribution")]
     #[cfg_attr(feature = "tracing", instrument(skip(args), level = "trace"))]
     #[inline]
+    #[allow(clippy::similar_names, reason = "naming is clear")]
     pub fn execute_binary_in_distribution<P, I>(
         &self,
         session_id: SessionID,
@@ -287,76 +311,55 @@ impl ApiV1 {
         I::Item: AsRef<str>,
     {
         self.check_required_version(&WSLVersion::new(2, 1, 2))?;
-        let c_path: Vec<u8> = path
-            .as_ref()
-            .as_str()
-            .as_bytes()
-            .iter()
-            .copied()
-            .chain(once(0))
-            .collect();
-        let path_ptr = c_path.as_ptr();
-        let c_args: Vec<CString> = args
-            .into_iter()
-            .map(|arg| CString::from_str_truncate(arg.as_ref()))
-            .collect();
-        let mut args_ptrs: Vec<_> = c_args
-            .iter()
-            .map(|arg| arg.as_ptr().cast::<u8>())
-            .chain(once(ptr::null()))
-            .collect();
-        let args_ptr = args_ptrs.as_mut_ptr();
+
+        let path_ref = path.as_ref();
+        let c_path = Self::encode_c_path(path_ref);
+
+        let (_c_args, mut argv) = Self::encode_c_argv(args);
+        let argv_ptr = argv.as_mut_ptr();
+
         let mut socket = MaybeUninit::<WinSocket>::uninit();
         let guid: wslpluginapi_sys::windows_sys::core::GUID = distribution_id.into();
-        // SAFETY:
-        // - `ExecuteBinaryInDistribution` is guaranteed to be non-null because we first checked
-        //   the API version (>= 2.1.2) before calling `unwrap_unchecked()`.
-        // - `session.id()` returns a valid integer identifying a WSLSessionInformation`, which comes from
-        //   a live session reference owned by the caller.
-        // - `distribution_id` is passed by reference as a properly aligned and sized GUID, cast
-        //   to the expected FFI type.
-        // - `path_ptr` points to a null-terminated buffer (`c_path`) that is kept alive for the
-        //   duration of the call.
-        // - `args_ptr` points to a null-terminated array of pointers (`args_ptrs`), each pointing
-        //   to a valid C string buffer (`c_args`). All these buffers live until after the call.
-        // - `socket.as_mut_ptr()` is a valid, writable pointer to uninitialized memory. The
-        //   function is documented to write a valid SOCKET there on success.
-        // - We only call `assume_init()` if `HRESULT::ok()` reports success, ensuring the socket
-        //   field has been properly initialized by the callee.
-        // - `TcpStream::from_raw_socket` takes ownership of the returned socket; no double-close
-        //   occurs because we never manually close it.
+
         #[allow(clippy::absolute_paths)]
+        // SAFETY: Calling ExecuteBinaryInDistribution is safe with agument correctly prepared.
         let stream = unsafe {
             HRESULT(self.0.ExecuteBinaryInDistribution.unwrap_unchecked()(
                 u32::from(session_id),
                 (&raw const guid),
-                path_ptr,
-                args_ptr,
+                c_path.as_ptr(),
+                argv_ptr,
                 socket.as_mut_ptr(),
             ))
             .ok()?;
+
             let socket = socket.assume_init();
             TcpStream::from_raw_socket(socket as SOCKET)
         };
+
         Ok(stream)
     }
-    /// Creates a new `WSLCommand` instance tied to the current WSL API.
+
+    /// Creates a new [`WSLCommand`] associated with this API instance.
     ///
-    /// This method initializes a `WSLCommand` with the provided session and
-    /// program details. The program is specified as a path that can be converted
-    /// to a `Utf8UnixPath`.
+    /// This is the preferred way to construct a command to be executed inside WSL.
+    /// The returned [`WSLCommand`] is bound to:
+    /// - this API handle,
+    /// - the provided session,
+    /// - the specified Linux program path.
     ///
     /// # Parameters
-    /// - `session`: The session information associated with the WSL instance.
-    /// - `program`: A reference to the path of the program to be executed,
-    ///   represented as an object implementing `AsRef<Utf8UnixPath>`.
+    /// - `session_id`: The WSL session in which the command will be executed.
+    /// - `program`: A Linux (UTF-8, Unix-style) path convertible into
+    ///   [`Utf8UnixPath`] via [`IntoCowUtf8UnixPath`].
     ///
     /// # Returns
-    /// A new instance of `WSLCommand` configured to execute the specified program
-    /// within the provided WSL session.
+    /// A [`WSLCommand`] builder ready to be configured and executed.
     ///
-    /// # Type Parameters
-    /// - `T`: A type that implements `AsRef<Utf8UnixPath>`.
+    /// # Notes
+    ///
+    /// - The default execution target is [`DistributionID::System`].
+    /// - `argv[0]` defaults to the program path unless explicitly overridden.
     #[inline]
     pub fn new_command<'a, P: IntoCowUtf8UnixPath<'a>>(
         &'a self,

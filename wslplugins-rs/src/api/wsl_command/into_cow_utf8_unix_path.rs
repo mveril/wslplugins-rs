@@ -7,7 +7,7 @@ pub trait IntoCowUtf8UnixPath<'a> {
 impl<'a> IntoCowUtf8UnixPath<'a> for Cow<'a, str> {
     fn into_cow_utf8_unix_path(self) -> Cow<'a, Utf8UnixPath> {
         match self {
-            Cow::Borrowed(s) => Cow::Borrowed(&s.as_ref()),
+            Cow::Borrowed(s) => Cow::Borrowed(s.as_ref()),
             Cow::Owned(s) => Cow::Owned(s.into()),
         }
     }
@@ -15,7 +15,7 @@ impl<'a> IntoCowUtf8UnixPath<'a> for Cow<'a, str> {
 
 impl<'a> IntoCowUtf8UnixPath<'a> for &'a str {
     fn into_cow_utf8_unix_path(self) -> Cow<'a, Utf8UnixPath> {
-        Cow::Borrowed(&self.as_ref())
+        Cow::Borrowed(self.as_ref())
     }
 }
 

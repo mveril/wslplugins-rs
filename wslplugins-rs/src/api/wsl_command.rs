@@ -1,16 +1,16 @@
+use super::super::api::{ApiV1, Result as ApiResult};
+use crate::{DistributionID, SessionID};
+use std::{borrow::Cow, iter::once, net::TcpStream};
 use typed_path::Utf8UnixPath;
+
+mod into_cow_utf8_unix_path;
+pub use into_cow_utf8_unix_path::IntoCowUtf8UnixPath;
+
+#[cfg(feature = "smallvec")]
+use smallvec::SmallVec;
 
 #[cfg(doc)]
 use super::super::api::Error as ApiError;
-use super::super::api::{ApiV1, Result as ApiResult};
-#[cfg(doc)]
-use crate::UserDistributionID;
-use crate::{DistributionID, SessionID};
-use std::{borrow::Cow, net::TcpStream};
-mod into_cow_utf8_unix_path;
-pub use into_cow_utf8_unix_path::IntoCowUtf8UnixPath;
-#[cfg(feature = "smallvec")]
-use smallvec::SmallVec;
 
 #[cfg(not(feature = "smallvec"))]
 type ArgVec<'a> = Vec<Cow<'a, str>>;
@@ -18,43 +18,130 @@ type ArgVec<'a> = Vec<Cow<'a, str>>;
 #[cfg(feature = "smallvec")]
 type ArgVec<'a> = SmallVec<[Cow<'a, str>; 8]>;
 
-/// Represents a command to be executed in WSL.
+/// A prepared command to be executed inside WSL.
 ///
-/// The `WSLCommand` struct encapsulates details such as the program path, arguments,
-/// and the associated distribution ID for execution.
+/// `WSLCommand` is a builder-style abstraction around the WSL Plugin API
+/// execution functions (`ExecuteBinary` / `ExecuteBinaryInDistribution`).
+///
+/// Instances of `WSLCommand` are created through [`ApiV1::new_command`],
+/// ensuring they are always tied to a valid API handle and session.
+///
+/// # Key points
+///
+/// - The program path is a **Linux path** (UTF-8, Unix-style) represented by
+///   [`Utf8UnixPath`].
+/// - Arguments are stored as `Cow<'a, str>` to minimize allocations.
+/// - `argv[0]` can be overridden; otherwise it defaults to the program path.
+/// - The execution target can be the system context or a specific distribution.
+///
+/// # Argument semantics
+///
+/// The underlying WSL Plugin API expects a NULL-terminated `argv` array:
+///
+/// ```text
+/// argv[0] = program name
+/// argv[1..] = user arguments
+/// ```
+///
+/// This type exposes:
+/// - [`WSLCommand::iter_argv`] for iterating over the full argument vector,
+/// - [`WSLCommand::arg0`] / [`WSLCommand::with_arg0`] to override `argv[0]`.
+///
+/// # Examples
+///
+/// ## Basic execution
+///
+/// ```no_run
+/// # use wslplugins_rs::{SessionID};
+/// # use wslplugins_rs::api::ApiV1;
+/// # fn demo(api: &ApiV1, session_id: SessionID) -> Result<(), Box<dyn std::error::Error>> {
+/// let stream = api
+///     .new_command(session_id, "/bin/cat")
+///     .with_arg("/proc/version")
+///     .execute()?;
+///
+/// # drop(stream);
+/// # Ok(())
+/// # }
+/// ```
+///
+/// ## Overriding `argv[0]`
+///
+/// Some programs inspect `argv[0]` to determine their behavior
+/// (for example `busybox`).
+///
+/// ```no_run
+/// # use wslplugins_rs::{SessionID};
+/// # use wslplugins_rs::api::ApiV1;
+/// # fn demo(api: &ApiV1, session_id: SessionID) -> Result<(), Box<dyn std::error::Error>> {
+/// let stream = api
+///     .new_command(session_id, "/bin/busybox")
+///     .with_arg0("sh")
+///     .with_args(["-c", "echo hello"])
+///     .execute()?;
+///
+/// # drop(stream);
+/// # Ok(())
+/// # }
+/// ```
+///
+/// ## Executing in a user distribution
+///
+/// ```no_run
+/// # use wslplugins_rs::{DistributionID, SessionID};
+/// # use wslplugins_rs::api::ApiV1;
+/// # use windows::core::GUID;
+/// # fn demo(api: &ApiV1, session_id: SessionID, distro: GUID) -> Result<(), Box<dyn std::error::Error>> {
+/// let stream = api
+///     .new_command(session_id, "/bin/echo")
+///     .with_distribution_id(DistributionID::User(distro))
+///     .with_arg("hello")
+///     .execute()?;
+///
+/// # drop(stream);
+/// # Ok(())
+/// # }
+/// ```
+///
+/// # Notes
+///
+/// - [`WSLCommand::execute`] consumes the command and returns a connected
+///   [`TcpStream`] to the process stdin/stdout.
+/// - stderr is forwarded to `dmesg` on the Linux side.
+/// - This type performs no validation of the Linux path or arguments beyond UTF-8 handling.
 #[derive(Clone, Debug)]
 pub struct WSLCommand<'a> {
-    /// The WSL context associated with the command.
+    /// Reference to the API v1 handle used to perform the execution.
     api: &'a ApiV1,
-    /// Session information for the current WSL session.
+
+    /// Session in which the program should be executed.
     session_id: SessionID,
-    /// The distribution ID under which the command is executed.
+
+    /// Target distribution selection.
+    ///
+    /// - `System` executes in the root namespace.
+    /// - `User(id)` executes in a user distribution identified by its GUID.
     distribution_id: DistributionID,
-    /// Path to the program being executed.
+
+    /// Linux program path (UTF-8, Unix path).
     path: Cow<'a, Utf8UnixPath>,
-    /// Optional argv[0] override.
+
+    /// Optional override for `argv[0]`.
+    ///
+    /// If `None`, `argv[0]` defaults to `path.as_str()`.
     arg0: Option<Cow<'a, str>>,
-    /// Arguments for the command.
+
+    /// Additional arguments (`argv[1..]`).
     args: ArgVec<'a>,
 }
 
 impl<'a> WSLCommand<'a> {
-    /// Creates a new `WSLCommand` instance.
+    /// Creates a new command builder for the given program.
     ///
-    /// This function initializes a `WSLCommand` with the necessary details to
-    /// execute a program in a WSL instance.
-    ///
-    /// # Parameters
-    /// - `api`: A reference to the WSL API version 1.
-    /// - `session`: The session information associated with the WSL instance.
-    /// - `program`: A reference to the path of the program to be executed,
-    ///   represented as an object implementing `AsRef<Utf8UnixPath>`.
-    ///
-    /// # Returns
-    /// A new `WSLCommand` instance.
-    ///
-    /// # Type Parameters
-    /// - `T`: A type that implements `AsRef<Utf8UnixPath>`.
+    /// - `program` is converted to a [`Utf8UnixPath`] using [`IntoCowUtf8UnixPath`].
+    /// - The default target is [`DistributionID::System`].
+    /// - `argv[0]` is the program path string unless overridden via [`WSLCommand::arg0`]
+    ///   or [`WSLCommand::with_arg0`].
     pub(crate) fn new<P: IntoCowUtf8UnixPath<'a>>(
         api: &'a ApiV1,
         session_id: SessionID,
@@ -63,69 +150,74 @@ impl<'a> WSLCommand<'a> {
         Self {
             api,
             arg0: None,
-            args: Vec::new(),
+            args: ArgVec::new(),
             path: program.into_cow_utf8_unix_path(),
             distribution_id: DistributionID::System,
             session_id,
         }
     }
 
-    /// Returns the path of the command.
+    /// Returns the program path as a [`Utf8UnixPath`].
     #[inline]
     #[must_use]
     pub fn get_path(&self) -> &Utf8UnixPath {
         self.path.as_ref()
     }
 
-    /// Sets the first argument (arg0) of the command.
+    /// Returns `argv[0]`.
     ///
-    /// # Parameters
-    /// - `arg0`: The new value for the first argument.
-    #[inline]
-    #[expect(
-        clippy::indexing_slicing,
-        reason = "The vec is known to have at least one value (the arg0)"
-    )]
-    pub fn arg0<T: Into<Cow<'a, str>> + ?Sized>(&mut self, arg0: T) -> &mut Self {
-        self.arg0 = Some(arg0.into());
-        self
-    }
-
-    /// Gets the first argument (arg0) of the command.
+    /// If `arg0` has not been overridden, this returns the program path string.
     #[inline]
     #[must_use]
     pub fn get_arg0(&self) -> &str {
-        self.arg0.as_deref().unwrap_or_else(|| self.path.as_str())
+        self.arg0.as_deref().unwrap_or(self.path.as_str())
     }
 
-    /// Checks if the first argument is the standard argument (the path).
+    /// Returns `true` if `argv[0]` is the default value (the program path).
     #[inline]
     #[must_use]
-    pub fn is_standard_arg_0(&self) -> bool {
+    pub const fn is_standard_arg_0(&self) -> bool {
         self.arg0.is_none()
     }
 
-    /// Resets the first argument to the path of the command.
+    /// Resets `argv[0]` to its default value (the program path).
     #[inline]
     pub fn reset_arg0(&mut self) -> &mut Self {
         self.arg0 = None;
         self
     }
 
-    /// Adds an argument to the command.
-    ///
-    /// # Parameters
-    /// - `arg`: The argument to add.
+    /// Sets `argv[0]` (builder-style, by mutable reference).
     #[inline]
-    pub fn arg<T: Into<Cow<'a, str>> + ?Sized>(&mut self, arg: T) -> &mut Self {
+    pub fn arg0<T: Into<Cow<'a, str>>>(&mut self, arg0: T) -> &mut Self {
+        self.arg0 = Some(arg0.into());
+        self
+    }
+
+    /// Sets `argv[0]` (builder-style, by value).
+    #[inline]
+    #[must_use]
+    pub fn with_arg0<T: Into<Cow<'a, str>>>(mut self, arg0: T) -> Self {
+        self.arg0 = Some(arg0.into());
+        self
+    }
+
+    /// Pushes one argument (`argv[n]`, `n >= 1`), builder-style by mutable reference.
+    #[inline]
+    pub fn arg<T: Into<Cow<'a, str>>>(&mut self, arg: T) -> &mut Self {
         self.args.push(arg.into());
         self
     }
 
-    /// Adds multiple arguments to the command.
-    ///
-    /// # Parameters
-    /// - `args`: An iterator of arguments to add.
+    /// Pushes one argument (`argv[n]`, `n >= 1`), builder-style by value.
+    #[inline]
+    #[must_use]
+    pub fn with_arg<T: Into<Cow<'a, str>>>(mut self, arg: T) -> Self {
+        self.args.push(arg.into());
+        self
+    }
+
+    /// Extends arguments from an iterator, builder-style by mutable reference.
     #[inline]
     pub fn args<I>(&mut self, args: I) -> &mut Self
     where
@@ -136,123 +228,115 @@ impl<'a> WSLCommand<'a> {
         self
     }
 
-    /// Returns an iterator over the arguments of the command, excluding arg0.
+    /// Extends arguments from an iterator, builder-style by value.
+    #[inline]
+    #[must_use]
+    pub fn with_args<I>(mut self, args: I) -> Self
+    where
+        I: IntoIterator,
+        I::Item: Into<Cow<'a, str>>,
+    {
+        self.args.extend(args.into_iter().map(Into::into));
+        self
+    }
+
+    /// Returns an iterator over user-provided arguments (`argv[1..]`).
     #[inline]
     #[must_use]
     pub fn get_args(&self) -> impl ExactSizeIterator<Item = &str> {
         self.args.iter().map(AsRef::as_ref)
     }
 
-    /// Clears all arguments except arg0.
-    ///
-    /// This method removes all additional arguments from the command,
-    /// effectively resetting the arguments to only include the program path.
-    ///
-    /// # Returns
-    /// A mutable reference to the current `WSLCommand` instance.
-    ///
-    /// # Example
-    /// ```rust ignore
-    /// command.arg("Hello").arg("World");
-    /// command.clear_args(); // Only arg0 ("/bin/echo") remains.
-    /// assert_eq!(command.get_args().count(), 0)
-    /// ```
+    /// Returns an iterator over the full argv (`argv[0]` + `argv[1..]`).
+    #[inline]
+    pub fn argv(&self) -> impl Iterator<Item = &str> {
+        once(self.get_arg0()).chain(self.args.iter().map(AsRef::as_ref))
+    }
+
+    /// Clears user-provided arguments (`argv[1..]`).
     #[inline]
     pub fn clear_args(&mut self) -> &mut Self {
         self.args.clear();
         self
     }
 
-    /// Truncates the arguments of the command after a specified index.
-    ///
-    /// This method keeps `arg0` and the first `i` additional arguments, discarding the rest.
-    ///
-    /// # Parameters
-    /// - `i`: The index after which arguments will be removed. Note that `i = 0` keeps only `arg0`.
-    ///
-    /// # Returns
-    /// A mutable reference to the current `WSLCommand` instance.
-    ///
-    /// # Example
-    /// ```rust ignore
-    /// let mut command = WSLCommand::new(context, session, "/bin/echo");
-    /// command.arg("Hello").arg("World");
-    /// command.truncate_args(1); // Keeps only "/bin/echo" and "Hello".
-    /// ```
+    /// Truncates user-provided arguments (`argv[1..]`) to length `i`.
     #[inline]
     pub fn truncate_args(&mut self, i: usize) -> &mut Self {
         self.args.truncate(i);
         self
     }
 
-    /// Sets the distribution ID for the command.
-    ///
-    /// # Parameters
-    /// - `distribution_id`: The new distribution ID to set.
+    /// Sets the distribution target (builder-style by mutable reference).
     #[inline]
-    pub const fn distribution_id(&mut self, distribution_id: DistributionID) -> &mut Self {
+    #[must_use]
+    #[allow(clippy::missing_const_for_fn, reason = "Useless const")]
+    pub fn distribution_id(&mut self, distribution_id: DistributionID) -> &mut Self {
         self.distribution_id = distribution_id;
         self
     }
 
-    /// Resets the distribution ID to the system default.
+    /// Sets the distribution target (builder-style by value).
     #[inline]
-    pub const fn reset_distribution_id(&mut self) -> &mut Self {
+    #[must_use]
+    #[allow(clippy::missing_const_for_fn, reason = "Useless const")]
+    pub fn with_distribution_id(mut self, distribution_id: DistributionID) -> Self {
+        self.distribution_id = distribution_id;
+        self
+    }
+
+    /// Resets the distribution target to [`DistributionID::System`].
+    #[inline]
+    #[allow(clippy::missing_const_for_fn, reason = "Useless const")]
+    pub fn reset_distribution_id(&mut self) -> &mut Self {
         self.distribution_id = DistributionID::System;
         self
     }
 
-    /// Gets the current distribution ID for the command.
+    /// Returns the current distribution target.
     #[inline]
     #[must_use]
     pub const fn get_distribution_id(&self) -> DistributionID {
         self.distribution_id
     }
 
-    /// Executes the command and returns a [`TcpStream`].
+    /// Executes the command via the underlying WSL Plugin API.
     ///
-    /// This method determines the API call to be used based on the [`DistributionID`]:
-    /// - If [`DistributionID::System`], the method invokes [`execute_binary`](super::ApiV1::execute_binary).
-    /// - If [`DistributionID::User`], it invokes [`execute_binary_in_distribution`](super::ApiV1::execute_binary_in_distribution)
-    ///   with the associated [`UserDistributionID`].
+    /// On success, returns a [`TcpStream`] connected to the process' stdin/stdout.
     ///
-    /// # Returns
-    /// - On success, it returns a [`TcpStream`] connected to the executed process, enabling interaction
-    ///   with the process's stdin and stdout.
-    /// - On failure, an error indicating the cause of the failure.
+    /// # Behavior
+    ///
+    /// - `argv[0]` is computed as:
+    ///   - overridden `arg0` if set,
+    ///   - otherwise the program path string.
+    /// - The full argv passed to the API is:
+    ///   `argv[0]` + all user-provided args.
+    /// - The selected execution method depends on [`DistributionID`].
     ///
     /// # Errors
-    /// This function will return an error if:
-    /// - [`ApiError::RequiresUpdate`]: The WSL runtime version does not support targeting a user distribution.
-    /// - [`ApiError::WinError`]: The API call fails to execute the binary.
     ///
-    /// # Example
-    /// ```rust ignore
-    /// let mut command = ;
-    /// match WSLCommand::new(context, session, "/bin/echo").arg("Hello, World!").execute() {
-    ///     Ok(stream) => {
-    ///         // Interact with the process via the TcpStream.
-    ///     },
-    ///     Err(e) => eprintln!("Error: {}", e),
-    /// }
-    /// ```
+    /// Returns an [`APIError`] if the underlying API call fails.
     #[inline]
-    pub fn execute(&self) -> ApiResult<TcpStream> {
-        let all_args_iter = std::iter::once(self.get_arg0())
-            .into_iter()
-            .chain(self.args.iter().map(|item| item.as_ref()));
-        let stream = match self.distribution_id {
-            DistributionID::System => {
-                self.api
-                    .execute_binary(self.session_id, &self.path, all_args_iter)?
+    pub fn execute(self) -> ApiResult<TcpStream> {
+        let WSLCommand {
+            api,
+            session_id,
+            distribution_id,
+            path,
+            arg0,
+            args,
+        } = self;
+
+        let argv0 = arg0.as_deref().unwrap_or(path.as_str());
+        let all_args = once(argv0).chain(args.iter().map(AsRef::as_ref));
+
+        match distribution_id {
+            DistributionID::System => api
+                .execute_binary(session_id, path.as_ref(), all_args)
+                .map_err(Into::into),
+            DistributionID::User(id) => {
+                api.execute_binary_in_distribution(session_id, id, path.as_ref(), all_args)
             }
-            DistributionID::User(id) => self.api.execute_binary_in_distribution(
-                self.session_id,
-                id,
-                &self.path,
-                all_args_iter,
-            )?,
-        };
-        Ok(stream)
+        }
     }
 }

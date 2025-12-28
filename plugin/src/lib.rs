@@ -78,7 +78,7 @@ impl WSLPluginV1 for Plugin {
             .context
             .api
             .new_command(session.id(), "/bin/cat")
-            .arg("/proc/version")
+            .with_arg("/proc/version")
             .execute()
         {
             Ok(mut stream) => {
@@ -153,8 +153,8 @@ impl Plugin {
             .context
             .api
             .new_command(session_id, "/bin/cat")
-            .arg("/etc/os-release")
-            .distribution_id(distro_id)
+            .with_arg("/etc/os-release")
+            .with_distribution_id(distro_id)
             .execute()
         {
             Ok(stream) => match OsRelease::from_reader(stream) {
