@@ -6,7 +6,7 @@
 //!
 //! ## Key Features
 //!
-//! - Bi-directional conversion between [`DistributionID`] and [GUID].
+//! - Bi-directional conversion between [`DistributionID`] and [`UserDistributionID`].
 //! - Robust error handling for conversions via [`ConversionError`].
 //! - Display implementation ([Display]) and support for other idiomatic conversions.
 //!
@@ -33,8 +33,7 @@ use thiserror::Error;
 ///   Refer to the [WSLg Architecture blogpost](https://devblogs.microsoft.com/commandline/wslg-architecture/#system-distro).
 ///
 /// - `User(UserDistributionID)`: Represents an individual distribution installed by a user. Each distribution
-///   is uniquely identified by a [`UserDistributionID`], which is consistent across reboots. This [`UserDistributionID`]
-///   corresponds to the [`GUID`] used by WSL for managing the distribution.
+///   is uniquely identified by a [`UserDistributionID`], which is consistent across reboots.
 ///
 /// ## Note
 ///
@@ -51,9 +50,9 @@ pub enum DistributionID {
     User(UserDistributionID),
 }
 
-/// Error type for conversion failures between `DistributionID` and GUID.
+/// Error type for conversion failures between [`DistributionID`] and [`UserDistributionID`].
 #[derive(Debug, Error)]
-#[error("Cannot convert System distribution to GUID.")]
+#[error("Cannot convert System distribution to UserDistribution.")]
 pub struct ConversionError;
 
 impl TryFrom<DistributionID> for UserDistributionID {

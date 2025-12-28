@@ -44,7 +44,7 @@ type ArgVec<'a> = SmallVec<[Cow<'a, str>; 8]>;
 /// ```
 ///
 /// This type exposes:
-/// - [`WSLCommand::iter_argv`] for iterating over the full argument vector,
+/// - [`WSLCommand::argv`] for iterating over the full argument vector,
 /// - [`WSLCommand::arg0`] / [`WSLCommand::with_arg0`] to override `argv[0]`.
 ///
 /// # Examples
@@ -314,7 +314,7 @@ impl<'a> WSLCommand<'a> {
     ///
     /// # Errors
     ///
-    /// Returns an [`APIError`] if the underlying API call fails.
+    /// Returns an [`ApiError`] if the underlying API call fails.
     #[inline]
     pub fn execute(self) -> ApiResult<TcpStream> {
         let WSLCommand {

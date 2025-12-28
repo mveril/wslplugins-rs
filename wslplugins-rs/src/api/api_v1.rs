@@ -21,6 +21,9 @@ use windows_core::{Result as WinResult, HRESULT};
 use wslpluginapi_sys;
 use wslpluginapi_sys::windows_sys::Win32::Networking::WinSock::SOCKET as WinSocket;
 
+#[cfg(doc)]
+use crate::DistributionID;
+
 use wslpluginapi_sys::WSLPluginAPIV1;
 
 use super::utils::check_required_version_result;
@@ -350,8 +353,7 @@ impl ApiV1 {
     ///
     /// # Parameters
     /// - `session_id`: The WSL session in which the command will be executed.
-    /// - `program`: A Linux (UTF-8, Unix-style) path convertible into
-    ///   [`Utf8UnixPath`] via [`IntoCowUtf8UnixPath`].
+    /// - `program`: A Linux (UTF-8, Unix-style) path
     ///
     /// # Returns
     /// A [`WSLCommand`] builder ready to be configured and executed.
