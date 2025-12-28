@@ -54,9 +54,9 @@ type ArgVec<'a> = SmallVec<[Cow<'a, str>; 8]>;
 /// ```no_run
 /// # use wslplugins_rs::{SessionID};
 /// # use wslplugins_rs::api::ApiV1;
-/// # fn demo(api: &ApiV1, session_id: SessionID) -> Result<(), Box<dyn std::error::Error>> {
+/// # fn demo(api: &ApiV1) -> Result<(), Box<dyn std::error::Error>> {
 /// let stream = api
-///     .new_command(session_id, "/bin/cat")
+///     .new_command(SessionID::from(0), "/bin/cat")
 ///     .with_arg("/proc/version")
 ///     .execute()?;
 ///
@@ -90,15 +90,14 @@ type ArgVec<'a> = SmallVec<[Cow<'a, str>; 8]>;
 /// ```no_run
 /// # use wslplugins_rs::{DistributionID, SessionID};
 /// # use wslplugins_rs::api::ApiV1;
-/// # use windows::core::GUID;
-/// # fn demo(api: &ApiV1, session_id: SessionID, distro: GUID) -> Result<(), Box<dyn std::error::Error>> {
+/// # use wslplugins_rs::UserDistributionID;
+/// # fn demo(api: &ApiV1) -> Result<(), Box<dyn std::error::Error>> {
+/// let distro: UserDistributionID = "3B6F3C1E-9B4A-4F2C-8E7A-2A9C6D4E1F52".parse().unwrap();
 /// let stream = api
-///     .new_command(session_id, "/bin/echo")
+///     .new_command(SessionID::from(0), "/bin/echo")
 ///     .with_distribution_id(DistributionID::User(distro))
 ///     .with_arg("hello")
 ///     .execute()?;
-///
-/// # drop(stream);
 /// # Ok(())
 /// # }
 /// ```
