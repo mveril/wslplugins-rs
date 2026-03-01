@@ -3,16 +3,14 @@ use super::Error;
 use super::{Result, WSLCommand};
 use crate::api::errors::require_update_error::Result as UpReqResult;
 use crate::api::wsl_command::IntoCowUtf8UnixPath;
-use crate::cstring_ext::CstringExt;
 use crate::{SessionID, UserDistributionID, WSLVersion};
-use std::ffi::{CString, OsStr};
+use std::ffi::OsStr;
 use std::fmt::{self, Debug};
 use std::mem::MaybeUninit;
 use std::net::TcpStream;
 use std::os::windows::io::FromRawSocket as _;
 use std::os::windows::raw::SOCKET;
 use std::path::Path;
-use std::ptr;
 #[cfg(feature = "tracing")]
 use tracing::instrument;
 use typed_path::Utf8UnixPath;
@@ -65,41 +63,6 @@ impl AsRef<ApiV1> for WSLPluginAPIV1 {
 }
 
 impl ApiV1 {
-    #[inline]
-    fn encode_c_path(path: &Utf8UnixPath) -> Vec<u8> {
-        let bytes = path.as_str().as_bytes();
-        let mut out = Vec::with_capacity(bytes.len() + 1);
-        out.extend_from_slice(bytes);
-        out.push(0);
-        out
-    }
-
-    #[allow(clippy::similar_names, reason = "naming is clear")]
-    fn encode_c_argv<I>(args: I) -> (Vec<CString>, Vec<*const u8>)
-    where
-        I: IntoIterator,
-        I::Item: AsRef<str>,
-    {
-        let iter = args.into_iter();
-        let (lower, upper) = iter.size_hint();
-        let count = upper.unwrap_or(lower);
-
-        let mut c_args = Vec::<CString>::with_capacity(count);
-        let mut argv = Vec::<*const u8>::with_capacity(count + 1);
-
-        for arg in iter {
-            let c = CString::from_str_truncate(arg.as_ref());
-            // Pointer is stable: moving CString does not move its internal buffer.
-            argv.push(c.as_ptr().cast::<u8>());
-            c_args.push(c);
-        }
-
-        // NULL-terminated list as required by the API contract.
-        argv.push(ptr::null());
-
-        (c_args, argv)
-    }
-
     /// Retpurns the current version of the WSL API being used.
     ///
     /// This is useful for checking compatibility with specific API features.
@@ -175,80 +138,23 @@ impl ApiV1 {
         HRESULT(result).ok()
     }
 
-    /// Execute a program in the root namespace.
-    ///
-    /// This method runs a program in the root namespace of the current WSL session. It connects the standard input and output
-    /// streams of the executed process to a [`TcpStream`], allowing interaction with the process.
-    ///
-    /// # Arguments
-    /// - `session`: The current WSL session.
-    /// - `path`: Path to the program to execute.
-    /// - `args`: Arguments to pass to the program (including `arg0`).
-    ///
-    /// # Returns
-    /// On success, this method returns a [`TcpStream`] connected to the standard input and output streams of the executed process.
-    /// - **Standard Input**: Data written to the stream will be sent to the process.
-    /// - **Standard Output**: Data output by the process will be readable from the stream.
-    ///
-    /// # Errors
-    /// This method can return the following a [`windows_core::Error`]: If the underlying Windows API call fails.
-    ///
-    /// # Example
-    /// ```rust,ignore
-    /// let stream = api.execute_binary(&session, "/bin/ls", ["/bin/ls", "-l", "/etc"])?;
-    /// // Write to the process (stdin)
-    /// writeln!(stream, "input data").unwrap();
-    ///
-    /// // Read from the process (stdout)
-    /// let mut buffer = String::new();
-    /// stream.read_to_string(&mut buffer).unwrap();
-    /// println!("Process output: {}", buffer);
-    /// ```
-    #[cfg_attr(feature = "tracing", instrument(skip(args), level = "trace"))]
-    #[doc(alias = "ExecuteBinary")]
-    #[inline]
-    #[allow(clippy::similar_names, reason = "naming is clear")]
-    pub fn execute_binary<P, I>(
+    pub(crate) unsafe fn execute_binary_internal(
         &self,
         session_id: SessionID,
-        path: P,
-        args: I,
-    ) -> WinResult<TcpStream>
-    where
-        P: AsRef<Utf8UnixPath> + std::fmt::Debug,
-        I: IntoIterator,
-        I::Item: AsRef<str>,
-    {
-        let path_ref = path.as_ref();
-        let c_path = Self::encode_c_path(path_ref);
-
-        let (_c_args, mut argv) = Self::encode_c_argv(args);
-        let argv_ptr = argv.as_mut_ptr(); // API expects LPCSTR* (not const-qualified)
-
+        path: &[u8],
+        args: &[*const u8],
+    ) -> WinResult<TcpStream> {
         let mut socket = MaybeUninit::<WinSocket>::uninit();
-        // SAFETY:
-        // - `ExecuteBinaryInDistribution` is guaranteed to be non-null because we first checked
-        //   the API version (>= 2.1.2) before calling `unwrap_unchecked()`.
-        // - `session.id()` returns a valid integer identifying a WSLSessionInformation`, which comes from
-        //   a live session reference owned by the caller.
-        // - `path_ptr` points to a null-terminated buffer (`c_path`) that is kept alive for the
-        //   duration of the call.
-        // - `args_ptr` points to a null-terminated array of pointers (`args_ptrs`), each pointing
-        //   to a valid C string buffer (`c_args`). All these buffers live until after the call.
-        // - `socket.as_mut_ptr()` is a valid, writable pointer to uninitialized memory. The
-        //   function is documented to write a valid SOCKET there on success.
-        // - We only call `assume_init()` if `HRESULT::ok()` reports success, ensuring the socket
-        //   field has been properly initialized by the callee.
-        // - `TcpStream::from_raw_socket` takes ownership of the returned socket; no double-close
-        //   occurs because we never manually close it.
+        // SAFETY: Calling ExecuteBinary is safe with agument correctly prepared.
         let stream = unsafe {
             HRESULT(self.0.ExecuteBinary.unwrap_unchecked()(
                 u32::from(session_id),
-                c_path.as_ptr(),
-                argv_ptr,
+                path.as_ptr(),
+                args.as_ptr().cast_mut(),
                 socket.as_mut_ptr(),
             ))
             .ok()?;
+
             let socket = socket.assume_init();
             TcpStream::from_raw_socket(socket as SOCKET)
         };
@@ -266,72 +172,23 @@ impl ApiV1 {
         .ok()
     }
 
-    /// Execute a program in a user distribution
-    ///
-    /// # Introduced
-    /// This requires API version 2.1.2 or later.
-    ///
-    /// # Arguments
-    /// - `session`: The current WSL session.
-    /// - `distribution_id`: The ID of the target distribution.
-    /// - `path`: Path to the program to execute.
-    /// - `args`: Arguments to pass to the program (including arg0).
-    ///
-    /// # Returns
-    /// A [`TcpStream`] connected to the process's stdin and stdout.
-    ///
-    /// # Errors
-    /// This function may return the following errors:
-    ///
-    /// - [`Error::RequiresUpdate`]: If the API version is lower than 2.1.2.
-    /// - [`Error::WinError`]: If the Windows API fails during execution.
-    ///
-    /// # Example
-    /// ```rust,ignore
-    /// let stream = api.execute_binary_in_distribution(&session, "/bin/ls", ["/bin/ls", "-l", "/etc"])?;
-    /// // Write to the process (stdin)
-    /// writeln!(stream, "input data").unwrap();
-    ///
-    /// // Read from the process (stdout)
-    /// let mut buffer = String::new();
-    /// stream.read_to_string(&mut buffer).unwrap();
-    /// println!("Process output: {}", buffer);
-    /// ```
-    #[doc(alias = "ExecuteBinaryInDistribution")]
-    #[cfg_attr(feature = "tracing", instrument(skip(args), level = "trace"))]
-    #[inline]
-    #[allow(clippy::similar_names, reason = "naming is clear")]
-    pub fn execute_binary_in_distribution<P, I>(
+    pub(crate) unsafe fn execute_binary_in_distribution_internal(
         &self,
         session_id: SessionID,
         distribution_id: UserDistributionID,
-        path: P,
-        args: I,
-    ) -> Result<TcpStream>
-    where
-        P: AsRef<Utf8UnixPath> + std::fmt::Debug,
-        I: IntoIterator,
-        I::Item: AsRef<str>,
-    {
+        c_path: &[u8],
+        args: &[*const u8],
+    ) -> Result<TcpStream> {
         self.check_required_version(&WSLVersion::new(2, 1, 2))?;
-
-        let path_ref = path.as_ref();
-        let c_path = Self::encode_c_path(path_ref);
-
-        let (_c_args, mut argv) = Self::encode_c_argv(args);
-        let argv_ptr = argv.as_mut_ptr();
-
         let mut socket = MaybeUninit::<WinSocket>::uninit();
         let guid: wslpluginapi_sys::windows_sys::core::GUID = distribution_id.into();
-
-        #[allow(clippy::absolute_paths)]
         // SAFETY: Calling ExecuteBinaryInDistribution is safe with agument correctly prepared.
         let stream = unsafe {
             HRESULT(self.0.ExecuteBinaryInDistribution.unwrap_unchecked()(
                 u32::from(session_id),
                 (&raw const guid),
                 c_path.as_ptr(),
-                argv_ptr,
+                args.as_ptr().cast_mut(),
                 socket.as_mut_ptr(),
             ))
             .ok()?;
@@ -339,7 +196,6 @@ impl ApiV1 {
             let socket = socket.assume_init();
             TcpStream::from_raw_socket(socket as SOCKET)
         };
-
         Ok(stream)
     }
 

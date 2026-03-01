@@ -1,17 +1,21 @@
 use super::super::api::{ApiV1, Result as ApiResult};
 use crate::{DistributionID, SessionID};
+use core::clone::Clone;
 use std::{borrow::Cow, iter::once, net::TcpStream};
 use typed_path::Utf8UnixPath;
 
 mod into_cow_utf8_unix_path;
 pub use into_cow_utf8_unix_path::IntoCowUtf8UnixPath;
+pub use prepared_wsl_command::PreparedWSLCommand;
+mod wsl_command_execution;
+pub use wsl_command_execution::WSLCommandExecution;
 
 #[cfg(feature = "smallvec")]
 use smallvec::SmallVec;
 
 #[cfg(doc)]
 use super::super::api::Error as ApiError;
-
+mod prepared_wsl_command;
 #[cfg(not(feature = "smallvec"))]
 type ArgVec<'a> = Vec<Cow<'a, str>>;
 
@@ -298,44 +302,17 @@ impl<'a> WSLCommand<'a> {
     pub const fn get_distribution_id(&self) -> DistributionID {
         self.distribution_id
     }
-
-    /// Executes the command via the underlying WSL Plugin API.
-    ///
-    /// On success, returns a [`TcpStream`] connected to the process' stdin/stdout.
-    ///
-    /// # Behavior
-    ///
-    /// - `argv[0]` is computed as:
-    ///   - overridden `arg0` if set,
-    ///   - otherwise the program path string.
-    /// - The full argv passed to the API is:
-    ///   `argv[0]` + all user-provided args.
-    /// - The selected execution method depends on [`DistributionID`].
-    ///
-    /// # Errors
-    ///
-    /// Returns an [`ApiError`] if the underlying API call fails.
+    /// Prepare a [`WSLCommand`] for execution, encoding the path and arguments into C-compatible formats.
     #[inline]
-    pub fn execute(self) -> ApiResult<TcpStream> {
-        let WSLCommand {
-            api,
-            session_id,
-            distribution_id,
-            path,
-            arg0,
-            args,
-        } = self;
+    #[must_use]
+    pub fn prepare(&self) -> PreparedWSLCommand<'a> {
+        PreparedWSLCommand::from(self)
+    }
+}
 
-        let argv0 = arg0.as_deref().unwrap_or(path.as_str());
-        let all_args = once(argv0).chain(args.iter().map(AsRef::as_ref));
-
-        match distribution_id {
-            DistributionID::System => api
-                .execute_binary(session_id, path.as_ref(), all_args)
-                .map_err(Into::into),
-            DistributionID::User(id) => {
-                api.execute_binary_in_distribution(session_id, id, path.as_ref(), all_args)
-            }
-        }
+impl WSLCommandExecution for WSLCommand<'_> {
+    #[inline]
+    fn execute(&self) -> ApiResult<TcpStream> {
+        self.prepare().execute()
     }
 }
