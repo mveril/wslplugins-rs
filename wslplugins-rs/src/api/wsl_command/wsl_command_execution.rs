@@ -1,6 +1,8 @@
 use std::net::TcpStream;
 
-use super::super::super::api::Result as ApiResult;
+use crate::api::errors::Result as ApiResult;
+#[cfg(doc)]
+use crate::{api::Error as ApiError, DistributionID};
 pub trait WSLCommandExecution {
     /// Executes the command via the underlying WSL Plugin API.
     ///

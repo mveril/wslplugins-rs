@@ -57,7 +57,7 @@ type ArgVec<'a> = SmallVec<[Cow<'a, str>; 8]>;
 ///
 /// ```no_run
 /// # use wslplugins_rs::{SessionID};
-/// # use wslplugins_rs::api::ApiV1;
+/// # use wslplugins_rs::api::{ApiV1, WSLCommandExecution};
 /// # fn demo(api: &ApiV1) -> Result<(), Box<dyn std::error::Error>> {
 /// let stream = api
 ///     .new_command(SessionID::from(0), "/bin/cat")
@@ -76,7 +76,7 @@ type ArgVec<'a> = SmallVec<[Cow<'a, str>; 8]>;
 ///
 /// ```no_run
 /// # use wslplugins_rs::{SessionID};
-/// # use wslplugins_rs::api::ApiV1;
+/// # use wslplugins_rs::api::{ApiV1, WSLCommandExecution};
 /// # fn demo(api: &ApiV1, session_id: SessionID) -> Result<(), Box<dyn std::error::Error>> {
 /// let stream = api
 ///     .new_command(session_id, "/bin/busybox")
@@ -92,9 +92,8 @@ type ArgVec<'a> = SmallVec<[Cow<'a, str>; 8]>;
 /// ## Executing in a user distribution
 ///
 /// ```no_run
-/// # use wslplugins_rs::{DistributionID, SessionID};
-/// # use wslplugins_rs::api::ApiV1;
-/// # use wslplugins_rs::UserDistributionID;
+/// # use wslplugins_rs::{DistributionID, UserDistributionID, SessionID};
+/// # use wslplugins_rs::api::{ApiV1, WSLCommandExecution};
 /// # fn demo(api: &ApiV1) -> Result<(), Box<dyn std::error::Error>> {
 /// let distro: UserDistributionID = "3B6F3C1E-9B4A-4F2C-8E7A-2A9C6D4E1F52".parse().unwrap();
 /// let stream = api
