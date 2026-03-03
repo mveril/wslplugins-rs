@@ -19,7 +19,7 @@ impl LowerHex for UuidFormatter {
 impl UpperHex for UuidFormatter {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result {
-        LowerHex::fmt(&self.0.as_hyphenated(), f)
+        UpperHex::fmt(&self.0.as_hyphenated(), f)
     }
 }
 
