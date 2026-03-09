@@ -1,6 +1,5 @@
 //! Sample WSL plugin implemented in Rust.
 use etc_os_release::OsRelease;
-use plugin::{Result, WSLPluginV1};
 use std::{env, fs::OpenOptions, io::Read, panic};
 use tracing::{error, info, instrument, warn};
 use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
@@ -8,8 +7,8 @@ use windows::{
     core::{Error as WinError, Result as WinResult},
     Win32::Foundation::E_FAIL,
 };
+use wslplugins_rs::prelude::*;
 use wslplugins_rs::wsl_user_configuration::bitflags::WSLUserConfigurationFlags;
-use wslplugins_rs::*;
 
 #[derive(Debug)]
 pub(crate) struct Plugin {
@@ -71,7 +70,7 @@ impl WSLPluginV1 for Plugin {
         &self,
         session: &WSLSessionInformation,
         user_settings: &WSLVmCreationSettings,
-    ) -> Result<()> {
+    ) -> PluginResult<()> {
         let flags: WSLUserConfigurationFlags = user_settings.custom_configuration_flags().into();
         info!("User configuration {:?}", flags);
         match self
@@ -106,7 +105,7 @@ impl WSLPluginV1 for Plugin {
         &self,
         session: &WSLSessionInformation,
         distribution: &DistributionInformation,
-    ) -> Result<()> {
+    ) -> PluginResult<()> {
         info!(
             "Distribution started. Sessionid= {:?}, Id={:?} Name={:}, Package={}, PidNs={}, InitPid={}",
             session.id(),

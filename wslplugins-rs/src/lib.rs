@@ -21,9 +21,7 @@
 //!
 //! ```rust
 //! #[cfg(feature = "macro")]
-//! use wslplugins_rs::{plugin::WSLPluginV1, WSLContext};
-//! use windows_core::Result as WinResult;
-//! use wslplugins_rs::wsl_plugin_v1;
+//! use wslplugins_rs::prelude::*;
 //! pub(crate) struct MyPlugin {
 //!   context: &'static WSLContext,
 //! }
@@ -58,6 +56,8 @@ pub use typed_path;
 pub use wsl_user_configuration::WSLUserConfiguration;
 /// Tools and utilities for creating custom WSL plugins.
 pub mod plugin;
+/// Convenient re-exports for common plugin development imports.
+pub mod prelude;
 
 // Re-exports for core structures to simplify usage.
 pub use core_distribution_information::CoreDistributionInformation;
