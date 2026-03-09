@@ -30,7 +30,7 @@ pub(crate) fn check_required_version_result_from_context(
     required_version: &WSLVersion,
 ) -> Result<()> {
     wsl_context.map_or(Ok(()), |context| {
-        let current_version: &WSLVersion = context.api.version();
+        let current_version = context.api.version();
         check_required_version_result(current_version, required_version)
     })
 }

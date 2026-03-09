@@ -53,6 +53,33 @@ impl WSLPluginV1 for Plugin {
 }
 ```
 
+### Running a command in WSL (`WSLCommand`)
+
+Use `ApiV1::new_command` to build and execute Linux commands from a plugin
+session.
+
+```rust
+use wslplugins_rs::{SessionID};
+use wslplugins_rs::api::{ApiV1, WSLCommandExecution};
+
+fn run_version(api: &ApiV1) -> Result<(), Box<dyn std::error::Error>> {
+    let stream = api
+        .new_command(SessionID::from(0), "/bin/cat")
+        .with_arg("/proc/version")
+        .execute()?;
+
+    drop(stream);
+    Ok(())
+}
+```
+
+Notes:
+- Program path must be a Linux UTF-8 path (for example `/bin/echo`).
+- `argv[0]` defaults to the program path and can be overridden with `with_arg0`.
+- Use `with_distribution_id` to execute in a specific user distribution.
+- `execute()` returns a `TcpStream` connected to process stdin/stdout.
+- stderr is forwarded to Linux `dmesg`.
+
 ### Installation and Configuration
 
 #### Building and Signing the Plugin

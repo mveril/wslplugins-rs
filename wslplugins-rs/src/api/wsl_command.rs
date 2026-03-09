@@ -111,6 +111,8 @@ type ArgVec<'a> = SmallVec<[Cow<'a, str>; 8]>;
 ///   [`TcpStream`] to the process stdin/stdout.
 /// - stderr is forwarded to `dmesg` on the Linux side.
 /// - This type performs no validation of the Linux path or arguments beyond UTF-8 handling.
+#[doc(alias = "ExecuteBinary")]
+#[doc(alias = "ExecuteBinaryInDistribution")]
 #[derive(Clone, Debug)]
 pub struct WSLCommand<'a> {
     /// Reference to the API v1 handle used to perform the execution.

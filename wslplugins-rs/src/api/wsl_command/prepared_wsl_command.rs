@@ -8,6 +8,18 @@ use crate::{
     DistributionID, SessionID,
 };
 
+/// A command pre-encoded for the WSL Plugin API.
+///
+/// `PreparedWSLCommand` stores:
+/// - a NUL-terminated program path (`c_path`),
+/// - a NUL-terminated `argv` pointer array (`argv`),
+/// - owned C strings backing `argv` (`_c_args`).
+///
+/// This avoids rebuilding C-compatible buffers when executing the same command
+/// multiple times.
+///
+/// Instances are usually created from [`WSLCommand`] via [`WSLCommand::prepare`]
+/// or `From<WSLCommand>`.
 #[derive(Debug)]
 pub struct PreparedWSLCommand<'a> {
     api: &'a ApiV1,
@@ -19,6 +31,19 @@ pub struct PreparedWSLCommand<'a> {
 }
 
 impl WSLCommandExecution for PreparedWSLCommand<'_> {
+    /// Executes the prepared command via the underlying WSL Plugin API.
+    ///
+    /// # Behavior
+    ///
+    /// - [`DistributionID::System`] uses `ExecuteBinary`.
+    /// - [`DistributionID::User`] uses `ExecuteBinaryInDistribution`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an API error if the call fails, including version requirements
+    /// for distribution-scoped execution.
+    #[doc(alias = "ExecuteBinary")]
+    #[doc(alias = "ExecuteBinaryInDistribution")]
     #[inline]
     fn execute(&self) -> ApiResult<TcpStream> {
         match self.distribution_id {
