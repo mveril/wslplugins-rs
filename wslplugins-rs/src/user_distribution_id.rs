@@ -6,6 +6,8 @@ pub mod fmt;
 mod parse_error;
 use fmt::DefaultFormatter;
 pub use parse_error::ParseError;
+
+use crate::CoreDistributionInformation;
 #[cfg(feature = "uuid")]
 mod uuid_impl;
 
@@ -30,6 +32,13 @@ impl From<wslpluginapi_sys::windows_sys::core::GUID> for UserDistributionID {
             )
         };
         Self(guid)
+    }
+}
+
+impl<T: CoreDistributionInformation> From<&T> for UserDistributionID {
+    #[inline]
+    fn from(value: &T) -> Self {
+        value.id()
     }
 }
 

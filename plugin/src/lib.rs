@@ -73,13 +73,13 @@ impl WSLPluginV1 for Plugin {
         user_settings: &WSLVmCreationSettings,
     ) -> Result<()> {
         let flags: WSLUserConfigurationFlags = user_settings.custom_configuration_flags().into();
-        info!("User configuration {flags:?}");
-
-        let ver_args = ["/bin/cat", "/proc/version"];
+        info!("User configuration {:?}", flags);
         match self
             .context
             .api
-            .execute_binary(session.id(), ver_args[0], &ver_args)
+            .new_command(session.id(), "/bin/cat")
+            .with_arg("/proc/version")
+            .execute()
         {
             Ok(mut stream) => {
                 let mut buf = String::new();
@@ -97,7 +97,7 @@ impl WSLPluginV1 for Plugin {
                 )
             }
         };
-        self.log_os_release(session.id(), None);
+        self.log_os_release(session.id(), DistributionID::System);
         Ok(())
     }
 
@@ -117,7 +117,7 @@ impl WSLPluginV1 for Plugin {
             // Use unknow if init_pid not available
             distribution.init_pid().map(|res| res.to_string()).unwrap_or("Unknow".to_string())
         );
-        self.log_os_release(session.id(), Some(distribution.id()));
+        self.log_os_release(session.id(), distribution.id().into());
         Ok(())
     }
 
@@ -148,21 +148,15 @@ impl WSLPluginV1 for Plugin {
 }
 
 impl Plugin {
-    fn log_os_release(&self, session_id: SessionID, distro_id: Option<UserDistributionID>) {
-        let args: [&str; 2] = ["/bin/cat", "/etc/os-release"];
-        let tcp_stream: std::result::Result<std::net::TcpStream, api::Error> = match distro_id {
-            Some(dist_id) => self
-                .context
-                .api
-                .execute_binary_in_distribution(session_id, dist_id, args[0], &args),
-            None => self
-                .context
-                .api
-                .execute_binary(session_id, args[0], &args)
-                .map_err(Into::into),
-        };
-        let result = tcp_stream;
-        match result {
+    fn log_os_release(&self, session_id: SessionID, distro_id: DistributionID) {
+        match self
+            .context
+            .api
+            .new_command(session_id, "/bin/cat")
+            .with_arg("/etc/os-release")
+            .with_distribution_id(distro_id)
+            .execute()
+        {
             Ok(stream) => match OsRelease::from_reader(stream) {
                 Ok(release) => {
                     if let Some(version) = release.version() {
