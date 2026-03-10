@@ -34,6 +34,14 @@ impl From<WSLUserConfiguration> for WSLUserConfigurationFlags {
     }
 }
 
+impl WSLUserConfiguration {
+    #[inline]
+    #[must_use]
+    pub fn into_bitflags(self) -> WSLUserConfigurationFlags {
+        WSLUserConfigurationFlags::from(self)
+    }
+}
+
 impl From<WSLUserConfigurationFlags> for WSLUserConfiguration {
     #[inline]
     fn from(value: WSLUserConfigurationFlags) -> Self {

@@ -42,6 +42,14 @@ impl From<FlagSet<WSLUserConfigurationFlags>> for WSLUserConfiguration {
     }
 }
 
+impl WSLUserConfiguration {
+    #[inline]
+    #[must_use]
+    pub fn into_flagset(self) -> FlagSet<WSLUserConfigurationFlags> {
+        FlagSet::from(self)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

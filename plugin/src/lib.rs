@@ -8,7 +8,6 @@ use windows::{
     Win32::Foundation::E_FAIL,
 };
 use wslplugins_rs::prelude::*;
-use wslplugins_rs::wsl_user_configuration::bitflags::WSLUserConfigurationFlags;
 
 #[derive(Debug)]
 pub(crate) struct Plugin {
@@ -71,7 +70,7 @@ impl WSLPluginV1 for Plugin {
         session: &WSLSessionInformation,
         user_settings: &WSLVmCreationSettings,
     ) -> PluginResult<()> {
-        let flags: WSLUserConfigurationFlags = user_settings.custom_configuration_flags().into();
+        let flags = user_settings.custom_configuration_flags().into_bitflags();
         info!("User configuration {:?}", flags);
         match self
             .context
