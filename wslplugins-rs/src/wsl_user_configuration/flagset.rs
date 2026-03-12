@@ -43,6 +43,7 @@ impl From<FlagSet<WSLUserConfigurationFlags>> for WSLUserConfiguration {
 }
 
 impl WSLUserConfiguration {
+    /// Converts the [`WSLUserConfiguration`] into a [`FlagSet`] of (`WSLUserConfigurationFlags`).
     #[inline]
     #[must_use]
     pub fn into_flagset(self) -> FlagSet<WSLUserConfigurationFlags> {

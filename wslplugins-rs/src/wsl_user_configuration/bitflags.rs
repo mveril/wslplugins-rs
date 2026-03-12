@@ -35,6 +35,7 @@ impl From<WSLUserConfiguration> for WSLUserConfigurationFlags {
 }
 
 impl WSLUserConfiguration {
+    /// Converts the [`WSLUserConfiguration`] into a [`WSLUserConfigurationFlags`]..
     #[inline]
     #[must_use]
     pub fn into_bitflags(self) -> WSLUserConfigurationFlags {
