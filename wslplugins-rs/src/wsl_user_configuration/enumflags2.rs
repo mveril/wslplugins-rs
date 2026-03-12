@@ -44,6 +44,15 @@ impl From<BitFlags<WSLUserConfigurationFlags>> for WSLUserConfiguration {
     }
 }
 
+impl WSLUserConfiguration {
+    /// Converts the [`WSLUserConfiguration`] into a [`BitFlags`] of (`WSLUserConfigurationFlags`).
+    #[inline]
+    #[must_use]
+    pub fn into_enumflags2(self) -> BitFlags<WSLUserConfigurationFlags> {
+        BitFlags::from(self)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
