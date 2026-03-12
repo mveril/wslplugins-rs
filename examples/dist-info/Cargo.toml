@@ -1,5 +1,5 @@
 [package]
-name = "plugin"
+name = "dist-info"
 authors.workspace = true
 version.workspace = true
 license.workspace = true
@@ -11,7 +11,7 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-wslplugins-rs = { path = "../wslplugins-rs", features = [
+wslplugins-rs = { path = "../../wslplugins-rs", features = [
   "macro",
   "bitflags",
   "tracing",

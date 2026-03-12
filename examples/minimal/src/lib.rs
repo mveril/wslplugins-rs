@@ -1,0 +1,152 @@
+//! Sample WSL plugin implemented in Rust.
+use std::borrow::Cow;
+use std::fs::File;
+use std::io::prelude::*;
+use std::{env, fs::OpenOptions, io::Read, panic};
+use windows::{
+    core::{Error as WinError, Result as WinResult},
+    Win32::Foundation::E_FAIL,
+};
+use wslplugins_rs::prelude::*;
+
+#[derive(Debug)]
+pub(crate) struct Plugin {
+    context: &'static WSLContext,
+    log_file: File,
+}
+
+#[wsl_plugin_v1(2, 1, 3)]
+impl WSLPluginV1 for Plugin {
+    fn try_new(context: &'static WSLContext) -> WinResult<Self> {
+        let log_file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open("C:\\wsl-plugin-demo.txt")
+            .map_err(|_| WinError::from(E_FAIL))?;
+        writeln!(
+            &log_file,
+            "Plugin loaded. WSL version: {}",
+            context.api.version()
+        )?;
+        let plugin = Plugin { context, log_file };
+        Ok(plugin)
+    }
+
+    fn on_vm_started(
+        &self,
+        session: &WSLSessionInformation,
+        user_settings: &WSLVmCreationSettings,
+    ) -> PluginResult<()> {
+        writeln!(
+            &self.log_file,
+            "VM created. SessionId={}, CustomConfigurationFlags={}",
+            session.session_id(),
+            user_settings.custom_configuration_flags()
+        )?;
+
+        // Launch cat /proc/version to get the VM's kernel version
+        match self
+            .context
+            .api
+            .new_command(session.session_id(), "/bin/cat")
+            .with_arg("/proc/version")
+            .execute()
+        {
+            Err(e) => {
+                writeln!(&self.logfile, "Failed to execute command: {}", e)?;
+                return Ok(());
+            }
+            Ok(mut stream) => {
+                let mut buffer = String::new();
+                stream.read_to_string(buf);
+                writeln!(&self.log_file, "Kernel version info: {}", buffer)?;
+            }
+        }
+        Ok(())
+    }
+    fn on_vm_stopping(&self, session: &WSLSessionInformation) -> PluginResult<()> {
+        writeln!(&self.log_file, "VM stopping. SessionId={}", session.id())?;
+        Ok(())
+    }
+    fn on_distribution_started(
+        &self,
+        session: &WSLSessionInformation,
+        distribution: &DistributionInformation,
+    ) -> PluginResult<()> {
+        writeln!(
+            &self.log_file,
+            "Distribution started. SessionId={}, name={}, package={}, InitPid={}",
+            session.id(),
+            distribution.name().to_string_lossy(),
+            distribution
+                .package_family_name()
+                .map_or(Cow::Borrowed(""), |s| Cow::Owned(
+                    s.to_string_lossy().into_owned()
+                )),
+            distribution
+                .init_pid()
+                .map_or(Cow::Borrowed(""), |pid| Cow::Owned(pid.to_string()))
+        );
+        Ok(())
+    }
+
+    fn on_distribution_stopping(
+        &self,
+        session: &WSLSessionInformation,
+        distribution: &DistributionInformation,
+    ) -> WinResult<()> {
+        writeln!(
+            &self.log_file,
+            "Distribution Stopping. SessionId={}, name={}, package={}, InitPid={}",
+            session.id(),
+            distribution.name().to_string_lossy(),
+            distribution
+                .package_family_name()
+                .map_or(Cow::Borrowed(""), |s| Cow::Owned(
+                    s.to_string_lossy().into_owned()
+                )),
+            distribution
+                .init_pid()
+                .map_or(Cow::Borrowed(""), |pid| Cow::Owned(pid.to_string()))
+        );
+        Ok(())
+    }
+
+    fn on_distribution_registered(
+        &self,
+        session: &WSLSessionInformation,
+        distribution: &OfflineDistributionInformation,
+    ) -> WinResult<()> {
+        writeln!(
+            &self.log_file,
+            "Distribution registered. SessionId={}, name={}, package={}",
+            session.id(),
+            distribution.name().to_string_lossy(),
+            distribution
+                .package_family_name()
+                .map_or(Cow::Borrowed(""), |s| Cow::Owned(
+                    s.to_string_lossy().into_owned()
+                ))
+        );
+        Ok(())
+    }
+
+    fn on_distribution_unregistered(
+        &self,
+        session: &WSLSessionInformation,
+        distribution: &OfflineDistributionInformation,
+    ) -> WinResult<()> {
+        writeln!(
+            &self.log_file,
+            "Distribution unregistered. SessionId={}, name={}, package={}",
+            session.id(),
+            distribution.name().to_string_lossy(),
+            distribution
+                .package_family_name()
+                .map_or(Cow::Borrowed(""), |s| Cow::Owned(
+                    s.to_string_lossy().into_owned()
+                ))
+        );
+        Ok(())
+    }
+}

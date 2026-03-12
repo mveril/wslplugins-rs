@@ -1,0 +1,21 @@
+[package]
+name = "minimal"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wslplugins-rs = { path = "../../wslplugins-rs", features = [
+  "macro",
+], version = "0.1.0-alpha.0" }
+[dependencies.windows]
+workspace = true
+features = ["Win32_Foundation"]
+[lints]
+workspace = true
