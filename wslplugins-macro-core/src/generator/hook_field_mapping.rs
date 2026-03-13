@@ -18,6 +18,13 @@ pub fn generate(imp: &ParsedImpl, version: &RequiredVersion) -> Result<TokenStre
     })
 }
 
+fn version_gated_hooks(hook: Hooks) -> bool {
+    matches!(
+        hook,
+        Hooks::OnDistributionRegistered | Hooks::OnDistributionUnregistered
+    )
+}
+
 // Generate hook function implementations based on provided hook mappings
 fn generate_hook_fns(hooks: &[Hooks]) -> Result<Vec<TokenStream>> {
     hooks
@@ -64,13 +71,13 @@ fn hook_field_mapping(hooks_struct_name: &Ident, hook: Hooks) -> Result<TokenStr
         Hooks::OnDistributionRegistered | Hooks::OnDistributionUnregistered => {
             let required_version = "2.1.2";
             quote! {
-                if api.version >= WSLVersion::new(2, 1, 2) {
+                if current_version >= ::wslplugins_rs::WSLVersion::new(2, 1, 2) {
                     #base
                 } else {
                     ::wslplugins_rs::__private::debug!(
                         "Hook {} not applied due to insufficient version (found: {}, required: {})",
                         #field_str,
-                        api.version,
+                        current_version,
                         #required_version
                     );
                 }
@@ -85,6 +92,15 @@ fn hook_field_mapping(hooks_struct_name: &Ident, hook: Hooks) -> Result<TokenStr
 fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<TokenStream> {
     let static_plugin_type = create_static_type(imp);
     let hooks_ref_name = format_ident!("hooks_ref");
+    let current_version = imp
+        .hooks
+        .iter()
+        .cloned()
+        .any(version_gated_hooks)
+        .then_some(quote! {
+            let current_version = ::wslplugins_rs::WSLVersion::from(api.Version);
+        })
+        .unwrap_or_default();
     let hook_set = prepare_hooks(&hooks_ref_name, &imp.hooks)?;
     let RequiredVersion {
         major,
@@ -111,6 +127,7 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
             hooks_ref: &mut ::wslplugins_rs::sys::WSLPluginHooksV1,
         ) -> ::wslplugins_rs::windows_core::Result<()> {
             let plugin: #static_plugin_type = ::wslplugins_rs::plugin::create_plugin_with_required_version(api, #major, #minor, #revision)?;
+            #current_version
             #(#hook_set)*
             PLUGIN.set(plugin).map_err(|_| ::wslplugins_rs::windows_core::Error::from(::wslplugins_rs::windows_core::HRESULT(::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_ABORT)))
         }
@@ -163,16 +180,18 @@ mod tests {
             hook_field_mapping(&hooks_struct_name, hook);
         assert_eq!(
             result.unwrap().to_string(),
-            quote!(if api.version >= WSLVersion::new(2, 1, 2) {
-                hooks_struct.OnDistributionRegistered = Some(on_distribution_registered);
-            } else {
-                ::wslplugins_rs::__private::debug!(
-                    "Hook {} not applied due to insufficient version (found: {}, required: {})",
-                    "OnDistributionRegistered",
-                    api.version,
-                    "2.1.2"
-                );
-            })
+            quote!(
+                if current_version >= ::wslplugins_rs::WSLVersion::new(2, 1, 2) {
+                    hooks_struct.OnDistributionRegistered = Some(on_distribution_registered);
+                } else {
+                    ::wslplugins_rs::__private::debug!(
+                        "Hook {} not applied due to insufficient version (found: {}, required: {})",
+                        "OnDistributionRegistered",
+                        current_version,
+                        "2.1.2"
+                    );
+                }
+            )
             .to_string()
         );
     }
