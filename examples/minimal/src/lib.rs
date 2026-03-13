@@ -42,7 +42,8 @@ impl WSLPluginV1 for Plugin {
             "VM created. SessionId={}, CustomConfigurationFlags={}",
             session.session_id(),
             user_settings.custom_configuration_flags()
-        )?;
+        )
+        .map_err(|_| WinError::from(E_FAIL))?;
 
         // Launch cat /proc/version to get the VM's kernel version
         match self
@@ -53,18 +54,19 @@ impl WSLPluginV1 for Plugin {
             .execute()
         {
             Err(e) => {
-                writeln!(&self.logfile, "Failed to execute command: {}", e)?;
+                writeln!(&self.log_file, "Failed to execute command: {}", e)?;
                 return Ok(());
             }
             Ok(mut stream) => {
                 let mut buffer = String::new();
-                stream.read_to_string(buf);
-                writeln!(&self.log_file, "Kernel version info: {}", buffer)?;
+                stream.read_to_string(&mut buffer);
+                writeln!(&self.log_file, "Kernel version info: {}", buffer.trim())
+                    .map_err(|_| WinError::from(E_FAIL))?;
             }
         }
         Ok(())
     }
-    fn on_vm_stopping(&self, session: &WSLSessionInformation) -> PluginResult<()> {
+    fn on_vm_stopping(&self, session: &WSLSessionInformation) -> WinResult<()> {
         writeln!(&self.log_file, "VM stopping. SessionId={}", session.id())?;
         Ok(())
     }
