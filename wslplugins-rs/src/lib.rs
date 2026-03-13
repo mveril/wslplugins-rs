@@ -42,6 +42,8 @@ pub(crate) mod cstring_ext;
 mod session_id;
 pub mod user_distribution_id;
 pub use windows_core;
+#[doc(hidden)]
+pub mod __private;
 pub mod distribution_id;
 mod distribution_information;
 mod offline_distribution_information;
