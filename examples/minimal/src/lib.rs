@@ -2,7 +2,7 @@
 use std::borrow::Cow;
 use std::fs::File;
 use std::io::prelude::*;
-use std::{env, fs::OpenOptions, io::Read, panic};
+use std::{fs::OpenOptions, io::Read};
 use windows::{
     core::{Error as WinError, Result as WinResult},
     Win32::Foundation::E_FAIL,
@@ -39,7 +39,7 @@ impl WSLPluginV1 for Plugin {
     ) -> PluginResult<()> {
         writeln!(
             &self.log_file,
-            "VM created. SessionId={}, CustomConfigurationFlags={}",
+            "VM created. SessionId={}, CustomConfigurationFlags={:?}",
             session.id(),
             user_settings.custom_configuration_flags()
         )
@@ -54,12 +54,14 @@ impl WSLPluginV1 for Plugin {
             .execute()
         {
             Err(e) => {
-                writeln!(&self.log_file, "Failed to execute command: {}", e)?;
-                return Ok(());
+                writeln!(&self.log_file, "Failed to execute command: {}", e)
+                    .map_err(|_| WinError::from(E_FAIL))?;
             }
             Ok(mut stream) => {
                 let mut buffer = String::new();
-                stream.read_to_string(&mut buffer);
+                stream
+                    .read_to_string(&mut buffer)
+                    .map_err(|_| WinError::from(E_FAIL))?;
                 writeln!(&self.log_file, "Kernel version info: {}", buffer.trim())
                     .map_err(|_| WinError::from(E_FAIL))?;
             }
@@ -87,7 +89,8 @@ impl WSLPluginV1 for Plugin {
             distribution
                 .init_pid()
                 .map_or(Cow::Borrowed(""), |pid| Cow::Owned(pid.to_string()))
-        );
+        )
+        .map_err(|_| WinError::from(E_FAIL))?;
         Ok(())
     }
 
@@ -108,7 +111,8 @@ impl WSLPluginV1 for Plugin {
             distribution
                 .init_pid()
                 .map_or(Cow::Borrowed(""), |pid| Cow::Owned(pid.to_string()))
-        );
+        )
+        .map_err(|_| WinError::from(E_FAIL))?;
         Ok(())
     }
 
@@ -126,7 +130,8 @@ impl WSLPluginV1 for Plugin {
                 .package_family_name()
                 .unwrap_or_default()
                 .display()
-        );
+        )
+        .map_err(|_| WinError::from(E_FAIL))?;
         Ok(())
     }
 
@@ -144,7 +149,8 @@ impl WSLPluginV1 for Plugin {
                 .package_family_name()
                 .unwrap_or_default()
                 .display()
-        );
+        )
+        .map_err(|_| WinError::from(E_FAIL))?;
         Ok(())
     }
 }
