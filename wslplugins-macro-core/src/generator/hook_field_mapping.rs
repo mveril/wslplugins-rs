@@ -67,7 +67,7 @@ fn hook_field_mapping(hooks_struct_name: &Ident, hook: Hooks) -> Result<TokenStr
                 if api.version >= WSLVersion::new(2, 1, 2) {
                     #base
                 } else {
-                    ::log::debug!(
+                    ::wslplugins_rs::__private::debug!(
                         "Hook {} not applied due to insufficient version (found: {}, required: {})",
                         #field_str,
                         api.version,
@@ -166,7 +166,7 @@ mod tests {
             quote!(if api.version >= WSLVersion::new(2, 1, 2) {
                 hooks_struct.OnDistributionRegistered = Some(on_distribution_registered);
             } else {
-                ::log::debug!(
+                ::wslplugins_rs::__private::debug!(
                     "Hook {} not applied due to insufficient version (found: {}, required: {})",
                     "OnDistributionRegistered",
                     api.version,
