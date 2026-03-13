@@ -3,10 +3,8 @@ use std::borrow::Cow;
 use std::fs::File;
 use std::io::prelude::*;
 use std::{fs::OpenOptions, io::Read};
-use windows::{
-    core::{Error as WinError, Result as WinResult},
-    Win32::Foundation::E_FAIL,
-};
+use windows::Win32::Foundation::E_FAIL;
+;
 use wslplugins_rs::prelude::*;
 
 #[derive(Debug)]
