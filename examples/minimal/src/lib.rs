@@ -40,7 +40,7 @@ impl WSLPluginV1 for Plugin {
         writeln!(
             &self.log_file,
             "VM created. SessionId={}, CustomConfigurationFlags={}",
-            session.session_id(),
+            session.id(),
             user_settings.custom_configuration_flags()
         )
         .map_err(|_| WinError::from(E_FAIL))?;
@@ -49,7 +49,7 @@ impl WSLPluginV1 for Plugin {
         match self
             .context
             .api
-            .new_command(session.session_id(), "/bin/cat")
+            .new_command(session.id(), "/bin/cat")
             .with_arg("/proc/version")
             .execute()
         {
@@ -82,9 +82,8 @@ impl WSLPluginV1 for Plugin {
             distribution.name().to_string_lossy(),
             distribution
                 .package_family_name()
-                .map_or(Cow::Borrowed(""), |s| Cow::Owned(
-                    s.to_string_lossy().into_owned()
-                )),
+                .unwrap_or_default()
+                .display(),
             distribution
                 .init_pid()
                 .map_or(Cow::Borrowed(""), |pid| Cow::Owned(pid.to_string()))
@@ -104,9 +103,8 @@ impl WSLPluginV1 for Plugin {
             distribution.name().to_string_lossy(),
             distribution
                 .package_family_name()
-                .map_or(Cow::Borrowed(""), |s| Cow::Owned(
-                    s.to_string_lossy().into_owned()
-                )),
+                .unwrap_or_default()
+                .display(),
             distribution
                 .init_pid()
                 .map_or(Cow::Borrowed(""), |pid| Cow::Owned(pid.to_string()))
@@ -126,9 +124,8 @@ impl WSLPluginV1 for Plugin {
             distribution.name().to_string_lossy(),
             distribution
                 .package_family_name()
-                .map_or(Cow::Borrowed(""), |s| Cow::Owned(
-                    s.to_string_lossy().into_owned()
-                ))
+                .unwrap_or_default()
+                .display()
         );
         Ok(())
     }
@@ -145,9 +142,8 @@ impl WSLPluginV1 for Plugin {
             distribution.name().to_string_lossy(),
             distribution
                 .package_family_name()
-                .map_or(Cow::Borrowed(""), |s| Cow::Owned(
-                    s.to_string_lossy().into_owned()
-                ))
+                .unwrap_or_default()
+                .display()
         );
         Ok(())
     }
