@@ -18,7 +18,7 @@ pub fn generate(imp: &ParsedImpl, version: &RequiredVersion) -> Result<TokenStre
     })
 }
 
-fn version_gated_hooks(hook: Hooks) -> bool {
+const fn version_gated_hooks(hook: Hooks) -> bool {
     matches!(
         hook,
         Hooks::OnDistributionRegistered | Hooks::OnDistributionUnregistered
@@ -95,7 +95,7 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
     let current_version = imp
         .hooks
         .iter()
-        .cloned()
+        .copied()
         .any(version_gated_hooks)
         .then_some(quote! {
             let current_version = ::wslplugins_rs::WSLVersion::from(api.Version);
