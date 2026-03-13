@@ -72,7 +72,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
         Hooks::OnDistributionRegistered | Hooks::OnDistributionUnregistered => Some(quote! {
             extern "C" fn #c_method_ident(
                 session: *const ::wslplugins_rs::sys::WSLSessionInformation,
-                distribution:  *const ::wslplugins_rs::sys::WSLOfflineDistributionInformation,
+                distribution:  *const ::wslplugins_rs::sys::WslOfflineDistributionInformation,
             ) -> ::wslplugins_rs::sys::windows_sys::core::HRESULT {
                 let session_ptr = unsafe { &*session };
                 let distribution_ptr = unsafe { &*distribution };
@@ -81,7 +81,7 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                         session_ptr.as_ref(),
                         distribution_ptr.as_ref(),
                     )).0
-                }).unwrap_or(::wslplugins_rs::sys::windows_sys::Win32::Foundation)
+                }).unwrap_or(::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_FAIL)
             }
         }),
     };
