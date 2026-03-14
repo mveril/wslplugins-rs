@@ -13,6 +13,7 @@
 //! - **`bitflags`**: Provides a [`bitflags`]-based implementation for handling user configuration flags.
 //! - **`enumflags2`**: Provides an [`enumflags2`]-based implementation for handling user configuration flags.
 //! - **`flagset`**: Provides a [`flagset`]-based implementation for handling user configuration flags.
+use std::fmt::{self, Display};
 
 #[cfg(feature = "bitflags")]
 pub mod bitflags;
@@ -41,6 +42,13 @@ impl From<WSLUserConfiguration> for i32 {
     #[inline]
     fn from(value: WSLUserConfiguration) -> Self {
         value.0
+    }
+}
+
+impl Display for WSLUserConfiguration {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Display::fmt(&self.0, f)
     }
 }
 
