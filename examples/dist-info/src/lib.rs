@@ -1,4 +1,4 @@
-//! Sample WSL plugin implemented in Rust.
+#![doc = include_str!("../README.md")]
 use etc_os_release::OsRelease;
 use std::{env, fs::OpenOptions, io::Read, panic};
 use tracing::{error, info, instrument, warn};

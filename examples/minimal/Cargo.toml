@@ -17,5 +17,6 @@ wslplugins-rs = { path = "../../wslplugins-rs", features = [
 [dependencies.windows]
 workspace = true
 features = ["Win32_Foundation"]
+readme = "README.md"
 [lints]
 workspace = true

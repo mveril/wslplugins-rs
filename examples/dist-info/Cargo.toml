@@ -6,6 +6,7 @@ license.workspace = true
 repository.workspace = true
 edition = "2021"
 publish = false
+readme = "README.md"
 
 [lib]
 crate-type = ["cdylib"]
