@@ -1,7 +1,6 @@
 # Minimal example
 
-This example is a close Rust translation of Microsoft's sample C++ WSL plugin:
-https://github.com/microsoft/wsl-plugin-sample/blob/main/plugin.cpp
+This example is a close Rust translation of [Microsoft's sample C++ WSL plugin](https://github.com/microsoft/wsl-plugin-sample/blob/main/plugin.cpp)
 
 It keeps the same observable behavior as the original sample:
 - it opens `C:\wsl-plugin-demo.txt` when the plugin is loaded

@@ -1,4 +1,4 @@
-//! Sample WSL plugin implemented in Rust.
+#![doc = include_str!("../README.md")]
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use windows::Win32::Foundation::{E_ABORT, E_FAIL};
