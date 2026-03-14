@@ -52,7 +52,7 @@ impl From<Error> for HRESULT {
     /// This implementation maps the custom `Error` to the `WSL_E_PLUGIN_REQUIRES_UPDATE` HRESULT.
     ///
     /// # Note
-    /// [`WSL_E_PLUGIN_REQUIRES_UPDATE`]: Indicates the WSL version is insufficient for the plugin.
+    /// [`Error::WSL_E_PLUGIN_REQUIRES_UPDATE`]: Indicates the WSL version is insufficient for the plugin.
     #[inline]
     fn from(_: Error) -> Self {
         Self(Error::WSL_E_PLUGIN_REQUIRES_UPDATE.0)
@@ -62,7 +62,7 @@ impl From<Error> for HRESULT {
 impl From<Error> for windows_core::Error {
     /// Converts the `Error` into a [`windows_core::Error`].
     ///
-    /// This implementation creates a [`windows_core::Error`] with the [`WSL_E_PLUGIN_REQUIRES_UPDATE`] code.
+    /// This implementation creates a [`windows_core::Error`] with the [`Error::WSL_E_PLUGIN_REQUIRES_UPDATE`] code.
     #[inline]
     fn from(value: Error) -> Self {
         Self::from(HRESULT::from(value))
