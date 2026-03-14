@@ -7,7 +7,6 @@
 use crate::WSLVersion;
 use thiserror::Error;
 use windows_core::HRESULT;
-use wslpluginapi_sys::WSL_E_PLUGIN_REQUIRES_UPDATE;
 
 /// Represents an error when the current WSL version is unsupported.
 ///
@@ -43,6 +42,8 @@ impl Error {
             required_version,
         }
     }
+    pub const WSL_E_PLUGIN_REQUIRES_UPDATE: HRESULT =
+        HRESULT(wslpluginapi_sys::WSL_E_PLUGIN_REQUIRES_UPDATE);
 }
 
 impl From<Error> for HRESULT {
@@ -51,10 +52,20 @@ impl From<Error> for HRESULT {
     /// This implementation maps the custom `Error` to the `WSL_E_PLUGIN_REQUIRES_UPDATE` HRESULT.
     ///
     /// # Note
-    /// [`WSL_E_PLUGIN_REQUIRES_UPDATE`]: Indicates the WSL version is insufficient for the plugin.
+    /// [`Error::WSL_E_PLUGIN_REQUIRES_UPDATE`]: Indicates the WSL version is insufficient for the plugin.
     #[inline]
     fn from(_: Error) -> Self {
-        Self(WSL_E_PLUGIN_REQUIRES_UPDATE)
+        Self(Error::WSL_E_PLUGIN_REQUIRES_UPDATE.0)
+    }
+}
+
+impl From<Error> for windows_core::Error {
+    /// Converts the `Error` into a [`windows_core::Error`].
+    ///
+    /// This implementation creates a [`windows_core::Error`] with the [`Error::WSL_E_PLUGIN_REQUIRES_UPDATE`] code.
+    #[inline]
+    fn from(value: Error) -> Self {
+        Self::from(HRESULT::from(value))
     }
 }
 

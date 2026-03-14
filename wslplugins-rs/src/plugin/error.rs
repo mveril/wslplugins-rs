@@ -4,6 +4,7 @@
 //! It integrates with Windows APIs, supports error codes and optional error messages,
 //! and provides utility methods for error creation and consumption.
 
+use crate::api::{errors::RequireUpdateError, Error as ApiError};
 use crate::WSLContext;
 use std::borrow::ToOwned;
 use std::ffi::{OsStr, OsString};
@@ -195,5 +196,19 @@ impl From<HRESULT> for Error {
     #[inline]
     fn from(value: HRESULT) -> Self {
         Self::new(value, None)
+    }
+}
+
+impl From<RequireUpdateError> for Error {
+    #[inline]
+    fn from(value: RequireUpdateError) -> Self {
+        Self::from(HRESULT::from(value))
+    }
+}
+
+impl From<ApiError> for Error {
+    #[inline]
+    fn from(value: ApiError) -> Self {
+        Self::from(HRESULT::from(value))
     }
 }
