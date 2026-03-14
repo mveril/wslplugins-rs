@@ -13,6 +13,10 @@
 //! - **`bitflags`**: Provides a [`bitflags`]-based implementation for handling user configuration flags.
 //! - **`enumflags2`**: Provides an [`enumflags2`]-based implementation for handling user configuration flags.
 //! - **`flagset`**: Provides a [`flagset`]-based implementation for handling user configuration flags.
+//!
+//! [`bitflags`]: https://docs.rs/bitflags
+//! [`flagset`]: https://docs.rs/flagset
+//! [`enumflags2`]: https://docs.rs/enumflags2
 use std::fmt::{self, Display};
 
 #[cfg(feature = "bitflags")]

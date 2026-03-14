@@ -47,12 +47,16 @@ impl WSLVmCreationSettings {
     /// Retrieves the custom configuration flags for the VM.
     ///
     /// # Returns
-    /// A wrapper type type representing the custom configuration flags.
-    /// This type is convertible to some flags if the associated feature is enabled
-    /// - **`bitflags`**: Uses the [bitflags]  crate for managing flags.
-    /// - **`flagset`**: Uses the [flagset] crate for managing flags.
-    /// - **`enumflags2`**: Uses the [enumflags2] crate for managing flags.
+    /// A wrapper type representing the custom configuration flags.
     ///
+    /// This type can be converted to a flag type when the corresponding feature is enabled:
+    /// - **`bitflags`**: Uses the [`bitflags`] crate for flag management.
+    /// - **`flagset`**: Uses the [`flagset`] crate for flag management.
+    /// - **`enumflags2`**: Uses the [`enumflags2`] crate for flag management.
+    ///
+    /// [`bitflags`]: https://docs.rs/bitflags
+    /// [`flagset`]: https://docs.rs/flagset
+    /// [`enumflags2`]: https://docs.rs/enumflags2
     #[must_use]
     #[inline]
     pub fn custom_configuration_flags(&self) -> WSLUserConfiguration {
