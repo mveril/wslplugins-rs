@@ -26,6 +26,20 @@ pub enum Error {
     WinError(#[from] WinError),
 }
 
+impl Error {
+    /// Retrieves the error code as an `HRESULT`.
+    ///
+    /// # Returns
+    /// The error code wrapped in an `HRESULT`.
+    #[inline]
+    pub const fn code(&self) -> HRESULT {
+        match &self {
+            Error::RequiresUpdate(_) => RequireUpdateError::WSL_E_PLUGIN_REQUIRES_UPDATE,
+            Error::WinError(error) => error.code(),
+        }
+    }
+}
+
 impl From<Error> for HRESULT {
     /// Converts the `Error` enum into an `HRESULT` code.
     ///
