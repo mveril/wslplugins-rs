@@ -87,7 +87,7 @@ impl WSLPluginV1 for Plugin {
         let init_pid = distribution.init_pid()?;
         writeln!(
             &self.log_file,
-            "Distribution started. Sessionid={}, Name={}, Package={}, PidNs={}, InitPid={}",
+            "Distribution started. Sessionid= {}, Name={}, Package={}, PidNs={}, InitPid={}",
             session.id(),
             distribution.name().to_string_lossy(),
             distribution
@@ -128,9 +128,9 @@ impl WSLPluginV1 for Plugin {
         session: &WSLSessionInformation,
         distribution: &OfflineDistributionInformation,
     ) -> WinResult<()> {
-        writeln!(
+        write!(
             &self.log_file,
-            "Distribution registered. SessionId={}, name={}, package={}",
+            "Distribution registeredd. SessionId={}, name={}, package={}",
             session.id(),
             distribution.name().to_string_lossy(),
             distribution
@@ -147,7 +147,7 @@ impl WSLPluginV1 for Plugin {
         session: &WSLSessionInformation,
         distribution: &OfflineDistributionInformation,
     ) -> WinResult<()> {
-        writeln!(
+        write!(
             &self.log_file,
             "Distribution unregistered. SessionId={}, name={}, package={}",
             session.id(),
