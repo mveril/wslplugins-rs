@@ -1,9 +1,7 @@
 //! Sample WSL plugin implemented in Rust.
-use std::borrow::Cow;
-use std::fs::File;
-use std::io::prelude::*;
-use std::{fs::OpenOptions, io::Read};
-use windows::Win32::Foundation::E_FAIL;
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Write};
+use windows::Win32::Foundation::{E_ABORT, E_FAIL};
 use wslplugins_rs::prelude::*;
 
 #[derive(Debug)]
@@ -17,9 +15,10 @@ impl WSLPluginV1 for Plugin {
     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
         let log_file = OpenOptions::new()
             .create(true)
-            .append(true)
+            .write(true)
+            .truncate(true)
             .open("C:\\wsl-plugin-demo.txt")
-            .map_err(|_| WinError::from(E_FAIL))?;
+            .map_err(|_| WinError::from(E_ABORT))?;
         writeln!(
             &log_file,
             "Plugin loaded. WSL version: {}",
@@ -34,10 +33,9 @@ impl WSLPluginV1 for Plugin {
         session: &WSLSessionInformation,
         user_settings: &WSLVmCreationSettings,
     ) -> PluginResult<()> {
-        #[allow(clippy::use_debug)]
         writeln!(
             &self.log_file,
-            "VM created. SessionId={}, CustomConfigurationFlags={:?}",
+            "VM created. SessionId={}, CustomConfigurationFlags={}",
             session.id(),
             user_settings.custom_configuration_flags()
         )
@@ -51,23 +49,34 @@ impl WSLPluginV1 for Plugin {
             .with_arg("/proc/version")
             .execute()
         {
-            Err(e) => {
-                writeln!(&self.log_file, "Failed to execute command: {e}")
+            Err(error) => {
+                writeln!(&self.log_file, "Failed to create process, {}", error.code())
                     .map_err(|_| WinError::from(E_FAIL))?;
+                Err(error)?;
             }
             Ok(mut stream) => {
                 let mut buffer = String::new();
                 stream
                     .read_to_string(&mut buffer)
                     .map_err(|_| WinError::from(E_FAIL))?;
-                writeln!(&self.log_file, "Kernel version info: {}", buffer.trim())
+
+                if buffer.is_empty() {
+                    writeln!(&self.log_file, "cat /proc/version returned no output")
+                        .map_err(|_| WinError::from(E_FAIL))?;
+                    return Ok(());
+                }
+
+                if buffer.ends_with('\n') {
+                    buffer.pop();
+                }
+                writeln!(&self.log_file, "Kernel version info: {buffer}")
                     .map_err(|_| WinError::from(E_FAIL))?;
             }
         }
         Ok(())
     }
     fn on_vm_stopping(&self, session: &WSLSessionInformation) -> WinResult<()> {
-        writeln!(&self.log_file, "VM stopping. SessionId={}", session.id())?;
+        writeln!(&self.log_file, "VM Stopping. SessionId={}", session.id())?;
         Ok(())
     }
     fn on_distribution_started(
@@ -75,18 +84,18 @@ impl WSLPluginV1 for Plugin {
         session: &WSLSessionInformation,
         distribution: &DistributionInformation,
     ) -> PluginResult<()> {
+        let init_pid = distribution.init_pid()?;
         writeln!(
             &self.log_file,
-            "Distribution started. SessionId={}, name={}, package={}, InitPid={}",
+            "Distribution started. Sessionid={}, Name={}, Package={}, PidNs={}, InitPid={}",
             session.id(),
             distribution.name().to_string_lossy(),
             distribution
                 .package_family_name()
                 .unwrap_or_default()
                 .display(),
-            distribution
-                .init_pid()
-                .map_or(Cow::Borrowed(""), |pid| Cow::Owned(pid.to_string()))
+            distribution.pid_namespace(),
+            init_pid
         )
         .map_err(|_| WinError::from(E_FAIL))?;
         Ok(())
@@ -97,18 +106,18 @@ impl WSLPluginV1 for Plugin {
         session: &WSLSessionInformation,
         distribution: &DistributionInformation,
     ) -> WinResult<()> {
+        let init_pid = distribution.init_pid()?;
         writeln!(
             &self.log_file,
-            "Distribution Stopping. SessionId={}, name={}, package={}, InitPid={}",
+            "Distribution Stopping. SessionId={}, name={}, package={}, PidNs={}, InitPid={}",
             session.id(),
             distribution.name().to_string_lossy(),
             distribution
                 .package_family_name()
                 .unwrap_or_default()
                 .display(),
-            distribution
-                .init_pid()
-                .map_or(Cow::Borrowed(""), |pid| Cow::Owned(pid.to_string()))
+            distribution.pid_namespace(),
+            init_pid
         )
         .map_err(|_| WinError::from(E_FAIL))?;
         Ok(())
