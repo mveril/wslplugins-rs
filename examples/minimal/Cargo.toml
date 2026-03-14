@@ -2,10 +2,10 @@
 name = "minimal"
 authors.workspace = true
 version.workspace = true
-edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description.workspace = true
+edition = "2021"
+publish = false
 
 [lib]
 crate-type = ["cdylib"]
