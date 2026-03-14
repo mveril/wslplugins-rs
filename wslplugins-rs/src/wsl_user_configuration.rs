@@ -46,6 +46,7 @@ impl From<WSLUserConfiguration> for i32 {
 }
 
 impl Display for WSLUserConfiguration {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         Display::fmt(&self.0, f)
     }
