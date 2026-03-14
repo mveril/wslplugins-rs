@@ -34,8 +34,8 @@ impl Error {
     #[inline]
     pub const fn code(&self) -> HRESULT {
         match &self {
-            Error::RequiresUpdate(_) => RequireUpdateError::WSL_E_PLUGIN_REQUIRES_UPDATE,
-            Error::WinError(error) => error.code(),
+            Self::RequiresUpdate(_) => RequireUpdateError::WSL_E_PLUGIN_REQUIRES_UPDATE,
+            Self::WinError(error) => error.code(),
         }
     }
 }

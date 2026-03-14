@@ -207,6 +207,7 @@ impl From<RequireUpdateError> for Error {
 }
 
 impl From<ApiError> for Error {
+    #[inline]
     fn from(value: ApiError) -> Self {
         Self::from(HRESULT::from(value))
     }
