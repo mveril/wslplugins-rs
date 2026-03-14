@@ -9,6 +9,6 @@ It keeps the same observable behavior as the original sample:
 - it requires WSL `2.1.3` because it uses distribution registration hooks
 
 The remaining differences come from the framework architecture and idiomatic Rust:
-- `#[wsl_plugin_v1(2, 1, 3)]` generates the entry point and hook registration
-- `WSLPluginV1` stores plugin state in a Rust struct instead of global variables
-- `ApiV1::new_command(...).execute()` replaces the manual `ExecuteBinary` and socket handling
+- `#[wsl_plugin_v1(2, 1, 3)]` generates the entry point and hook registration using the [`wslplugins_rs::wsl_plugin_v1`] macro
+- [`wslplugins_rs::plugin::WSLPluginV1`] stores plugin state in a Rust struct instead of global variables
+- `ApiV1::new_command(...).execute()` replaces the manual `ExecuteBinary` and socket handling using the [`wslplugins_rs::api::WSLCommand`] API
