@@ -4,7 +4,6 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::{fs::OpenOptions, io::Read};
 use windows::Win32::Foundation::E_FAIL;
-;
 use wslplugins_rs::prelude::*;
 
 #[derive(Debug)]
@@ -26,7 +25,7 @@ impl WSLPluginV1 for Plugin {
             "Plugin loaded. WSL version: {}",
             context.api.version()
         )?;
-        let plugin = Plugin { context, log_file };
+        let plugin = Self { context, log_file };
         Ok(plugin)
     }
 
@@ -35,6 +34,7 @@ impl WSLPluginV1 for Plugin {
         session: &WSLSessionInformation,
         user_settings: &WSLVmCreationSettings,
     ) -> PluginResult<()> {
+        #[allow(clippy::use_debug)]
         writeln!(
             &self.log_file,
             "VM created. SessionId={}, CustomConfigurationFlags={:?}",
@@ -52,7 +52,7 @@ impl WSLPluginV1 for Plugin {
             .execute()
         {
             Err(e) => {
-                writeln!(&self.log_file, "Failed to execute command: {}", e)
+                writeln!(&self.log_file, "Failed to execute command: {e}")
                     .map_err(|_| WinError::from(E_FAIL))?;
             }
             Ok(mut stream) => {
