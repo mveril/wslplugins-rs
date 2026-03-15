@@ -98,8 +98,11 @@ Notes:
    - After building, sign the plugin to confirm its integrity and origin. Use PowerShell to run the signing script:
 
    ```powershell
-     .\sign-plugin.ps1 -PluginPath .	arget
-   elease\plugin.dll -Trust
+     .\sign-plugin.ps1 -PluginPath .\target\release\minimal.dll -Trust
+   ```
+   or
+   ```powershell
+     .\sign-plugin.ps1 -PluginPath .\target\release\dist_info.dll -Trust
    ```
 
 - Ensure the path to the DLL is correct and that the `sign-plugin.ps1` script is properly configured to handle Rust DLLs.
@@ -113,11 +116,10 @@ Notes:
    - Use the following command to add the plugin to the Windows registry, allowing WSL to recognize it:
 
    ```cmd
-     reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss\Plugins" /v wsl-plugin-rs /d path	o\wsl-plugin-rs	arget
-   elease\plugin.dll /t reg_sz
+     reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss\Plugins" /v wsl-plugin-rs /d path\to\wsl-plugin-rs\target\release\plugin.dll /t reg_sz
    ```
 
-- Replace `path\to\wsl-plugin-rs\target\release\plugin.dll` with the exact path of the signed DLL.
+- Replace `path\to\wsl-plugin-rs\target\release\plugin.dll` with the exact path of the signed plugin DLL.
 
 5. **Restart WSL Service**:
    - For the plugin to be loaded by WSL, you need to restart the associated service:

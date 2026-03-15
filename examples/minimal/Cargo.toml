@@ -5,6 +5,7 @@ version.workspace = true
 license.workspace = true
 repository.workspace = true
 edition = "2021"
+readme = "README.md"
 publish = false
 
 [lib]
@@ -17,6 +18,5 @@ wslplugins-rs = { path = "../../crates/wslplugins-rs", features = [
 [dependencies.windows]
 workspace = true
 features = ["Win32_Foundation"]
-readme = "README.md"
 [lints]
 workspace = true
