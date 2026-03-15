@@ -148,4 +148,4 @@ jobs:
         shell: pwsh
         run: |
           echo "Running cargo publish dry-run..."
-          cargo publish --dry-run
+          cargo publish --dry-run --workspace
