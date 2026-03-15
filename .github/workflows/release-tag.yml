@@ -1,11 +1,11 @@
-name: Tag on Merge to Master
+name: Tag on Merge to Main
 
 on:
   pull_request:
     types:
       - closed
     branches:
-      - master
+      - main
 
 jobs:
   create-tag:

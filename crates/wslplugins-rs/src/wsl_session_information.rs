@@ -12,6 +12,7 @@ use wslpluginapi_sys::windows_sys::Win32::Security::PSID;
 ///
 /// This struct wraps the `WSLSessionInformation` provided by the WSL Plugin API and
 /// provides safe, idiomatic access to its fields.
+#[repr(transparent)]
 pub struct WSLSessionInformation(wslpluginapi_sys::WSLSessionInformation);
 
 impl WSLSessionInformation {
