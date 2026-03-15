@@ -12,6 +12,7 @@ use crate::WSLUserConfiguration;
 ///
 /// This struct wraps the `WSLVmCreationSettings` structure from the WSL Plugin API, providing
 /// safe and idiomatic Rust access to its fields.
+#[repr(transparent)]
 pub struct WSLVmCreationSettings(wslpluginapi_sys::WSLVmCreationSettings);
 
 impl From<wslpluginapi_sys::WSLVmCreationSettings> for WSLVmCreationSettings {

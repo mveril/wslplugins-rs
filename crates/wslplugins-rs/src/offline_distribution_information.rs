@@ -112,7 +112,7 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
         )?;
         // SAFETY: check already inside
         unsafe {
-            let ptr = PCWSTR::from_raw(self.0.Flavor);
+            let ptr = PCWSTR::from_raw(self.0.Version);
             if ptr.is_null() || ptr.is_empty() {
                 Ok(None)
             } else {

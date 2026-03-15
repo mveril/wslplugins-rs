@@ -144,7 +144,7 @@ impl CoreDistributionInformation for DistributionInformation {
         )?;
         // SAFETY: check did before by versionning.
         unsafe {
-            let ptr = self.0.Flavor;
+            let ptr = self.0.Version;
             if ptr.is_null() {
                 Ok(None)
             } else {
