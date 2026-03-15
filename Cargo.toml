@@ -1,11 +1,11 @@
 [workspace]
 resolver = "2"
 members = [
-    "plugin",
     "wslplugins-rs",
     "wslplugins-macro",
     "wslplugins-macro-core",
     "wslplugins-macro-tests",
+    "examples/*",
 ]
 [workspace.dependencies]
 wslpluginapi-sys = "0.1.0-rc.1"

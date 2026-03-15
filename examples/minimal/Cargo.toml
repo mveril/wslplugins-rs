@@ -1,5 +1,5 @@
 [package]
-name = "plugin"
+name = "minimal"
 authors.workspace = true
 version.workspace = true
 license.workspace = true
@@ -11,15 +11,12 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-wslplugins-rs = { path = "../wslplugins-rs", features = [
+wslplugins-rs = { path = "../../wslplugins-rs", features = [
   "macro",
-  "bitflags",
-  "tracing",
 ], version = "0.1.0-alpha.0" }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tracing-appender = "0.2"
-etc-os-release = "0.1.0"
 [dependencies.windows]
 workspace = true
 features = ["Win32_Foundation"]
+readme = "README.md"
+[lints]
+workspace = true
