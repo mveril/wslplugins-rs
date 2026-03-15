@@ -12,7 +12,7 @@ readme = "README.md"
 crate-type = ["cdylib"]
 
 [dependencies]
-wslplugins-rs = { path = "../../wslplugins-rs", features = [
+wslplugins-rs = { path = "../../crates/wslplugins-rs", features = [
   "macro",
   "bitflags",
   "tracing",

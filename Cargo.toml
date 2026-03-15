@@ -1,10 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "wslplugins-rs",
-    "wslplugins-macro",
-    "wslplugins-macro-core",
-    "wslplugins-macro-tests",
+    "crates/*",
     "examples/*",
 ]
 [workspace.dependencies]
