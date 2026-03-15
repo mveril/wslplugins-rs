@@ -40,7 +40,7 @@ Add the crate with the `macro` feature:
 
 ```toml
 [dependencies]
-wslplugins-rs = { version = "0.1.0-alpha.0", features = ["macro"] }
+wslplugins-rs = { version = "0.1.0-beta.1", features = ["macro"] }
 ```
 
 Then implement a plugin:
