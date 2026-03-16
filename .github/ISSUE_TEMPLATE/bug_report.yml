@@ -78,13 +78,13 @@ body:
       placeholder: 2.6.2.0
     validations:
       required: true
-  - type: distribution affected
+  - type: input
     id: linux_distribution
     attributes:
-      label: Linux distribution
+      label: Linux distribution affected
       placeholder: Ubuntu 24.04 LTS
     validations:
-      required: true
+      required: false
 
   - type: input
     id: rust_toolchain
