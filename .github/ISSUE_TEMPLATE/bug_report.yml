@@ -59,11 +59,14 @@ body:
       placeholder: What happened instead? Include error messages, logs, or screenshots if relevant.
     validations:
       required: true
-
+  - type: markdown
+    attributes:
+      value: |
+        ## Environment details
   - type: input
     id: windows-version
     attributes:
-      label: Windows version
+      label: Windows version (use wsl --version to get the information)
       placeholder: 10.0.26200.8037
     validations:
       required: true
@@ -71,15 +74,22 @@ body:
   - type: input
     id: wsl_version
     attributes:
-      label: WSL version
+      label: WSL version (use wsl --version to get the information)
       placeholder: 2.6.2.0
+    validations:
+      required: true
+  - type: distribution affected
+    id: linux_distribution
+    attributes:
+      label: Linux distribution
+      placeholder: Ubuntu 24.04 LTS
     validations:
       required: true
 
   - type: input
     id: rust_toolchain
     attributes:
-      label: Rust toolchain
+      label: Rust toolchain (use rustc --version to get the information)
       placeholder: stable-x86_64-pc-windows-msvc 1.88.0
     validations:
       required: true
@@ -95,10 +105,10 @@ body:
   - type: input
     id: plugin_affected
     attributes:
-      label: Plugin affected
-      placeholder: Name of the example or link to public repo
+      label: Plugin affected (name of the example or link to public repo)
+      placeholder: dist-info
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: other_remarks
