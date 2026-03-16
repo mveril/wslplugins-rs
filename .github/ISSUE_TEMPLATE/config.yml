@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and usage help
+    url: https://github.com/microsoft/WSL/discussions
+    about: Use GitHub Discussions when the question is about WSL itself rather than this crate.
+contact_links:
+  - name: Issues and feature requests about WSL plugin native API
+    url: https://github.com/microsoft/WSL/issues
+    about: Use GitHub Issue when the issue is about WSL plugin native API itself rather than this crate.

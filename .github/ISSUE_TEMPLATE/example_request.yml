@@ -1,0 +1,51 @@
+name: Example request
+description: Suggest a new example plugin or example project for the repository.
+title: "[Example] "
+labels:
+  - example
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggest a new example that would help users understand or adopt the project. Focus on the use case and what the example should demonstrate.
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use case
+      description: What real-world scenario should this example cover?
+      placeholder: Describe the problem or workflow this example should illustrate.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_content
+    attributes:
+      label: What should the example demonstrate?
+      placeholder: Explain the API usage, plugin behavior, or workflow the example should show.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_shape
+    attributes:
+      label: Proposed shape
+      placeholder: Minimal plugin, end-to-end example, integration sample, example repo, etc.
+
+  - type: textarea
+    id: expected_dependencies
+    attributes:
+      label: Expected dependencies
+      placeholder: List any expected crates, tools, SDKs, Windows features, or external services.
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      placeholder: Add links to docs, prior art, public repos, or related issues.
+
+  - type: textarea
+    id: other_remarks
+    attributes:
+      label: Other remarks
+      placeholder: Add any extra context here.
