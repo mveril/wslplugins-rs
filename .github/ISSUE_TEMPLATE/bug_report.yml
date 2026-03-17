@@ -79,7 +79,7 @@ body:
     validations:
       required: true
   - type: input
-    id: linux_distribution
+    id: linux_distribution (if applicable)
     attributes:
       label: Linux distribution affected
       placeholder: Ubuntu 24.04 LTS
@@ -89,8 +89,16 @@ body:
   - type: input
     id: rust_toolchain
     attributes:
-      label: Rust toolchain (use rustc --version to get the information)
-      placeholder: stable-x86_64-pc-windows-msvc 1.88.0
+      label: Rust toolchain (use rustup show active-toolchain)
+      placeholder: stable-x86_64-pc-windows-msvc
+    validations:
+      required: true
+
+  - type: input
+    id: rust_version
+    attributes:
+      label: Rust version (use rustc --version)
+      placeholder: 1.94.0 (4a4ef493e 2026-03-02)
     validations:
       required: true
 
