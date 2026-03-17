@@ -1,0 +1,143 @@
+name: Bug report
+description: Report a reproducible bug in the framework, macro, or examples.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please provide a minimal reproduction and include environment details, especially if the issue is specific to WSL or Windows.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken?
+      placeholder: A clear and concise description of the bug.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: components
+    attributes:
+      label: Components involved
+      description: Select the areas that seem affected.
+      options:
+        - label: Public API
+        - label: Proc macro
+        - label: Runtime internals
+        - label: Unsafe code
+        - label: Documentation
+        - label: Examples
+        - label: CI / release workflow
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: List the smallest set of steps needed to reproduce the problem.
+      placeholder: |
+        1. Build with ...
+        2. Load plugin ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: What happened instead? Include error messages, logs, or screenshots if relevant.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Environment
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Windows / Host
+
+  - type: input
+    id: windows-version
+    attributes:
+      label: Windows version (use wsl --version to get the information)
+      placeholder: 10.0.26200.8037
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ### WSL
+
+  - type: input
+    id: wsl_version
+    attributes:
+      label: WSL version (use wsl --version to get the information)
+      placeholder: 2.6.2.0
+    validations:
+      required: true
+
+  - type: input
+    id: linux_distribution
+    attributes:
+      label: Linux distribution affected (if applicable)
+      placeholder: Ubuntu 24.04 LTS
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Rust / Project
+
+  - type: input
+    id: rust_toolchain
+    attributes:
+      label: Rust toolchain (use rustup show active-toolchain)
+      placeholder: stable-x86_64-pc-windows-msvc
+    validations:
+      required: true
+
+  - type: input
+    id: rust_version
+    attributes:
+      label: Rust version (use rustc --version)
+      placeholder: 1.94.0 (4a4ef493e 2026-03-02)
+    validations:
+      required: true
+
+  - type: input
+    id: crate_version
+    attributes:
+      label: Crate version or commit
+      placeholder: 0.1.0-beta.1
+    validations:
+      required: true
+
+  - type: input
+    id: plugin_affected
+    attributes:
+      label: Plugin affected (name of the example or link to public repo)
+      placeholder: dist-info
+    validations:
+      required: false
+
+  - type: textarea
+    id: other_remarks
+    attributes:
+      label: Other remarks
+      placeholder: Any extra details that would help diagnose the issue.

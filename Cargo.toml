@@ -5,7 +5,7 @@ members = [
     "examples/*",
 ]
 [workspace.dependencies]
-wslpluginapi-sys = "0.1.0-rc.1"
+wslpluginapi-sys = "0.2.0"
 windows-core = ">=0.57.0"
 windows = ">=0.57.0"
 quote = "1"
@@ -15,14 +15,14 @@ smallvec = "1"
 
 [workspace.package]
 authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]
-version = "0.1.0-alpha.0"
+version = "0.1.0-beta.1"
 edition = "2021"
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/mveril/wslplugins-rs"
 description = "A Rust framework for developing WSL plugins using safe and idiomatic Rust."
 
 [patch.crates-io]
-wslpluginapi-sys = { version = "0.1.0-rc.1", git = "https://github.com/mveril/wslpluginapi-sys.git", branch = "develop" }
+wslpluginapi-sys = { version = "0.2.0", git = "https://github.com/mveril/wslpluginapi-sys.git", branch = "release/0.2.0+2.4.4" }
 
 
 [workspace.lints.rust]
