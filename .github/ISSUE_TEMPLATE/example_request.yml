@@ -18,6 +18,11 @@ body:
     validations:
       required: true
 
+  - type: markdown
+    attributes:
+      value: |
+        ## Example details
+
   - type: textarea
     id: expected_content
     attributes:
@@ -37,6 +42,11 @@ body:
     attributes:
       label: Expected dependencies
       placeholder: List any expected crates, tools, SDKs, Windows features, or external services.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## References
 
   - type: textarea
     id: references

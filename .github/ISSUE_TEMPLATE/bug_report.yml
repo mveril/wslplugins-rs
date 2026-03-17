@@ -59,10 +59,17 @@ body:
       placeholder: What happened instead? Include error messages, logs, or screenshots if relevant.
     validations:
       required: true
+
   - type: markdown
     attributes:
       value: |
-        ## Environment details
+        ## Environment
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Windows / Host
+
   - type: input
     id: windows-version
     attributes:
@@ -71,6 +78,11 @@ body:
     validations:
       required: true
 
+  - type: markdown
+    attributes:
+      value: |
+        ### WSL
+
   - type: input
     id: wsl_version
     attributes:
@@ -78,13 +90,19 @@ body:
       placeholder: 2.6.2.0
     validations:
       required: true
+
   - type: input
-    id: linux_distribution (if applicable)
+    id: linux_distribution
     attributes:
-      label: Linux distribution affected
+      label: Linux distribution affected (if applicable)
       placeholder: Ubuntu 24.04 LTS
     validations:
       required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Rust / Project
 
   - type: input
     id: rust_toolchain

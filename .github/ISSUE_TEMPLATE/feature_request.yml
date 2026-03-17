@@ -18,6 +18,11 @@ body:
     validations:
       required: true
 
+  - type: markdown
+    attributes:
+      value: |
+        ## Proposal
+
   - type: checkboxes
     id: components
     attributes:
@@ -46,6 +51,11 @@ body:
     attributes:
       label: Alternatives considered
       placeholder: Describe any workarounds or alternative approaches you considered.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Impact
 
   - type: textarea
     id: scope
