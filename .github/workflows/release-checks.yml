@@ -140,7 +140,7 @@ jobs:
         shell: pwsh
         run: |
           echo "Running tests..."
-          cargo test --all-targets
+          cargo test --workspace --all-features
 
       - name: Publish Dry-Run
         env:
@@ -148,4 +148,4 @@ jobs:
         shell: pwsh
         run: |
           echo "Running cargo publish dry-run..."
-          cargo publish --dry-run --workspace
+          cargo publish --workspace --dry-run --locked

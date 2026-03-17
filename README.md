@@ -161,7 +161,7 @@ The repository release workflow is centered on these commands:
 cargo test --workspace --all-features
 cargo clippy --workspace --all-targets --all-features
 cargo fmt --all -- --check
-cargo publish --dry-run
+cargo publish --workspace --dry-run
 ```
 
 ## Contributing
