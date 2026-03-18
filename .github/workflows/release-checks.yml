@@ -1,3 +1,5 @@
+name: Release Checks
+
 on:
   push:
     branches:
@@ -6,6 +8,9 @@ on:
     branches:
       - release/*
 
+permissions:
+  contents: read
+
 jobs:
   version-check:
     runs-on: windows-latest
@@ -13,6 +18,7 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
       RUSTFLAGS: -D warnings
+      RELEASE_BRANCH: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
 
     steps:
       - name: Checkout Code
@@ -30,79 +36,73 @@ jobs:
       - name: Cache PowerShell Modules
         uses: actions/cache@v3
         with:
-          path: |
-            $env:USERPROFILE\Documents\WindowsPowerShell\Modules
+          path: C:\Users\runneradmin\Documents\PowerShell\Modules
           key: ${{ runner.os }}-powershell-modules
           restore-keys: ${{ runner.os }}-powershell-modules-
 
       - name: Install Rust
         shell: pwsh
-        run: rustup update stable && rustup default stable
+        run: |
+          rustup update stable
+          rustup default stable
 
       - name: Install PSSemVer
         shell: pwsh
         run: |
-          try {
-            Import-Module -Name PSSemVer -ErrorAction Stop
-          } catch {
-            Write-Host "Installing PSSemVer module..."
+          if (-not (Get-Module -ListAvailable -Name PSSemVer)) {
             Install-Module -Name PSSemVer -Scope CurrentUser -Force -ErrorAction Stop
-            Import-Module -Name PSSemVer -ErrorAction Stop
           }
+          Import-Module -Name PSSemVer -ErrorAction Stop
 
       - name: Extract Branch Version
-        id: extract_version
         shell: pwsh
         run: |
-          $branchName = "${{ github.ref_name }}"
+          $branchName = "${{ env.RELEASE_BRANCH }}"
+          $rawVersion = $branchName -replace '^release/', ''
+          Import-Module -Name PSSemVer -ErrorAction Stop
           try {
-              $rawVersion = $branchName -replace '^release/', ''
               $expectedVersion = [PSSemVer]::Parse($rawVersion)
-
-
-              Write-Output "expected_version=$expectedVersion" | Out-File -FilePath $GITHUB_OUTPUT -Encoding utf8
-              Write-Host "Expected version for crates: $expectedVersion"
           } catch {
-              Write-Error "Branch name does not contain a valid semantic version. Current branch: $branchName"
+              Write-Error "ERROR: Failed to parse '$rawVersion' as a valid SemVer version from branch '$branchName'."
               exit 1
           }
+          echo "EXPECTED_VERSION=$expectedVersion" >> $env:GITHUB_ENV
 
       - name: Parse and Compare Crate Versions
         shell: pwsh
-        env:
-          EXPECTED_VERSION: ${{ steps.extract_version.outputs.expected_version }}
         run: |
+          Import-Module -Name PSSemVer -ErrorAction Stop
           try {
               $expectedSemVer = [PSSemVer]::Parse($env:EXPECTED_VERSION)
           } catch {
-              Write-Error "Expected version '$env:EXPECTED_VERSION' is not a valid semantic version."
+              Write-Error "ERROR: Expected version '$env:EXPECTED_VERSION' is not a valid semantic version."
               exit 1
           }
 
-          # Retrieve workspace metadata
-          $metadataJson = cargo metadata --format-version 1
+          cargo generate-lockfile
+          $metadataJson = cargo metadata --format-version 1 --no-deps
           $metadata = $metadataJson | ConvertFrom-Json
           $workspaceMembers = $metadata.workspace_members
-
           $errors = @()
 
           foreach ($package in $metadata.packages) {
-              # Skip non-workspace members
               if (-not ($workspaceMembers -contains $package.id)) {
                   continue
               }
 
-              $name = $package.name
-              $semVer = [PSSemVer]::Parse($package.version)
+              if ($package.publish -eq $false) {
+                  continue
+              }
 
-              if ($semVer.CompareTo($expectedSemVer) -ne 0) {
-                  if ($package.publish -ne $false) {
-                      $errors += "ERROR: Publishable crate '$name' has version '$semVer', expected '$expectedSemVer'."
-                  } else {
-                      Write-Warning "Non-publishable crate '$name' has version '$semVer', expected '$expectedSemVer'."
-                  }
-              } else {
-                  Write-Host "Crate '$name' with version '$semVer' matches the branch version."
+              try {
+                  $currentSemVer = [PSSemVer]::Parse($package.version)
+              } catch {
+                  $errors += "ERROR: Current version '$($package.version)' for crate '$($package.name)' is not a valid semantic version."
+                  continue
+              }
+
+              if ($currentSemVer.CompareTo($expectedSemVer) -ne 0) {
+                  $errors += "ERROR: Crate '$($package.name)' version '$currentSemVer' does not match expected '$expectedSemVer'."
               }
           }
 
@@ -134,18 +134,28 @@ jobs:
 
       - name: Install Rust
         shell: pwsh
-        run: rustup update stable && rustup default stable
+        run: |
+          rustup update stable
+          rustup default stable
 
       - name: Run Tests
         shell: pwsh
         run: |
-          echo "Running tests..."
           cargo test --workspace --all-features
 
-      - name: Publish Dry-Run
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Run Clippy
         shell: pwsh
         run: |
-          echo "Running cargo publish dry-run..."
+          cargo clippy --workspace --all-targets --all-features
+
+      - name: Check Formatting
+        shell: pwsh
+        run: |
+          cargo fmt --all -- --check
+
+      - name: Publish Dry-Run
+        shell: pwsh
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
           cargo publish --workspace --dry-run --locked

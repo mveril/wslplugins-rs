@@ -1,6 +1,9 @@
 name: Create GitHub Release
 
 on:
+  pull_request:
+    types: [closed]
+    branches: [main]
   push:
     tags:
       - "v*"
@@ -9,85 +12,216 @@ permissions:
   contents: write
 
 jobs:
+  determine-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.determine.outputs.tag }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine tag to use
+        id: determine
+        shell: bash
+        run: |
+          echo "Event: ${GITHUB_EVENT_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+              if [ "${{ github.event.pull_request.merged }}" = "true" ]; then
+                  echo "PR merged, creating tag..."
+                  branch="${GITHUB_HEAD_REF}"
+                  if [[ "$branch" != release/* ]]; then
+                      echo "Error: Branch '$branch' does not start with 'release/'"
+                      exit 1
+                  fi
+                  version="${branch#release/}"
+                  if [ -z "$version" ]; then
+                      echo "Error: Extracted version is empty."
+                      exit 1
+                  fi
+                  tag="v${version}"
+                  echo "Creating tag: $tag"
+                  git config user.name "GitHub Actions"
+                  git config user.email "actions@github.com"
+                  git tag "$tag" -a -m "Release version $version"
+                  git push origin "$tag"
+                  echo "tag=$tag" >> "$GITHUB_OUTPUT"
+              else
+                  echo "PR not merged. Doing nothing."
+                  echo "tag=" >> "$GITHUB_OUTPUT"
+                  exit 0
+              fi
+          elif [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+              echo "Push event detected."
+              tag="${GITHUB_REF#refs/tags/}"
+              if [ -z "$tag" ]; then
+                echo "Error: TAG value from push event is empty."
+                exit 1
+              fi
+              echo "Using pushed tag: $tag"
+              echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          else
+              echo "Error: Unsupported event '${GITHUB_EVENT_NAME}'."
+              exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   validate-and-release:
+    if: ${{ needs.determine-tag.outputs.tag_name != '' }}
+    needs: determine-tag
     runs-on: windows-latest
     env:
+      TAG_NAME: ${{ needs.determine-tag.outputs.tag_name }}
       CARGO_TERM_COLOR: always
       RUSTFLAGS: -D warnings
 
     steps:
-      - name: Checkout repository
+      - name: Validate TAG_NAME presence
+        shell: pwsh
+        run: |
+          if (-not $env:TAG_NAME -or $env:TAG_NAME -eq "") {
+              Write-Error "TAG_NAME is empty. Aborting deployment."
+              exit 1
+          } else {
+              Write-Host "TAG_NAME is set to $env:TAG_NAME."
+          }
+
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Cache Cargo Registry
+      - name: Cache Cargo Dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-registry-
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-dependencies-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-dependencies-
 
-      - name: Cache Cargo Git Index
+      - name: Cache PowerShell Modules
         uses: actions/cache@v3
         with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-index-
+          path: C:\Users\runneradmin\Documents\PowerShell\Modules
+          key: ${{ runner.os }}-powershell-modules
+          restore-keys: ${{ runner.os }}-powershell-modules-
 
       - name: Install Rust
         shell: pwsh
-        run: rustup update stable && rustup default stable
+        run: |
+          rustup update stable
+          rustup default stable
 
       - name: Install PSSemVer
         shell: pwsh
         run: |
-          try {
-            Import-Module -Name PSSemVer -ErrorAction Stop
-          } catch {
-            Write-Host "Installing PSSemVer module..."
+          if (-not (Get-Module -ListAvailable -Name PSSemVer)) {
             Install-Module -Name PSSemVer -Scope CurrentUser -Force -ErrorAction Stop
-            Import-Module -Name PSSemVer -ErrorAction Stop
           }
+          Import-Module -Name PSSemVer -ErrorAction Stop
 
-      - name: Validate Tag with PSSemVer
+      - name: Validate Tag Version
         id: validate
         shell: pwsh
         run: |
-          $tagName = "${{ github.ref_name }}"
+          $tagName = "${env:TAG_NAME}"
+          Import-Module -Name PSSemVer -ErrorAction Stop
           try {
               $rawVersion = $tagName -replace '^v', ''
+              echo "version=$rawVersion" >> $env:GITHUB_ENV
               $version = [PSSemVer]::Parse($rawVersion)
-
-              if ($version.Prerelease) {
-                  "prerelease=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-                  "release_kind=prerelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+              $hasPrerelease = -not [string]::IsNullOrWhiteSpace([string]$version.Prerelease)
+              $prereleaseValue = $hasPrerelease.ToString().ToLower()
+              echo "prerelease=$prereleaseValue" >> $env:GITHUB_ENV
+              if ($hasPrerelease) {
                   "release_label=Prerelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+                  "release_kind=prerelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
               } else {
-                  "prerelease=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-                  "release_kind=release" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
                   "release_label=Release" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+                  "release_kind=release" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
               }
           } catch {
               Write-Error "Tag name does not contain a valid semantic version. Current tag: $tagName"
               exit 1
           }
-        continue-on-error: false
+
+      - name: Verify Workspace Versions Match Tag
+        shell: pwsh
+        run: |
+          Import-Module -Name PSSemVer -ErrorAction Stop
+          try {
+              $expectedSemVer = [PSSemVer]::Parse($env:version)
+          } catch {
+              Write-Error "Expected version '$env:version' is not a valid semantic version."
+              exit 1
+          }
+
+          cargo generate-lockfile
+          $metadataJson = cargo metadata --format-version 1 --no-deps
+          $metadata = $metadataJson | ConvertFrom-Json
+          $workspaceMembers = $metadata.workspace_members
+          $errors = @()
+
+          foreach ($package in $metadata.packages) {
+              if (-not ($workspaceMembers -contains $package.id)) {
+                  continue
+              }
+
+              if ($package.publish -eq $false) {
+                  continue
+              }
+
+              try {
+                  $semVer = [PSSemVer]::Parse($package.version)
+              } catch {
+                  $errors += "Current version '$($package.version)' for crate '$($package.name)' is not a valid semantic version."
+                  continue
+              }
+
+              if ($semVer.CompareTo($expectedSemVer) -ne 0) {
+                  $errors += "Publishable crate '$($package.name)' has version '$semVer', expected '$expectedSemVer'."
+              }
+          }
+
+          if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error $_ }
+              exit 1
+          }
+
+      - name: Run Tests
+        shell: pwsh
+        run: |
+          cargo test --workspace --all-features
+
+      - name: Run Clippy
+        shell: pwsh
+        run: |
+          cargo clippy --workspace --all-targets --all-features
+
+      - name: Check Formatting
+        shell: pwsh
+        run: |
+          cargo fmt --all -- --check
 
       - name: Cargo Publish Dry-Run
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --workspace --dry-run --locked
+        shell: pwsh
+        run: |
+          cargo publish --workspace --dry-run --locked
 
       - name: Cargo Publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --workspace --locked
+        shell: pwsh
+        run: |
+          cargo publish --workspace --locked
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ steps.validate.outputs.release_label }} ${{ github.ref_name }}
+          tag_name: ${{ env.TAG_NAME }}
+          name: ${{ steps.validate.outputs.release_label }} ${{ env.TAG_NAME }}
           body: |
             This is a ${{ steps.validate.outputs.release_kind }} of the workspace crates.
-            Main crate: https://crates.io/crates/wslplugins-rs
-          prerelease: ${{ steps.validate.outputs.prerelease == 'true' }}
+            - Main crate: https://crates.io/crates/wslplugins-rs/${{ env.version }}
+          prerelease: ${{ env.prerelease == 'true' }}
