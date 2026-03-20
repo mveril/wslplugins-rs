@@ -1,0 +1,93 @@
+//! # WSL VM Creation Settings
+//!
+//! This module provides a safe abstraction for handling WSL VM creation settings. It wraps the
+//! `WSLVmCreationSettings` structure from the WSL Plugin API and provides utilities for accessing
+//! custom configuration flags with support for multiple flag management libraries.
+
+use std::fmt::Debug;
+
+use crate::WSLUserConfiguration;
+
+/// Represents WSL VM creation settings.
+///
+/// This struct wraps the `WSLVmCreationSettings` structure from the WSL Plugin API, providing
+/// safe and idiomatic Rust access to its fields.
+#[repr(transparent)]
+pub struct WSLVmCreationSettings(wslpluginapi_sys::WSLVmCreationSettings);
+
+impl From<wslpluginapi_sys::WSLVmCreationSettings> for WSLVmCreationSettings {
+    #[inline]
+    fn from(value: wslpluginapi_sys::WSLVmCreationSettings) -> Self {
+        Self(value)
+    }
+}
+
+impl From<WSLVmCreationSettings> for wslpluginapi_sys::WSLVmCreationSettings {
+    #[inline]
+    fn from(value: WSLVmCreationSettings) -> Self {
+        value.0
+    }
+}
+
+impl AsRef<wslpluginapi_sys::WSLVmCreationSettings> for WSLVmCreationSettings {
+    #[inline]
+    fn as_ref(&self) -> &wslpluginapi_sys::WSLVmCreationSettings {
+        &self.0
+    }
+}
+
+impl AsRef<WSLVmCreationSettings> for wslpluginapi_sys::WSLVmCreationSettings {
+    #[inline]
+    fn as_ref(&self) -> &WSLVmCreationSettings {
+        // SAFETY: conveting this kind of ref is safe as it is transparent
+        unsafe { &*std::ptr::from_ref::<Self>(self).cast::<WSLVmCreationSettings>() }
+    }
+}
+
+impl WSLVmCreationSettings {
+    /// Retrieves the custom configuration flags for the VM.
+    ///
+    /// # Returns
+    /// A wrapper type representing the custom configuration flags.
+    ///
+    /// This type can be converted to a flag type when the corresponding feature is enabled:
+    /// - **`bitflags`**: Uses the [`bitflags`] crate for flag management.
+    /// - **`flagset`**: Uses the [`flagset`] crate for flag management.
+    /// - **`enumflags2`**: Uses the [`enumflags2`] crate for flag management.
+    ///
+    /// [`bitflags`]: https://docs.rs/bitflags
+    /// [`flagset`]: https://docs.rs/flagset
+    /// [`enumflags2`]: https://docs.rs/enumflags2
+    #[must_use]
+    #[inline]
+    pub fn custom_configuration_flags(&self) -> WSLUserConfiguration {
+        WSLUserConfiguration::from(self.0.CustomConfigurationFlags)
+    }
+}
+
+impl Debug for WSLVmCreationSettings {
+    /// Formats the VM creation settings for debugging.
+    ///
+    /// The debug output includes the custom configuration flags.
+    #[inline]
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("WSLVmCreationSettings")
+            .field(
+                "customConfigurationFlags",
+                &self.custom_configuration_flags(),
+            )
+            .finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::utils::test_transparence;
+
+    use super::WSLVmCreationSettings;
+
+    #[test]
+    fn test_layouts() {
+        test_transparence::<wslpluginapi_sys::WSLVmCreationSettings, WSLVmCreationSettings>();
+    }
+}

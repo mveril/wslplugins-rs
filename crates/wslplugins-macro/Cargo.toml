@@ -1,0 +1,21 @@
+[package]
+name = "wslplugins-macro"
+authors.workspace = true
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+edition = "2021"
+description = "macro for wslplugins-rs"
+keywords = ["wsl", "plugin", "windows", "linux", "internal"]
+categories = ["os::windows-apis", "api-bindings", "virtualization"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+wslplugins-macro-core = { path = "../wslplugins-macro-core", version = "0.1.0-beta.1"}
+syn = { workspace = true }
+quote = { workspace = true }
+proc-macro2 = { workspace = true }
+[lints]
+workspace = true

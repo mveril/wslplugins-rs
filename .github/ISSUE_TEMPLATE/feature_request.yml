@@ -1,0 +1,71 @@
+name: Feature request
+description: Suggest an improvement to the framework, macro, docs, or examples.
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please focus on the problem first, then the proposed solution. If this affects the public API, include migration or compatibility considerations.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem are you trying to solve?
+      placeholder: A clear and concise description of the current limitation.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Proposal
+
+  - type: checkboxes
+    id: components
+    attributes:
+      label: Components affected
+      description: Select the areas this proposal would touch.
+      options:
+        - label: Public API
+        - label: Proc macro
+        - label: Runtime internals
+        - label: Unsafe code
+        - label: Documentation
+        - label: Examples
+        - label: CI / release workflow
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the change you would like to see.
+      placeholder: Explain the API, behavior, or documentation improvement you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: Describe any workarounds or alternative approaches you considered.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Impact
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and impact
+      description: Note whether this affects runtime behavior, macros, examples, docs, or release workflow.
+      placeholder: This would affect ...
+
+  - type: textarea
+    id: other_remarks
+    attributes:
+      label: Other remarks
+      placeholder: Add any extra context, links, or examples here.

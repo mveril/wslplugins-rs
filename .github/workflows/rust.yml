@@ -1,8 +1,15 @@
+name: rust
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
+      - develop
+      - release/*
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
+      - develop
+      - release/*
 
 jobs:
   build-and-validate:
@@ -54,16 +61,16 @@ jobs:
         run: cargo fmt -- --check
 
       - name: Build the Project
-        run: cargo build --verbose
+        run: cargo build --verbose --all-features
 
       - name: Run Tests
-        run: cargo test --verbose
+        run: cargo test --verbose --all-features
 
-      - name: Generate Documentation (${{ matrix.RUSTDOCFLAGS }}, ${{ matrix.toolchain }})
+      - name: Generate Documentation (${{ matrix.DOCTYPE }}, ${{ matrix.toolchain }})
         run: cargo doc --no-deps --all-features
 
-      - name: Install and Run Security Audit (Nightly Only)
+      - name: Install and Run cargo deny (Nightly Only)
         if: matrix.toolchain == 'nightly'
         run: |
-          cargo install cargo-audit
-          cargo audit
+          cargo install cargo-deny || echo "cargo-deny already installed"
+          cargo deny check --show-stats

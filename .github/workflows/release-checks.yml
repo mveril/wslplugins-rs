@@ -1,0 +1,161 @@
+name: Release Checks
+
+on:
+  push:
+    branches:
+      - release/*
+  pull_request:
+    branches:
+      - release/*
+
+permissions:
+  contents: read
+
+jobs:
+  version-check:
+    runs-on: windows-latest
+    name: "Check crate versions"
+    env:
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -D warnings
+      RELEASE_BRANCH: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Cache Cargo Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-dependencies-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-dependencies-
+
+      - name: Cache PowerShell Modules
+        uses: actions/cache@v3
+        with:
+          path: C:\Users\runneradmin\Documents\PowerShell\Modules
+          key: ${{ runner.os }}-powershell-modules
+          restore-keys: ${{ runner.os }}-powershell-modules-
+
+      - name: Install Rust
+        shell: pwsh
+        run: |
+          rustup update stable
+          rustup default stable
+
+      - name: Install PSSemVer
+        shell: pwsh
+        run: |
+          if (-not (Get-Module -ListAvailable -Name PSSemVer)) {
+            Install-Module -Name PSSemVer -Scope CurrentUser -Force -ErrorAction Stop
+          }
+          Import-Module -Name PSSemVer -ErrorAction Stop
+
+      - name: Extract Branch Version
+        shell: pwsh
+        run: |
+          $branchName = "${{ env.RELEASE_BRANCH }}"
+          $rawVersion = $branchName -replace '^release/', ''
+          Import-Module -Name PSSemVer -ErrorAction Stop
+          try {
+              $expectedVersion = [PSSemVer]::Parse($rawVersion)
+          } catch {
+              Write-Error "ERROR: Failed to parse '$rawVersion' as a valid SemVer version from branch '$branchName'."
+              exit 1
+          }
+          echo "EXPECTED_VERSION=$expectedVersion" >> $env:GITHUB_ENV
+
+      - name: Parse and Compare Crate Versions
+        shell: pwsh
+        run: |
+          Import-Module -Name PSSemVer -ErrorAction Stop
+          try {
+              $expectedSemVer = [PSSemVer]::Parse($env:EXPECTED_VERSION)
+          } catch {
+              Write-Error "ERROR: Expected version '$env:EXPECTED_VERSION' is not a valid semantic version."
+              exit 1
+          }
+
+          cargo generate-lockfile
+          $metadataJson = cargo metadata --format-version 1 --no-deps
+          $metadata = $metadataJson | ConvertFrom-Json
+          $workspaceMembers = $metadata.workspace_members
+          $errors = @()
+
+          foreach ($package in $metadata.packages) {
+              if (-not ($workspaceMembers -contains $package.id)) {
+                  continue
+              }
+
+              if ($package.publish -eq $false) {
+                  continue
+              }
+
+              try {
+                  $currentSemVer = [PSSemVer]::Parse($package.version)
+              } catch {
+                  $errors += "ERROR: Current version '$($package.version)' for crate '$($package.name)' is not a valid semantic version."
+                  continue
+              }
+
+              if ($currentSemVer.CompareTo($expectedSemVer) -ne 0) {
+                  $errors += "ERROR: Crate '$($package.name)' version '$currentSemVer' does not match expected '$expectedSemVer'."
+              }
+          }
+
+          if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error $_ }
+              exit 1
+          }
+
+  publish-dry-run:
+    needs: version-check
+    runs-on: windows-latest
+    name: "Publish Dry-Run"
+    env:
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -D warnings
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Cache Cargo Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-dependencies-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-dependencies-
+
+      - name: Install Rust
+        shell: pwsh
+        run: |
+          rustup update stable
+          rustup default stable
+
+      - name: Run Tests
+        shell: pwsh
+        run: |
+          cargo test --workspace --all-features
+
+      - name: Run Clippy
+        shell: pwsh
+        run: |
+          cargo clippy --workspace --all-targets --all-features
+
+      - name: Check Formatting
+        shell: pwsh
+        run: |
+          cargo fmt --all -- --check
+
+      - name: Publish Dry-Run
+        shell: pwsh
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          cargo publish --workspace --dry-run --locked

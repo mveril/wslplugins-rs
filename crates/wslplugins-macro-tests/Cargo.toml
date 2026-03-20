@@ -1,0 +1,22 @@
+[package]
+name = "wslplugins-macro-tests"
+authors.workspace = true
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "A Rust framework for developing WSL plugins using safe and idiomatic Rust."
+edition = "2021"
+publish = false
+
+[dependencies]
+wslplugins-rs = { path = "../wslplugins-rs", features = [
+  "macro",
+], version = "0.1.0-beta.1" }
+wslpluginapi-sys.workspace = true
+
+[dependencies.windows]
+workspace = true
+features = ["Win32_Foundation"]
+
+[dev-dependencies]
+trybuild = "1.0.99"

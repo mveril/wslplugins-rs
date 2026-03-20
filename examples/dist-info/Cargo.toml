@@ -1,0 +1,26 @@
+[package]
+name = "dist-info"
+authors.workspace = true
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+edition = "2021"
+publish = false
+readme = "README.md"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wslplugins-rs = { path = "../../crates/wslplugins-rs", features = [
+  "macro",
+  "bitflags",
+  "tracing",
+], version = "0.1.0-beta.1" }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+etc-os-release = "0.1.0"
+[dependencies.windows]
+workspace = true
+features = ["Win32_Foundation"]
