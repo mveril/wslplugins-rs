@@ -37,7 +37,8 @@ criterion = "0.8"
 default = ["smallvec"]
 sys = []
 smallvec = ["dep:smallvec"]
-macro = ["dep:wslplugins-macro", "sys", "tracing"]
+macro = ["dep:wslplugins-macro", "sys", "private_tracing"]
+private_tracing = ["dep:tracing"]
 tracing = ["dep:tracing"]
 uuid = ["dep:uuid"]
 
@@ -49,7 +50,6 @@ targets = ["x86_64-pc-windows-msvc"]
 
 [lints]
 workspace = true
-
 
 [[bench]]
 name = "user_distribution_id_formatting"
