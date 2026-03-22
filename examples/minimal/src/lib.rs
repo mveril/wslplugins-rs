@@ -1,6 +1,6 @@
 #![doc = include_str!("../README.md")]
-use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
+use std::fs::File;
+use std::io::prelude::*;
 use windows::Win32::Foundation::{E_ABORT, E_FAIL};
 use wslplugins_rs::prelude::*;
 
@@ -13,12 +13,8 @@ pub(crate) struct Plugin {
 #[wsl_plugin_v1(2, 1, 3)]
 impl WSLPluginV1 for Plugin {
     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
-        let log_file = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .truncate(true)
-            .open("C:\\wsl-plugin-demo.txt")
-            .map_err(|_| WinError::from(E_ABORT))?;
+        let log_file =
+            File::create("C:\\wsl-plugin-demo.txt").map_err(|_| WinError::from(E_ABORT))?;
         writeln!(
             &log_file,
             "Plugin loaded. WSL version: {}",
