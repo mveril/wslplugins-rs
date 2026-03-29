@@ -19,7 +19,7 @@ tracing = { version = "0.1.43", optional = true }
 thiserror = "2.0.7"
 typed-path = ">0.1"
 widestring = { version = "1", features = ["alloc"] }
-wslplugins-macro = { path = "../wslplugins-macro", optional = true, version = "0.1.0-beta.1" }
+wslplugins-macro = { path = "../wslplugins-macro", optional = true, version = "0.1.0-beta.2" }
 wslpluginapi-sys.workspace = true
 uuid = { version = "1", optional = true }
 smallvec = { workspace = true, optional = true }
