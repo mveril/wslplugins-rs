@@ -38,7 +38,6 @@ default = ["smallvec"]
 sys = []
 smallvec = ["dep:smallvec"]
 macro = ["dep:wslplugins-macro", "sys", "dep:tracing"]
-private_tracing = ["dep:tracing"]
 tracing = ["dep:tracing"]
 uuid = ["dep:uuid"]
 
