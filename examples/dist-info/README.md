@@ -8,7 +8,7 @@ It is intended as a reference for:
 - enriching host-side information with Linux `os-release` data through [`etc_os_release`]
 - emitting structured diagnostics with [`tracing`]
 
-Compared to the minimal example, this sample is focused on distro identity and descriptive metadata rather than on reproducing Microsoft's sample plugin behavior.
+Compared with the minimal example, this sample focuses on distro identity and descriptive metadata rather than on reproducing Microsoft's sample plugin behavior.
 
 ## What this example includes
 
