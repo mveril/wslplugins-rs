@@ -1,2 +1,3 @@
 # wslplugins-macro
-This package is an optional dependency of `wslplugins-rs` and provide macro for it's not intended to be used manually
+
+This package is an optional dependency of `wslplugins-rs` and provides the procedural macro. It is not intended to be used directly.
