@@ -43,6 +43,7 @@ mod session_id;
 pub mod user_distribution_id;
 pub use windows_core;
 #[doc(hidden)]
+#[cfg(feature = "macro")]
 pub mod __private;
 pub mod distribution_id;
 mod distribution_information;

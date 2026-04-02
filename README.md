@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE-MIT)
 [![Platform](https://img.shields.io/badge/platform-Windows-blue?logo=windows&logoColor=white)](#)
 
-WSLPlugins-rs is a Rust framework for building [WSL plugins](https://learn.microsoft.com/windows/wsl/wsl-plugins). It wraps the raw WSL plugin API with safer, more idiomatic Rust types and provides a procedural macro for generating the plugin entry points and hook wiring.
+WSLPlugins-rs is a Rust framework for building [WSL plugins](https://learn.microsoft.com/windows/wsl/wsl-plugins). It wraps the raw WSL plugin API with safer, more idiomatic Rust types and provides a procedural macro for generating plugin entry points and hook wiring.
 The project is intended for Windows hosts that load plugins through WSL. It includes:
 
 - a runtime crate: `wslplugins-rs`
@@ -17,7 +17,7 @@ The project is intended for Windows hosts that load plugins through WSL. It incl
 ## Features
 
 - Safe and ergonomic wrappers around the WSL plugin API
-- A `#[wsl_plugin_v1(...)]` macro to generate the exported entry points
+- A `#[wsl_plugin_v1(...)]` macro that generates the exported entry points
 - Support for WSL metadata, session information, and command execution
 - Examples that can be built, signed, and loaded into WSL
 
@@ -46,7 +46,7 @@ Add the crate with the `macro` feature:
 
 ```toml
 [dependencies]
-wslplugins-rs = { version = "0.1.0-beta.1", features = ["macro"] }
+wslplugins-rs = { version = "0.1.0-beta.2", features = ["macro"] }
 ```
 
 Then implement a plugin:
