@@ -64,23 +64,22 @@ impl WSLPluginV1 for Plugin {
         _session: &WSLSessionInformation,
         distribution: &DistributionInformation,
     ) -> PluginResult<()> {
-        if distribution
-            .package_family_name()
-            .filter(|s| s.len() > 0) // treat empty string as no package family name see https://github.com/mveril/wslplugins-rs/issues/44
-            .is_none()
+        if let Some(package_familly_name) =
+            distribution.package_family_name().filter(|s| s.len() > 0)
+        // treat empty string as no package family name see https://github.com/mveril/wslplugins-rs/issues/44
         {
+            info!(
+                "Distribution {} started with package family name {:}",
+                distribution.name().display(),
+                package_familly_name.display()
+            );
+            Ok(())
+        } else {
             let mut msg = OsString::from("The WSL distribution `");
             msg.push(distribution.name());
             msg.push("` is not allowed by your organization because it is not packaged.");
             warn!("{}", msg.display());
             return Err(PluginError::with_message(E_ACCESSDENIED, &msg));
-        } else {
-            info!(
-                "Distribution {} started with package family name {:}",
-                distribution.name().display(),
-                distribution.package_family_name()
-            );
-            Ok(())
         }
     }
 }
