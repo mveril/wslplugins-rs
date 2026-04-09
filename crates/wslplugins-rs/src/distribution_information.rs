@@ -18,6 +18,7 @@ use crate::api::{
     errors::require_update_error::Result, utils::check_required_version_result_from_context,
 };
 use crate::core_distribution_information::CoreDistributionInformation;
+use crate::utils::opt_wide_str;
 use crate::WSLVersion;
 use crate::{UserDistributionID, WSLContext};
 use std::ffi::OsString;
@@ -108,15 +109,7 @@ impl CoreDistributionInformation for DistributionInformation {
 
     #[inline]
     fn package_family_name(&self) -> Option<OsString> {
-        // SAFETY: check already inside
-        unsafe {
-            let ptr = self.0.PackageFamilyName;
-            if ptr.is_null() {
-                None
-            } else {
-                Some(OsString::from_wide(PCWSTR::from_raw(ptr).as_wide()))
-            }
-        }
+        opt_wide_str(self.0.PackageFamilyName)
     }
 
     #[inline]
@@ -125,15 +118,7 @@ impl CoreDistributionInformation for DistributionInformation {
             WSLContext::get_current(),
             &WSLVersion::new(2, 4, 4),
         )?;
-        // SAFETY: check already inside and before by versionning
-        unsafe {
-            let ptr = self.0.Flavor;
-            if ptr.is_null() {
-                Ok(None)
-            } else {
-                Ok(Some(OsString::from_wide(PCWSTR::from_raw(ptr).as_wide())))
-            }
-        }
+        Ok(opt_wide_str(self.0.Flavor))
     }
 
     #[inline]
@@ -142,15 +127,7 @@ impl CoreDistributionInformation for DistributionInformation {
             WSLContext::get_current(),
             &WSLVersion::new(2, 4, 4),
         )?;
-        // SAFETY: check did before by versionning.
-        unsafe {
-            let ptr = self.0.Version;
-            if ptr.is_null() {
-                Ok(None)
-            } else {
-                Ok(Some(OsString::from_wide(PCWSTR::from_raw(ptr).as_wide())))
-            }
-        }
+        Ok(opt_wide_str(self.0.Version))
     }
 }
 
