@@ -65,7 +65,7 @@ impl WSLPluginV1 for Plugin {
         distribution: &DistributionInformation,
     ) -> PluginResult<()> {
         if let Some(package_familly_name) =
-            distribution.package_family_name().filter(|s| s.len() > 0)
+            distribution.package_family_name().filter(|s| !s.is_empty())
         // treat empty string as no package family name see https://github.com/mveril/wslplugins-rs/issues/44
         {
             info!(
