@@ -68,10 +68,7 @@ impl WSLPluginV1 for Plugin {
             clippy::option_if_let_else,
             reason = "Improve readability by using if let"
         )]
-        if let Some(package_familly_name) =
-            distribution.package_family_name().filter(|s| !s.is_empty())
-        // treat empty string as no package family name see https://github.com/mveril/wslplugins-rs/issues/44
-        {
+        if let Some(package_familly_name) = distribution.package_family_name() {
             info!(
                 "Distribution {} started with package family name {:}",
                 distribution.name().display(),
