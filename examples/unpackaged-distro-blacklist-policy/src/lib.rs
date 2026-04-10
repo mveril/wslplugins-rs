@@ -64,6 +64,10 @@ impl WSLPluginV1 for Plugin {
         _session: &WSLSessionInformation,
         distribution: &DistributionInformation,
     ) -> PluginResult<()> {
+        #[allow(
+            clippy::option_if_let_else,
+            reason = "Improve readability by using if let"
+        )]
         if let Some(package_familly_name) =
             distribution.package_family_name().filter(|s| !s.is_empty())
         // treat empty string as no package family name see https://github.com/mveril/wslplugins-rs/issues/44
@@ -79,7 +83,7 @@ impl WSLPluginV1 for Plugin {
             msg.push(distribution.name());
             msg.push("` is not allowed by your organization because it is not packaged.");
             warn!("{}", msg.display());
-            return Err(PluginError::with_message(E_ACCESSDENIED, &msg));
+            Err(PluginError::with_message(E_ACCESSDENIED, &msg))
         }
     }
 }
