@@ -46,7 +46,7 @@ mod tests {
         let unit = prop_oneof![(1u16..=0xD7FF), (0xE000u16..=0xFFFF),];
 
         proptest::collection::vec(unit, 0..100).prop_map(|wide| {
-            let mut wide: Vec<u16> = items;
+            let mut wide: Vec<u16> = wide;
             wide.push(0);
             wide
         })
