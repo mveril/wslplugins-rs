@@ -60,7 +60,7 @@ mod tests {
             let ptr = wide.as_ptr();
 
             let result = opt_wide_str(ptr);
-
+            #[allow(clippy::indexing_slicing, reason="Safe because we know the last element is the null terminator")]
             let expected = OsString::from_wide(&wide[..wide.len() - 1]);
 
             prop_assert_eq!(result, Some(expected));
