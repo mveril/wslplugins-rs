@@ -8,6 +8,7 @@ use crate::{
         errors::require_update_error::Result, utils::check_required_version_result_from_context,
     },
     core_distribution_information::CoreDistributionInformation,
+    utils::opt_wide_str,
     UserDistributionID, WSLContext, WSLVersion,
 };
 use std::{
@@ -75,15 +76,7 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
     /// - `None`: If the package family name is null or empty.
     #[inline]
     fn package_family_name(&self) -> Option<OsString> {
-        // SAFETY: check already inside
-        unsafe {
-            let ptr = PCWSTR::from_raw(self.0.PackageFamilyName);
-            if ptr.is_null() || ptr.is_empty() {
-                None
-            } else {
-                Some(OsString::from_wide(ptr.as_wide()))
-            }
-        }
+        opt_wide_str(self.0.PackageFamilyName)
     }
 
     #[inline]
@@ -93,15 +86,7 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
             &WSLVersion::new(2, 4, 4),
         )?;
 
-        // SAFETY: check already inside
-        unsafe {
-            let ptr = PCWSTR::from_raw(self.0.Flavor);
-            if ptr.is_null() || ptr.is_empty() {
-                Ok(None)
-            } else {
-                Ok(Some(OsString::from_wide(ptr.as_wide())))
-            }
-        }
+        Ok(opt_wide_str(self.0.Flavor))
     }
 
     #[inline]
@@ -110,15 +95,7 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
             WSLContext::get_current(),
             &WSLVersion::new(2, 4, 4),
         )?;
-        // SAFETY: check already inside
-        unsafe {
-            let ptr = PCWSTR::from_raw(self.0.Version);
-            if ptr.is_null() || ptr.is_empty() {
-                Ok(None)
-            } else {
-                Ok(Some(OsString::from_wide(ptr.as_wide())))
-            }
-        }
+        Ok(opt_wide_str(self.0.Version))
     }
 }
 
