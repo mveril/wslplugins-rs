@@ -9,12 +9,12 @@ pub fn test_transparence<T, U>() {
     assert_eq!(size_of::<T>(), size_of::<U>());
 }
 
-pub(crate) fn opt_wide_str(ptr: *const u16) -> Option<OsString> {
+pub fn opt_wide_str(ptr: *const u16) -> Option<OsString> {
     if ptr.is_null() {
         None
     } else {
-        // SAFETY: The caller guarantees that `ptr` is valid and points to a null-terminated wide string.
         let wide_str = PCWSTR::from_raw(ptr);
+        // SAFETY: The caller guarantees that `ptr` is valid and points to a null-terminated wide string.
         unsafe {
             let wide = wide_str.as_wide();
             if wide.is_empty() {
@@ -28,8 +28,6 @@ pub(crate) fn opt_wide_str(ptr: *const u16) -> Option<OsString> {
 
 #[cfg(test)]
 mod tests {
-    use std::num::NonZeroU16;
-
     use super::*;
     use proptest::prelude::*;
     #[test]
