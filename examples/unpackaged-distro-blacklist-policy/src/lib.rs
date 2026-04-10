@@ -1,6 +1,6 @@
-use std::ffi::OsString;
+#![doc = include_str!("../README.md")]
 
-// #![doc = include_str!("../README.md")]
+use std::ffi::OsString;
 use std::{env, fs::OpenOptions, panic};
 use tracing::{error, info, warn};
 use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
