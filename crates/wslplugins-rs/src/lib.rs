@@ -83,5 +83,5 @@ pub use wslplugins_macro::wsl_plugin_v1;
 #[cfg(feature = "sys")]
 pub use wslpluginapi_sys as sys;
 
-pub use session_id::SessionID;
+pub use session_id::{HasSessionId, SessionID};
 pub use user_distribution_id::UserDistributionID;

@@ -3,7 +3,7 @@ use super::Error;
 use super::{Result, WSLCommand};
 use crate::api::errors::require_update_error::Result as UpReqResult;
 use crate::api::wsl_command::IntoCowUtf8UnixPath;
-use crate::{SessionID, UserDistributionID, WSLVersion};
+use crate::{HasSessionId, SessionID, UserDistributionID, WSLVersion};
 use std::ffi::OsStr;
 use std::fmt::{self, Debug};
 use std::mem::MaybeUninit;
@@ -102,18 +102,19 @@ impl ApiV1 {
     pub fn mount_folder<
         WP: AsRef<Path> + std::fmt::Debug,
         UP: AsRef<Utf8UnixPath> + std::fmt::Debug,
+        S: AsRef<OsStr> + std::fmt::Debug,
     >(
         &self,
         session_id: SessionID,
         windows_path: WP,
         linux_path: UP,
         read_only: bool,
-        name: &OsStr,
+        name: S,
     ) -> WinResult<()> {
         let encoded_windows_path =
             U16CString::from_os_str_truncate(windows_path.as_ref().as_os_str());
         let encoded_linux_path = U16CString::from_str_truncate(linux_path.as_ref().as_str());
-        let encoded_name = U16CString::from_os_str_truncate(name);
+        let encoded_name = U16CString::from_os_str_truncate(name.as_ref());
         // SAFETY:
         // - `self.0.MountFolder` comes from the validated `WSLPluginAPIV1` struct provided by WSL.
         //   The API guarantees that this function pointer is non-null for supported versions.
@@ -219,9 +220,9 @@ impl ApiV1 {
     /// - The default execution target is [`DistributionID::System`].
     /// - `argv[0]` defaults to the program path unless explicitly overridden.
     #[inline]
-    pub fn new_command<'a, P: IntoCowUtf8UnixPath<'a>>(
+    pub fn new_command<'a, S: HasSessionId, P: IntoCowUtf8UnixPath<'a>>(
         &'a self,
-        session_id: SessionID,
+        session_id: S,
         program: P,
     ) -> WSLCommand<'a> {
         WSLCommand::new(self, session_id, program)
