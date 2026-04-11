@@ -62,7 +62,7 @@ impl Error {
     /// A new instance of `Error`.
     #[must_use]
     #[inline]
-    pub fn new(code: HRESULT, message: Option<&OsStr>) -> Self {
+    pub fn new<S: AsRef<OsStr>>(code: HRESULT, message: Option<S>) -> Self {
         let code = if code.is_ok() {
             WinError::from_hresult(code).code()
         } else {
@@ -73,7 +73,7 @@ impl Error {
 
         Self {
             code,
-            message: message.map(ToOwned::to_owned),
+            message: message.map(|m| m.as_ref().to_owned()),
         }
     }
 
@@ -87,7 +87,7 @@ impl Error {
     #[must_use]
     #[inline]
     pub fn with_code(code: HRESULT) -> Self {
-        Self::new(code, None)
+        Self::new::<&OsStr>(code, None)
     }
 
     /// Creates an error with both a code and a message.
@@ -100,7 +100,7 @@ impl Error {
     /// A new instance of `Error`.
     #[must_use]
     #[inline]
-    pub fn with_message(code: HRESULT, message: &OsStr) -> Self {
+    pub fn with_message<S: AsRef<OsStr>>(code: HRESULT, message: S) -> Self {
         Self::new(code, Some(message))
     }
 
@@ -195,7 +195,7 @@ impl From<HRESULT> for Error {
     /// An `Error` containing the `HRESULT` as its code.
     #[inline]
     fn from(value: HRESULT) -> Self {
-        Self::new(value, None)
+        Self::new::<&OsStr>(value, None)
     }
 }
 

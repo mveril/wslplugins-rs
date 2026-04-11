@@ -18,7 +18,7 @@ pub use crate::api::{Error as ApiError, Result as ApiResult};
 pub use crate::plugin::{Error as PluginError, Result as PluginResult, WSLPluginV1};
 pub use crate::windows_core::{Error as WinError, Result as WinResult};
 pub use crate::{
-    CoreDistributionInformation, DistributionID, DistributionInformation,
+    CoreDistributionInformation, DistributionID, DistributionInformation, HasSessionId,
     OfflineDistributionInformation, SessionID, UserDistributionID, WSLContext,
     WSLSessionInformation, WSLUserConfiguration, WSLVersion, WSLVmCreationSettings,
 };

@@ -3,7 +3,7 @@
 //! This module provides a safe abstraction over the `WSLSessionInformation` structure
 //! from the WSL Plugin API, allowing access to session details in an idiomatic Rust interface.
 
-use crate::SessionID;
+use crate::{HasSessionId, SessionID};
 use core::hash;
 use std::{fmt, os::windows::raw::HANDLE};
 use wslpluginapi_sys::windows_sys::Win32::Security::PSID;
@@ -50,6 +50,13 @@ impl WSLSessionInformation {
     #[inline]
     pub const unsafe fn user_sid(&self) -> PSID {
         self.0.UserSid
+    }
+}
+
+impl HasSessionId for WSLSessionInformation {
+    #[inline]
+    fn session_id(&self) -> SessionID {
+        self.id()
     }
 }
 

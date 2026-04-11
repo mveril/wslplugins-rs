@@ -41,7 +41,7 @@ impl WSLPluginV1 for Plugin {
         match self
             .context
             .api
-            .new_command(session.id(), "/bin/cat")
+            .new_command(session, "/bin/cat")
             .with_arg("/proc/version")
             .execute()
         {

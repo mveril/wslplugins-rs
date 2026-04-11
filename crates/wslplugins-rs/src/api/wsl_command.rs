@@ -1,5 +1,5 @@
 use super::super::api::{ApiV1, Result as ApiResult};
-use crate::{DistributionID, SessionID};
+use crate::{DistributionID, HasSessionId, SessionID};
 use core::clone::Clone;
 use std::{borrow::Cow, iter::once, net::TcpStream};
 use typed_path::Utf8UnixPath;
@@ -146,9 +146,9 @@ impl<'a> WSLCommand<'a> {
     /// - The default target is [`DistributionID::System`].
     /// - `argv[0]` is the program path string unless overridden via [`WSLCommand::arg0`]
     ///   or [`WSLCommand::with_arg0`].
-    pub(crate) fn new<P: IntoCowUtf8UnixPath<'a>>(
+    pub(crate) fn new<P: IntoCowUtf8UnixPath<'a>, S: HasSessionId>(
         api: &'a ApiV1,
-        session_id: SessionID,
+        session_id: S,
         program: P,
     ) -> Self {
         Self {
@@ -157,7 +157,7 @@ impl<'a> WSLCommand<'a> {
             args: ArgVec::new(),
             path: program.into_cow_utf8_unix_path(),
             distribution_id: DistributionID::System,
-            session_id,
+            session_id: session_id.session_id(),
         }
     }
 
@@ -275,8 +275,8 @@ impl<'a> WSLCommand<'a> {
     #[inline]
     #[must_use]
     #[allow(clippy::missing_const_for_fn, reason = "Useless const")]
-    pub fn distribution_id(&mut self, distribution_id: DistributionID) -> &mut Self {
-        self.distribution_id = distribution_id;
+    pub fn distribution_id<T: Into<DistributionID>>(&mut self, distribution_id: T) -> &mut Self {
+        self.distribution_id = distribution_id.into();
         self
     }
 
@@ -284,8 +284,8 @@ impl<'a> WSLCommand<'a> {
     #[inline]
     #[must_use]
     #[allow(clippy::missing_const_for_fn, reason = "Useless const")]
-    pub fn with_distribution_id(mut self, distribution_id: DistributionID) -> Self {
-        self.distribution_id = distribution_id;
+    pub fn with_distribution_id<T: Into<DistributionID>>(mut self, distribution_id: T) -> Self {
+        self.distribution_id = distribution_id.into();
         self
     }
 

@@ -36,6 +36,7 @@ impl From<wslpluginapi_sys::windows_sys::core::GUID> for UserDistributionID {
 }
 
 impl<T: CoreDistributionInformation> From<&T> for UserDistributionID {
+    /// Converts a reference to a type implementing `CoreDistributionInformation` into a `UserDistributionID`.
     #[inline]
     fn from(value: &T) -> Self {
         value.id()
