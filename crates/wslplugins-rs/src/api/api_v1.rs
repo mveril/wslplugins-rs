@@ -102,14 +102,14 @@ impl ApiV1 {
     pub fn mount_folder<
         WP: AsRef<Path> + std::fmt::Debug,
         UP: AsRef<Utf8UnixPath> + std::fmt::Debug,
-        N: AsRef<OsStr> + std::fmt::Debug,
+        S: AsRef<OsStr> + std::fmt::Debug,
     >(
         &self,
         session_id: SessionID,
         windows_path: WP,
         linux_path: UP,
         read_only: bool,
-        name: N,
+        name: S,
     ) -> WinResult<()> {
         let encoded_windows_path =
             U16CString::from_os_str_truncate(windows_path.as_ref().as_os_str());
