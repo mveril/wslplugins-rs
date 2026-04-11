@@ -115,7 +115,7 @@ impl WSLPluginV1 for Plugin {
             // Use unknow if init_pid not available
             distribution.init_pid().map(|res| res.to_string()).unwrap_or("Unknow".to_string())
         );
-        self.log_os_release(session.id(), distribution.id().into());
+        self.log_os_release(session.id(), distribution.into());
         Ok(())
     }
 

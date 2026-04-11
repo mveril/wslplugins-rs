@@ -14,7 +14,7 @@ pub use wsl_command_execution::WSLCommandExecution;
 use smallvec::SmallVec;
 
 #[cfg(doc)]
-use super::super::api::Error as ApiError;
+use crate::{api::Error as ApiError, CoreDistributionInformation, UserDistributionID};
 mod prepared_wsl_command;
 #[cfg(not(feature = "smallvec"))]
 type ArgVec<'a> = Vec<Cow<'a, str>>;
@@ -272,6 +272,12 @@ impl<'a> WSLCommand<'a> {
     }
 
     /// Sets the distribution target (builder-style by mutable reference).
+    ///
+    /// This accepts any value convertible into a [`DistributionID`], including:
+    /// - a [`DistributionID`] directly,
+    /// - a [`UserDistributionID`],
+    /// - an [`Option<UserDistributionID>`],
+    /// - a reference to a type implementing [`CoreDistributionInformation`].
     #[inline]
     #[must_use]
     #[allow(clippy::missing_const_for_fn, reason = "Useless const")]
@@ -281,6 +287,12 @@ impl<'a> WSLCommand<'a> {
     }
 
     /// Sets the distribution target (builder-style by value).
+    ///
+    /// This accepts any value convertible into a [`DistributionID`], including:
+    /// - a [`DistributionID`] directly,
+    /// - a [`UserDistributionID`],
+    /// - an [`Option<UserDistributionID>`],
+    /// - a reference to a type implementing [`CoreDistributionInformation`].
     #[inline]
     #[must_use]
     #[allow(clippy::missing_const_for_fn, reason = "Useless const")]

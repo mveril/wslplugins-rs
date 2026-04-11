@@ -80,10 +80,10 @@ impl From<&UserDistributionID> for DistributionID {
     }
 }
 
-impl<T: CoreDistributionInformation> From<T> for DistributionID {
-    /// Converts a type implementing `CoreDistributionInformation` into a `DistributionID`.
+impl<T: CoreDistributionInformation> From<&T> for DistributionID {
+    /// Converts a reference to a type implementing `CoreDistributionInformation` into a `DistributionID`.
     #[inline]
-    fn from(value: T) -> Self {
+    fn from(value: &T) -> Self {
         value.id().into()
     }
 }
