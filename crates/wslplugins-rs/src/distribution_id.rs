@@ -41,7 +41,7 @@ use thiserror::Error;
 ///   user distributions for operations like Linux GUI apps.
 /// - User distributions provide isolated environments for specific Linux distributions, allowing
 ///   users to install and run various Linux distributions on their Windows machines.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DistributionID {
     /// Represents the system-level distribution.
     /// For more info about the system distribution please check the [WSLg architecture blogpost](https://devblogs.microsoft.com/commandline/wslg-architecture/#system-distro)
@@ -50,8 +50,25 @@ pub enum DistributionID {
     User(UserDistributionID),
 }
 
+impl Default for DistributionID {
+    fn default() -> Self {
+        Self::System
+    }
+}
+
+impl DistributionID {
+    /// Checks if the distribution is a distribution installed by the user.
+    pub fn is_user(&self) -> bool {
+        matches!(*self, Self::User(_))
+    }
+    /// Checks if the distribution is the system distribution.
+    pub fn is_system(&self) -> bool {
+        matches!(*self, Self::System)
+    }
+}
+
 /// Error type for conversion failures between [`DistributionID`] and [`UserDistributionID`].
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Clone, Copy, PartialEq, Eq, Hash)]
 #[error("Cannot convert System distribution to UserDistribution.")]
 pub struct ConversionError;
 
@@ -116,6 +133,159 @@ impl Display for DistributionID {
         match self {
             Self::System => f.write_str("System"),
             Self::User(id) => std::fmt::Display::fmt(id, f),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::api::errors::require_update_error::Result;
+    use proptest::prelude::*;
+    use std::ffi::OsString;
+
+    #[derive(Clone, Copy)]
+    struct TestDistribution {
+        id: UserDistributionID,
+    }
+
+    impl CoreDistributionInformation for TestDistribution {
+        fn id(&self) -> UserDistributionID {
+            self.id
+        }
+
+        fn name(&self) -> OsString {
+            OsString::from("test")
+        }
+
+        fn package_family_name(&self) -> Option<OsString> {
+            None
+        }
+
+        fn flavor(&self) -> Result<Option<OsString>> {
+            Ok(None)
+        }
+
+        fn version(&self) -> Result<Option<OsString>> {
+            Ok(None)
+        }
+    }
+
+    #[test]
+    fn default_returns_system() {
+        assert_eq!(DistributionID::default(), DistributionID::System);
+    }
+
+    #[test]
+    fn is_system_returns_true_for_system_distribution() {
+        assert!(DistributionID::System.is_system());
+    }
+
+    #[test]
+    fn is_user_returns_false_for_system_distribution() {
+        assert!(!DistributionID::System.is_user());
+    }
+
+    #[test]
+    fn try_from_system_returns_error() {
+        assert_eq!(
+            UserDistributionID::try_from(DistributionID::System),
+            Err(ConversionError)
+        );
+    }
+
+    #[test]
+    fn from_none_returns_system() {
+        assert_eq!(
+            DistributionID::from(Option::<UserDistributionID>::None),
+            DistributionID::System
+        );
+    }
+
+    #[test]
+    fn option_from_system_returns_none() {
+        let maybe_user: Option<UserDistributionID> = DistributionID::System.into();
+        assert_eq!(maybe_user, None);
+    }
+
+    #[test]
+    fn display_for_system_is_system() {
+        assert_eq!(format!("{}", DistributionID::System), "System");
+    }
+
+    proptest! {
+        #[test]
+        fn is_system_returns_false_for_user_distribution(raw_id in any::<u128>()) {
+            let user_id = UserDistributionID::from(windows_core::GUID::from_u128(raw_id));
+
+            prop_assert!(!DistributionID::User(user_id).is_system());
+        }
+
+        #[test]
+        fn is_user_returns_true_for_user_distribution(raw_id in any::<u128>()) {
+            let user_id = UserDistributionID::from(windows_core::GUID::from_u128(raw_id));
+
+            prop_assert!(DistributionID::User(user_id).is_user());
+        }
+
+        #[test]
+        fn try_from_user_returns_inner_id(raw_id in any::<u128>()) {
+            let user_id = UserDistributionID::from(windows_core::GUID::from_u128(raw_id));
+
+            prop_assert_eq!(
+                UserDistributionID::try_from(DistributionID::User(user_id)),
+                Ok(user_id)
+            );
+        }
+
+        #[test]
+        fn from_user_distribution_id_wraps_user_variant(raw_id in any::<u128>()) {
+            let user_id = UserDistributionID::from(windows_core::GUID::from_u128(raw_id));
+
+            prop_assert_eq!(DistributionID::from(user_id), DistributionID::User(user_id));
+        }
+
+        #[test]
+        fn from_user_distribution_id_reference_wraps_user_variant(raw_id in any::<u128>()) {
+            let user_id = UserDistributionID::from(windows_core::GUID::from_u128(raw_id));
+
+            prop_assert_eq!(DistributionID::from(&user_id), DistributionID::User(user_id));
+        }
+
+        #[test]
+        fn from_some_user_distribution_id_wraps_user_variant(raw_id in any::<u128>()) {
+            let user_id = UserDistributionID::from(windows_core::GUID::from_u128(raw_id));
+
+            prop_assert_eq!(
+                DistributionID::from(Some(user_id)),
+                DistributionID::User(user_id)
+            );
+        }
+
+        #[test]
+        fn option_from_user_distribution_returns_some_inner_id(raw_id in any::<u128>()) {
+            let user_id = UserDistributionID::from(windows_core::GUID::from_u128(raw_id));
+            let maybe_user: Option<UserDistributionID> = DistributionID::User(user_id).into();
+
+            prop_assert_eq!(maybe_user, Some(user_id));
+        }
+
+        #[test]
+        fn display_for_user_delegates_to_user_distribution_id(raw_id in any::<u128>()) {
+            let user_id = UserDistributionID::from(windows_core::GUID::from_u128(raw_id));
+
+            prop_assert_eq!(
+                format!("{}", DistributionID::User(user_id)),
+                format!("{user_id}")
+            );
+        }
+
+        #[test]
+        fn from_core_distribution_information_uses_the_underlying_id(raw_id in any::<u128>()) {
+            let user_id = UserDistributionID::from(windows_core::GUID::from_u128(raw_id));
+            let distribution = TestDistribution { id: user_id };
+
+            prop_assert_eq!(DistributionID::from(&distribution), DistributionID::User(user_id));
         }
     }
 }
