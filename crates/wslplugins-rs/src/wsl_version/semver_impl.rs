@@ -25,6 +25,7 @@ pub enum SemverConversionError {
 }
 
 impl From<TryFromIntError> for SemverConversionError {
+    #[inline]
     fn from(_: TryFromIntError) -> Self {
         Self::ComponentOutOfRange
     }
@@ -109,11 +110,7 @@ mod tests {
 
         let result = WSLVersion::try_from(semver_version);
 
-        assert_eq!(
-            result,
-            Err(SemverConversionError::ComponentOutOfRange
-            )
-        );
+        assert_eq!(result, Err(SemverConversionError::ComponentOutOfRange));
     }
 
     proptest! {
