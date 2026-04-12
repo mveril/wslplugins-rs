@@ -6,6 +6,7 @@ use std::{
 
 #[cfg(feature = "semver")]
 mod semver_impl;
+#[cfg(feature = "semver")]
 pub use semver_impl::SemverConversionError;
 
 /// Represents a WSL version number.
