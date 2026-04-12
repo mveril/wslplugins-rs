@@ -77,6 +77,7 @@ mod tests {
             major: 2,
             minor: 4,
             patch: 4,
+            #[allow(clippy::unwrap_used, reason = "test data is valid")]
             pre: "alpha.1".parse().unwrap(),
             build: BuildMetadata::EMPTY,
         };
@@ -93,6 +94,7 @@ mod tests {
             minor: 4,
             patch: 4,
             pre: Prerelease::EMPTY,
+            #[allow(clippy::unwrap_used, reason = "test data is valid")]
             build: "build.1".parse().unwrap(),
         };
 
