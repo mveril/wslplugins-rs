@@ -8,8 +8,7 @@ use thiserror::Error;
 /// `WSLVersion` only models the numeric `major.minor.revision` components used
 /// by the WSL plugin API. Semantic-versioning pre-release identifiers and build
 /// metadata therefore cannot be represented and are rejected.
-#[cfg_attr(docsrs, doc(cfg(feature = "semver")))]
-#[derive(Debug, Error)]
+#[derive(Debug, Error, PartialEq, Eq)]
 pub enum SemverConversionError {
     /// The semantic version contains a pre-release identifier such as
     /// `-alpha.1`, which has no equivalent in `WSLVersion`.
@@ -22,7 +21,13 @@ pub enum SemverConversionError {
     /// One of the numeric version components does not fit into the `u32`
     /// representation used by `WSLVersion`.
     #[error("semantic version numeric component exceeds u32 range")]
-    ComponentOutOfRange(#[from] TryFromIntError),
+    ComponentOutOfRange,
+}
+
+impl From<TryFromIntError> for SemverConversionError {
+    fn from(_: TryFromIntError) -> Self {
+        Self::ComponentOutOfRange
+    }
 }
 
 impl From<WSLVersion> for Version {
@@ -61,43 +66,54 @@ impl TryFrom<Version> for WSLVersion {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use proptest::prelude::*;
 
     #[test]
     fn test_try_from_semver_version_rejects_prerelease() {
-        let semver_version = Version::parse("2.4.4-alpha.1").unwrap();
+        let semver_version = Version {
+            major: 2,
+            minor: 4,
+            patch: 4,
+            pre: "alpha.1".parse().unwrap(),
+            build: BuildMetadata::EMPTY,
+        };
 
-        let error = WSLVersion::try_from(semver_version).unwrap_err();
+        let result = WSLVersion::try_from(semver_version);
 
-        assert!(matches!(
-            error,
-            SemverConversionError::PrereleaseNotSupported
-        ));
+        assert_eq!(result, Err(SemverConversionError::PrereleaseNotSupported));
     }
 
     #[test]
     fn test_try_from_semver_version_rejects_build_metadata() {
-        let semver_version = Version::parse("2.4.4+build.1").unwrap();
+        let semver_version = Version {
+            major: 2,
+            minor: 4,
+            patch: 4,
+            pre: Prerelease::EMPTY,
+            build: "build.1".parse().unwrap(),
+        };
 
-        let error = WSLVersion::try_from(semver_version).unwrap_err();
+        let result = WSLVersion::try_from(semver_version);
 
-        assert!(matches!(
-            error,
-            SemverConversionError::BuildMetadataNotSupported
-        ));
+        assert_eq!(
+            result,
+            Err(SemverConversionError::BuildMetadataNotSupported)
+        );
     }
 
     #[test]
     fn test_try_from_semver_version_rejects_out_of_range_component() {
         let semver_version = Version::new(u64::from(u32::MAX) + 1, 0, 0);
 
-        let error = WSLVersion::try_from(semver_version).unwrap_err();
+        let result = WSLVersion::try_from(semver_version);
 
-        assert!(matches!(
-            error,
-            SemverConversionError::ComponentOutOfRange(_)
-        ));
+        assert_eq!(
+            result,
+            Err(SemverConversionError::ComponentOutOfRange
+            )
+        );
     }
 
     proptest! {
@@ -113,8 +129,8 @@ mod tests {
             prop_assert_eq!(semver_version.major, u64::from(major));
             prop_assert_eq!(semver_version.minor, u64::from(minor));
             prop_assert_eq!(semver_version.patch, u64::from(revision));
-            prop_assert!(semver_version.pre.is_empty());
-            prop_assert!(semver_version.build.is_empty());
+            prop_assert_eq!(semver_version.pre, Prerelease::EMPTY);
+            prop_assert_eq!(semver_version.build, BuildMetadata::EMPTY);
         }
 
         #[test]
@@ -129,9 +145,10 @@ mod tests {
                 u64::from(patch),
             );
 
-            let version = WSLVersion::try_from(semver_version).unwrap();
-
-            prop_assert_eq!(version, WSLVersion::new(major, minor, patch));
+            prop_assert_eq!(
+                WSLVersion::try_from(semver_version),
+                Ok(WSLVersion::new(major, minor, patch))
+            );
         }
     }
 }

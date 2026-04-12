@@ -4,6 +4,10 @@ use std::{
     ptr,
 };
 
+#[cfg(feature = "semver")]
+mod semver_impl;
+pub use semver_impl::SemverConversionError;
+
 /// Represents a WSL version number.
 ///
 /// This struct wraps the `WSLVersion` from the WSL Plugin API and provides
