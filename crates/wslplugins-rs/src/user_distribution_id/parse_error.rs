@@ -1,7 +1,7 @@
 use thiserror::Error;
 use windows_core::HRESULT;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ParseError {
     #[error("Windows error: HRESULT={0}")]
     Windows(HRESULT),
