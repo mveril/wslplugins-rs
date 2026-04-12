@@ -23,11 +23,7 @@ wslplugins-macro = { path = "../wslplugins-macro", optional = true, version = "0
 wslpluginapi-sys.workspace = true
 uuid = { version = "1", optional = true }
 smallvec = { workspace = true, optional = true }
-
-
-[dependencies.semver]
-version = ">0.1"
-optional = true
+semver = { version = "1", optional = true }
 
 [dev-dependencies]
 proptest = "1.9.0"
@@ -40,6 +36,7 @@ smallvec = ["dep:smallvec"]
 macro = ["dep:wslplugins-macro", "sys", "dep:tracing"]
 tracing = ["dep:tracing"]
 uuid = ["dep:uuid"]
+semver = ["dep:semver"]
 
 [package.metadata.docs.rs]
 all-features = true

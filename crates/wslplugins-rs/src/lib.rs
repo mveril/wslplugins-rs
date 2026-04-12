@@ -72,6 +72,8 @@ pub use wsl_session_information::WSLSessionInformation;
 pub use wsl_vm_creation_settings::WSLVmCreationSettings;
 mod wsl_version;
 pub use api::WSLCommandExecution;
+#[cfg(feature = "semver")]
+pub use wsl_version::SemverConversionError;
 pub use wsl_version::WSLVersion;
 
 /// Re-exports procedural macros when the `macro` feature is enabled.

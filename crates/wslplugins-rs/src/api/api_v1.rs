@@ -73,7 +73,9 @@ impl ApiV1 {
     /// let version = api_v1.version();
     /// println!(
     ///     "WSL API version: {}.{}.{}",
-    ///     version.Major, version.Minor, version.Revision
+    ///     version.major(),
+    ///     version.minor(),
+    ///     version.revision(),
     /// );
     #[must_use]
     #[inline]
