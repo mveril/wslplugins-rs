@@ -41,28 +41,27 @@ use thiserror::Error;
 ///   user distributions for operations like Linux GUI apps.
 /// - User distributions provide isolated environments for specific Linux distributions, allowing
 ///   users to install and run various Linux distributions on their Windows machines.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum DistributionID {
     /// Represents the system-level distribution.
     /// For more info about the system distribution please check the [WSLg architecture blogpost](https://devblogs.microsoft.com/commandline/wslg-architecture/#system-distro)
+    #[default]
     System,
     /// Represents an installed user-specific distribution identified by a [`UserDistributionID`].
     User(UserDistributionID),
 }
 
-impl Default for DistributionID {
-    fn default() -> Self {
-        Self::System
-    }
-}
-
 impl DistributionID {
     /// Checks if the distribution is a distribution installed by the user.
-    pub fn is_user(&self) -> bool {
+    #[must_use]
+    #[inline]
+    pub const fn is_user(&self) -> bool {
         matches!(*self, Self::User(_))
     }
     /// Checks if the distribution is the system distribution.
-    pub fn is_system(&self) -> bool {
+    #[must_use]
+    #[inline]
+    pub const fn is_system(&self) -> bool {
         matches!(*self, Self::System)
     }
 }
