@@ -15,7 +15,7 @@ use wslpluginapi_sys::WSL_E_PLUGIN_REQUIRES_UPDATE;
 /// This enum encapsulates two main error categories:
 /// - Plugin-specific errors (`RequireUpdateError`).
 /// - Errors originating from Windows APIs (`WinError`).
-#[derive(Debug, Error, PartialEq, Eq, Hash)]
+#[derive(Debug, Error, Clone, PartialEq, Eq, Hash)]
 pub enum Error {
     /// Indicates that the current WSL version does not meet the required version.
     #[error("Require Update Error")]
