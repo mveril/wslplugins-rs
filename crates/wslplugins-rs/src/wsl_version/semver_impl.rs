@@ -8,7 +8,7 @@ use thiserror::Error;
 /// `WSLVersion` only models the numeric `major.minor.revision` components used
 /// by the WSL plugin API. Semantic-versioning pre-release identifiers and build
 /// metadata therefore cannot be represented and are rejected.
-#[derive(Debug, Error, PartialEq, Eq)]
+#[derive(Debug, Error, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SemverConversionError {
     /// The semantic version contains a pre-release identifier such as
     /// `-alpha.1`, which has no equivalent in `WSLVersion`.

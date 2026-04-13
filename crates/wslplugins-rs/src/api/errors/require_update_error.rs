@@ -16,7 +16,7 @@ use windows_core::HRESULT;
 /// # Fields
 /// - `current_version`: The current WSL version.
 /// - `required_version`: The required WSL version.
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Clone, Copy, PartialEq, Eq, Hash)]
 #[error("WSLVersion unsupported: current version {current_version}, required version {required_version}")]
 pub struct Error {
     /// The current version of WSL.
