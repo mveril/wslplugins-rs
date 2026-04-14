@@ -9,6 +9,8 @@ use fmt::DefaultFormatter;
 pub use parse_error::ParseError;
 
 use crate::{CoreDistributionInformation, DistributionID};
+#[cfg(feature = "serde")]
+mod serde_impl;
 #[cfg(feature = "uuid")]
 mod uuid_impl;
 

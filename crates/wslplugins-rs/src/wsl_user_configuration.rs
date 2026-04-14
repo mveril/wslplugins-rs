@@ -32,8 +32,11 @@ pub mod flagset;
 ///
 /// This struct provides a simple wrapper around a 32-bit integer ([i32]), allowing for
 /// easy conversion to and from [i32] values and also flags depending on the enabled feature.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 pub struct WSLUserConfiguration(i32);
+
 
 impl From<i32> for WSLUserConfiguration {
     #[inline]
