@@ -2,7 +2,16 @@ use std::{
     fmt::{self, Debug, Display},
     hash::Hash,
     ptr,
+    str::FromStr,
 };
+
+mod parse_error;
+pub use parse_error::WSLVersionParseError;
+
+#[cfg(feature = "semver")]
+mod semver_impl;
+#[cfg(feature = "semver")]
+pub use semver_impl::SemverConversionError;
 
 /// Represents a WSL version number.
 ///
@@ -129,5 +138,99 @@ impl Debug for WSLVersion {
             .field("minor", &self.minor())
             .field("revision", &self.revision())
             .finish()
+    }
+}
+
+impl FromStr for WSLVersion {
+    type Err = WSLVersionParseError;
+
+    #[inline]
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.split('.').collect();
+        if !matches!(parts.len(), 2 | 3) {
+            return Err(WSLVersionParseError::InvalidFormat {
+                input: s.to_owned(),
+            });
+        }
+
+        let major = parts[0]
+            .parse::<u32>()
+            .map_err(|_| WSLVersionParseError::InvalidMajor {
+                input: s.to_owned(),
+            })?;
+        let minor = parts[1]
+            .parse::<u32>()
+            .map_err(|_| WSLVersionParseError::InvalidMinor {
+                input: s.to_owned(),
+            })?;
+        let revision = parts
+            .get(2)
+            .map(|s| s.parse::<u32>())
+            .transpose()
+            .map_err(|_| WSLVersionParseError::InvalidRevision {
+                input: s.to_owned(),
+            })?
+            .unwrap_or(0);
+
+        Ok(WSLVersion::new(major, minor, revision))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utils::test_transparence;
+
+    #[test]
+    fn test_layouts() {
+        test_transparence::<wslpluginapi_sys::WSLVersion, WSLVersion>();
+    }
+
+    #[test]
+    fn test_from_str_rejects_invalid_format() {
+        let result = "2".parse::<WSLVersion>();
+
+        assert_eq!(
+            result,
+            Err(WSLVersionParseError::InvalidFormat {
+                input: "2".to_owned(),
+            })
+        );
+    }
+
+    #[test]
+    fn test_from_str_rejects_invalid_major() {
+        let result = "a.0.0".parse::<WSLVersion>();
+
+        assert_eq!(
+            result,
+            Err(WSLVersionParseError::InvalidMajor {
+                input: "a.0.0".to_owned(),
+            })
+        );
+    }
+
+    #[test]
+    fn test_from_str_rejects_invalid_minor() {
+        let result = "2.a.0".parse::<WSLVersion>();
+
+        assert_eq!(
+            result,
+            Err(WSLVersionParseError::InvalidMinor {
+                input: "2.a.0".to_owned(),
+            })
+        );
+    }
+
+    #[test]
+    fn test_from_str_rejects_invalid_revision() {
+        let result = "2.0.a".parse::<WSLVersion>();
+
+        assert_eq!(
+            result,
+            Err(WSLVersionParseError::InvalidRevision {
+                input: "2.0.a".to_owned(),
+            })
+        );
     }
 }
