@@ -26,7 +26,7 @@ pub use semver_impl::SemverConversionError;
 /// assert_eq!(version.revision(), 0);
 /// ```
 #[repr(transparent)]
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct WSLVersion(wslpluginapi_sys::WSLVersion);
 
 impl WSLVersion {
@@ -104,7 +104,8 @@ impl From<WSLVersion> for wslpluginapi_sys::WSLVersion {
 impl AsRef<WSLVersion> for wslpluginapi_sys::WSLVersion {
     #[inline]
     fn as_ref(&self) -> &WSLVersion {
-        // SAFETY: conveting this kind of ref is safe as it is transparent
+        // SAFETY: Converting this reference is safe because `WSLVersion` is
+        // `#[repr(transparent)]` over `wslpluginapi_sys::WSLVersion`.
         unsafe { &*ptr::from_ref(self).cast::<WSLVersion>() }
     }
 }
@@ -113,13 +114,6 @@ impl AsRef<wslpluginapi_sys::WSLVersion> for WSLVersion {
     #[inline]
     fn as_ref(&self) -> &wslpluginapi_sys::WSLVersion {
         &self.0
-    }
-}
-
-impl Default for WSLVersion {
-    #[inline]
-    fn default() -> Self {
-        Self::new(1, 0, 0)
     }
 }
 

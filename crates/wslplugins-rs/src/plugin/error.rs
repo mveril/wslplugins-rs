@@ -24,7 +24,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// This struct encapsulates:
 /// - An error code (`HRESULT`) derived from Windows APIs.
 /// - An optional error message (`OsString`).
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Clone, PartialEq, Eq, Hash)]
 pub struct Error {
     /// The error code associated with the failure.
     code: NonZeroI32,
