@@ -139,6 +139,10 @@ impl FromStr for WSLVersion {
     type Err = WSLVersionParseError;
 
     #[inline]
+    #[expect(
+        clippy::indexing_slicing,
+        reason = "We check the length of `parts` before indexing it, so this is safe."
+    )]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split('.').collect();
         if !matches!(parts.len(), 2 | 3) {
@@ -166,7 +170,7 @@ impl FromStr for WSLVersion {
             })?
             .unwrap_or(0);
 
-        Ok(WSLVersion::new(major, minor, revision))
+        Ok(Self::new(major, minor, revision))
     }
 }
 

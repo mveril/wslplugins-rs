@@ -1,6 +1,10 @@
 use thiserror::Error;
 
 /// Errors returned when parsing a [`super::WSLVersion`] from text.
+#[allow(
+    clippy::enum_variant_names,
+    reason = "These names are more descriptive and easier to understand than the alternatives."
+)]
 #[derive(Debug, Error, Clone, PartialEq, Eq, Hash)]
 pub enum WSLVersionParseError {
     /// The version string does not follow the supported `major.minor` or
