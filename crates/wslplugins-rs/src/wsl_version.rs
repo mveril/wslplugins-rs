@@ -13,6 +13,9 @@ mod semver_impl;
 #[cfg(feature = "semver")]
 pub use semver_impl::SemverConversionError;
 
+#[cfg(feature = "serde")]
+mod serde_impl;
+
 /// Represents a WSL version number.
 ///
 /// This struct wraps the `WSLVersion` from the WSL Plugin API and provides
