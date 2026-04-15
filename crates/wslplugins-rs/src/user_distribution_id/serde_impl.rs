@@ -11,7 +11,7 @@ fn guid_to_windows_bytes(guid: windows_core::GUID) -> [u8; 16] {
 }
 
 #[inline]
-fn guid_from_windows_bytes(bytes: &[u8; 16]) -> windows_core::GUID {
+const fn guid_from_windows_bytes(bytes: &[u8; 16]) -> windows_core::GUID {
     let data1 = [bytes[0], bytes[1], bytes[2], bytes[3]];
     let data2 = [bytes[4], bytes[5]];
     let data3 = [bytes[6], bytes[7]];
@@ -79,8 +79,10 @@ mod tests {
         let value = UserDistributionID(windows_core::GUID::from_u128(
             0x12345678_9abc_def0_1357_2468ace0bdf1,
         ));
+        #[allow(clippy::unwrap_used)]
         let json = serde_json::to_string(&value).unwrap();
         assert_eq!(json, "\"12345678-9ABC-DEF0-1357-2468ACE0BDF1\"");
+        #[allow(clippy::unwrap_used)]
         let decoded: UserDistributionID = serde_json::from_str(&json).unwrap();
         assert_eq!(decoded, value);
     }
@@ -112,6 +114,7 @@ mod tests {
 
     #[test]
     fn binary_layout_matches_expected_bytes_for_known_guid() {
+        #[allow(clippy::unwrap_used)]
         let id = UserDistributionID::from_str("80E4258D-0E16-4301-B8BE-E7833D02A7AA").unwrap();
 
         assert_eq!(

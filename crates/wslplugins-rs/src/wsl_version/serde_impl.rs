@@ -18,13 +18,14 @@ impl Serialize for WSLVersion {
 }
 
 impl<'de> Deserialize<'de> for WSLVersion {
+    #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
         struct WSLVersionVisitor;
 
-        impl<'de> Visitor<'de> for WSLVersionVisitor {
+        impl Visitor<'_> for WSLVersionVisitor {
             type Value = WSLVersion;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -50,9 +51,10 @@ mod tests {
     #[test]
     fn serde_version_as_semver_string() {
         let version = WSLVersion::new(2, 4, 4);
+        #[allow(clippy::unwrap_used)]
         let json = serde_json::to_string(&version).unwrap();
         assert_eq!(json, r#""2.4.4""#);
-
+        #[allow(clippy::unwrap_used)]
         let decoded: WSLVersion = serde_json::from_str(&json).unwrap();
         assert_eq!(decoded, version);
     }
