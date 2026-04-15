@@ -73,18 +73,32 @@ mod tests {
     use std::str::FromStr;
 
     use crate::UserDistributionID;
+    use serde_test::{assert_tokens, Configure, Token};
 
     #[test]
     fn serde_roundtrip_uses_guid_string() {
         let value = UserDistributionID(windows_core::GUID::from_u128(
             0x12345678_9abc_def0_1357_2468ace0bdf1,
         ));
-        #[allow(clippy::unwrap_used)]
-        let json = serde_json::to_string(&value).unwrap();
-        assert_eq!(json, "\"12345678-9ABC-DEF0-1357-2468ACE0BDF1\"");
-        #[allow(clippy::unwrap_used)]
-        let decoded: UserDistributionID = serde_json::from_str(&json).unwrap();
-        assert_eq!(decoded, value);
+        assert_tokens(
+            &value.readable(),
+            &[Token::Str("12345678-9ABC-DEF0-1357-2468ACE0BDF1")],
+        );
+    }
+
+    #[test]
+    fn serde_compact_uses_windows_guid_bytes() {
+        let value = UserDistributionID(windows_core::GUID::from_u128(
+            0x12345678_9abc_def0_1357_2468ace0bdf1,
+        ));
+
+        assert_tokens(
+            &value.compact(),
+            &[Token::BorrowedBytes(&[
+                0x78, 0x56, 0x34, 0x12, 0xbc, 0x9a, 0xf0, 0xde, 0x13, 0x57, 0x24, 0x68, 0xac,
+                0xe0, 0xbd, 0xf1,
+            ])],
+        );
     }
 
     #[test]
