@@ -37,7 +37,6 @@ pub mod flagset;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 pub struct WSLUserConfiguration(i32);
 
-
 impl From<i32> for WSLUserConfiguration {
     #[inline]
     fn from(value: i32) -> Self {
