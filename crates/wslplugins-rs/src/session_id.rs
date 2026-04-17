@@ -1,7 +1,9 @@
 use crate::WSLSessionInformation;
 use std::fmt::{self, Debug, Display};
 
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(transparent))]
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SessionID(pub u32);
