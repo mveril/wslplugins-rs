@@ -7,7 +7,7 @@
 //! ## Key Features
 //!
 //! - Bi-directional conversion between [`DistributionID`] and [`UserDistributionID`].
-//! - Robust error handling for conversions via [`ConversionError`].
+//! - Robust error handling for conversions via [`UserIDConversionError`].
 //! - Display implementation ([Display]) and support for other idiomatic conversions.
 //!
 //! ## Usage Context
