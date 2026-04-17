@@ -133,4 +133,12 @@ mod tests {
             prop_assert_eq!(format!("{:x}", user_dist_id), format!("{user_dist_id:X}").to_ascii_lowercase());
         }
     }
+
+    #[test]
+    fn try_from_system_returns_error() {
+        assert_eq!(
+            UserDistributionID::try_from(DistributionID::System),
+            Err(UserDistributionIDConversionError)
+        );
+    }
 }

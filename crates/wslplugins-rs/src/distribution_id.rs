@@ -13,7 +13,7 @@
 //!   [`CoreDistributionInformation`] implementation.
 //!
 //! When a caller needs a user distribution identifier and receives
-//! [`DistributionID::System`] instead, [`UserIDConversionError`] is returned.
+//! [`DistributionID::System`] instead, [`UserDistributionIDConversionError`] is returned.
 
 use crate::{CoreDistributionInformation, UserDistributionID};
 use std::fmt::Display;
@@ -160,14 +160,6 @@ mod tests {
     #[test]
     fn is_user_returns_false_for_system_distribution() {
         assert!(!DistributionID::System.is_user());
-    }
-
-    #[test]
-    fn try_from_system_returns_error() {
-        assert_eq!(
-            UserDistributionID::try_from(DistributionID::System),
-            Err(UserDistributionIDConversionError)
-        );
     }
 
     #[test]
