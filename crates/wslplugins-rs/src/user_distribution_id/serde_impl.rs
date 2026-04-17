@@ -1,15 +1,22 @@
-use core::slice;
+use std::{ptr, slice};
 
 use crate::UserDistributionID;
 
 #[inline]
-fn guid_to_windows_bytes(guid: &windows_core::GUID) -> &[u8] {
-    unsafe { slice::from_raw_parts(guid as *const windows_core::GUID as *const u8, 16) }
+const fn guid_to_windows_bytes(guid: &windows_core::GUID) -> &[u8] {
+    // SAFETY: The layout of windows_core::GUID is guaranteed to be 16 bytes and match the Windows GUID layout
+    unsafe {
+        slice::from_raw_parts(
+            std::ptr::from_ref::<windows_core::GUID>(guid).cast::<u8>(),
+            16,
+        )
+    }
 }
 
 #[inline]
 const fn guid_from_windows_bytes(bytes: &[u8; 16]) -> windows_core::GUID {
-    unsafe { *(bytes.as_ptr().cast::<windows_core::GUID>()) }
+    // SAFETY: The caller must ensure that `bytes` is exactly 16 bytes long and properly aligned for windows_core::GUID
+    unsafe { ptr::read_unaligned(bytes.as_ptr().cast::<windows_core::GUID>()) }
 }
 
 impl serde::Serialize for UserDistributionID {
@@ -21,7 +28,7 @@ impl serde::Serialize for UserDistributionID {
         if serializer.is_human_readable() {
             serializer.collect_str(self)
         } else {
-            serializer.serialize_bytes(&guid_to_windows_bytes(&self.0))
+            serializer.serialize_bytes(guid_to_windows_bytes(&self.0))
         }
     }
 }
