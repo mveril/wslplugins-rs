@@ -19,7 +19,7 @@ pub struct UserDistributionID(pub windows_core::GUID);
 /// Error type for conversion failures between [`DistributionID`] and [`UserDistributionID`].
 #[derive(Debug, Error, Clone, Copy, PartialEq, Eq, Hash)]
 #[error("Cannot convert System distribution to UserDistribution.")]
-pub struct UserIDConversionError;
+pub struct UserDistributionIDConversionError;
 
 impl From<windows_core::GUID> for UserDistributionID {
     #[inline]
@@ -50,12 +50,12 @@ impl<T: CoreDistributionInformation> From<&T> for UserDistributionID {
 }
 
 impl TryFrom<DistributionID> for UserDistributionID {
-    type Error = UserIDConversionError;
+    type Error = UserDistributionIDConversionError;
     #[inline]
     fn try_from(value: DistributionID) -> Result<Self, Self::Error> {
         match value {
             DistributionID::User(id) => Ok(id),
-            DistributionID::System => Err(UserIDConversionError),
+            DistributionID::System => Err(UserDistributionIDConversionError),
         }
     }
 }
