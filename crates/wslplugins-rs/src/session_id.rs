@@ -1,7 +1,7 @@
 use crate::WSLSessionInformation;
-use std::fmt::{self, Debug, Display};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+use std::fmt::{self, Debug, Display};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(transparent))]
