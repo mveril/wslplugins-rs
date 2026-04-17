@@ -12,7 +12,7 @@ use crate::CoreDistributionInformation;
 mod uuid_impl;
 
 #[repr(transparent)]
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub struct UserDistributionID(pub windows_core::GUID);
 
 impl From<windows_core::GUID> for UserDistributionID {
