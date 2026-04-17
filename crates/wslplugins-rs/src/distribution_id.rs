@@ -18,8 +18,9 @@
 //! and conversions simplify integration with APIs like those defined in `WslPluginApi`.
 
 use crate::{CoreDistributionInformation, UserDistributionID};
-use std::{convert::TryFrom, fmt::Display};
-use thiserror::Error;
+use std::fmt::Display;
+
+pub use crate::user_distribution_id::UserIDConversionError;
 
 /// Represents a distribution identifier in the Windows Subsystem for Linux (WSL).
 ///
@@ -62,22 +63,6 @@ impl DistributionID {
     #[inline]
     pub const fn is_system(&self) -> bool {
         matches!(*self, Self::System)
-    }
-}
-
-/// Error type for conversion failures between [`DistributionID`] and [`UserDistributionID`].
-#[derive(Debug, Error, Clone, Copy, PartialEq, Eq, Hash)]
-#[error("Cannot convert System distribution to UserDistribution.")]
-pub struct ConversionError;
-
-impl TryFrom<DistributionID> for UserDistributionID {
-    type Error = ConversionError;
-    #[inline]
-    fn try_from(value: DistributionID) -> Result<Self, Self::Error> {
-        match value {
-            DistributionID::User(id) => Ok(id),
-            DistributionID::System => Err(ConversionError),
-        }
     }
 }
 
@@ -183,7 +168,7 @@ mod tests {
     fn try_from_system_returns_error() {
         assert_eq!(
             UserDistributionID::try_from(DistributionID::System),
-            Err(ConversionError)
+            Err(UserIDConversionError)
         );
     }
 

@@ -2,18 +2,24 @@ use std::{
     fmt::{Debug, Display, LowerHex, UpperHex},
     str::FromStr,
 };
+use thiserror::Error;
 pub mod fmt;
 mod parse_error;
 use fmt::DefaultFormatter;
 pub use parse_error::ParseError;
 
-use crate::CoreDistributionInformation;
+use crate::{CoreDistributionInformation, DistributionID};
 #[cfg(feature = "uuid")]
 mod uuid_impl;
 
 #[repr(transparent)]
 #[derive(Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub struct UserDistributionID(pub windows_core::GUID);
+
+/// Error type for conversion failures between [`DistributionID`] and [`UserDistributionID`].
+#[derive(Debug, Error, Clone, Copy, PartialEq, Eq, Hash)]
+#[error("Cannot convert System distribution to UserDistribution.")]
+pub struct UserIDConversionError;
 
 impl From<windows_core::GUID> for UserDistributionID {
     #[inline]
@@ -40,6 +46,17 @@ impl<T: CoreDistributionInformation> From<&T> for UserDistributionID {
     #[inline]
     fn from(value: &T) -> Self {
         value.id()
+    }
+}
+
+impl TryFrom<DistributionID> for UserDistributionID {
+    type Error = UserIDConversionError;
+    #[inline]
+    fn try_from(value: DistributionID) -> Result<Self, Self::Error> {
+        match value {
+            DistributionID::User(id) => Ok(id),
+            DistributionID::System => Err(UserIDConversionError),
+        }
     }
 }
 
