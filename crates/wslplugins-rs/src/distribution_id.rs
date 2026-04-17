@@ -16,6 +16,8 @@
 //! [`DistributionID::System`] instead, [`UserDistributionIDConversionError`] is returned.
 
 use crate::{CoreDistributionInformation, UserDistributionID};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 pub use crate::user_distribution_id::UserDistributionIDConversionError;
@@ -40,9 +42,9 @@ pub use crate::user_distribution_id::UserDistributionIDConversionError;
 ///   user distributions for operations like Linux GUI apps.
 /// - User distributions provide isolated environments for specific Linux distributions, allowing
 ///   users to install and run various Linux distributions on their Windows machines.
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(tag = "kind", rename_all = "snake_case"))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DistributionID {
     /// Represents the system-level distribution.
     /// For more info about the system distribution please check the [WSLg architecture blogpost](https://devblogs.microsoft.com/commandline/wslg-architecture/#system-distro)
