@@ -1,4 +1,5 @@
 use std::{ptr, slice};
+use windows_core::GUID;
 
 use crate::UserDistributionID;
 
@@ -7,16 +8,16 @@ const fn guid_to_windows_bytes(guid: &windows_core::GUID) -> &[u8] {
     // SAFETY: The layout of windows_core::GUID is guaranteed to be 16 bytes and match the Windows GUID layout
     unsafe {
         slice::from_raw_parts(
-            std::ptr::from_ref::<windows_core::GUID>(guid).cast::<u8>(),
+            std::ptr::from_ref::<GUID>(guid).cast::<u8>(),
             16,
         )
     }
 }
 
 #[inline]
-const fn guid_from_windows_bytes(bytes: &[u8; 16]) -> windows_core::GUID {
-    // SAFETY: The caller must ensure that `bytes` is exactly 16 bytes long and properly aligned for windows_core::GUID
-    unsafe { ptr::read_unaligned(bytes.as_ptr().cast::<windows_core::GUID>()) }
+const fn guid_from_windows_bytes(bytes: &[u8; 16]) -> GUID {
+    // SAFETY: We know guid is 16 bytes and the caller guarantees the bytes are a valid Windows [GUID] representation
+    unsafe { ptr::read_unaligned(bytes.as_ptr().cast::<GUID>()) }
 }
 
 impl serde::Serialize for UserDistributionID {
@@ -128,7 +129,7 @@ mod tests {
 
     #[test]
     fn serde_roundtrip_uses_guid_string() {
-        let value = UserDistributionID(windows_core::GUID::from_u128(
+        let value = UserDistributionID(GUID::from_u128(
             0x12345678_9abc_def0_1357_2468ace0bdf1,
         ));
         assert_tokens(
@@ -139,7 +140,7 @@ mod tests {
 
     #[test]
     fn serde_compact_uses_windows_guid_bytes() {
-        let value = UserDistributionID(windows_core::GUID::from_u128(
+        let value = UserDistributionID(GUID::from_u128(
             0x12345678_9abc_def0_1357_2468ace0bdf1,
         ));
 
@@ -154,7 +155,7 @@ mod tests {
 
     #[test]
     fn binary_layout_matches_windows_guid_layout() {
-        let guid = windows_core::GUID::from_u128(0x12345678_9abc_def0_1357_2468ace0bdf1);
+        let guid = GUID::from_u128(0x12345678_9abc_def0_1357_2468ace0bdf1);
         assert_eq!(
             super::guid_to_windows_bytes(&guid),
             [
@@ -173,7 +174,7 @@ mod tests {
         let guid = super::guid_from_windows_bytes(&bytes);
         assert_eq!(
             guid,
-            windows_core::GUID::from_u128(0x12345678_9abc_def0_1357_2468ace0bdf1)
+            GUID::from_u128(0x12345678_9abc_def0_1357_2468ace0bdf1)
         );
     }
 
