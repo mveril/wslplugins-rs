@@ -39,9 +39,9 @@ pub mod api;
 // Internal modules for managing specific WSL features.
 mod core_wsl_distribution_information;
 pub(crate) mod cstring_ext;
-mod wsl_offline_distribution_information;
 mod session_id;
 pub mod user_distribution_id;
+mod wsl_offline_distribution_information;
 pub use windows_core;
 #[doc(hidden)]
 #[cfg(feature = "macro")]
@@ -65,17 +65,17 @@ pub mod prelude;
 // Re-exports for core structures to simplify usage.
 pub use core_wsl_distribution_information::CoreWSLDistributionInformation;
 pub use distribution_id::DistributionID;
-pub use wsl_offline_distribution_information::WSLOfflineDistributionInformation;
 pub use wsl_context::WSLContext;
 pub use wsl_distribution_information::WSLDistributionInformation;
+pub use wsl_offline_distribution_information::WSLOfflineDistributionInformation;
 pub use wsl_session_information::WSLSessionInformation;
 pub use wsl_vm_creation_settings::WSLVmCreationSettings;
 mod wsl_version;
 pub use api::WSLCommandExecution;
-#[cfg(feature = "semver")]
-pub use wsl_version::SemverConversionError;
 pub use session_id::{HasSessionId, SessionID};
 pub use user_distribution_id::UserDistributionID;
+#[cfg(feature = "semver")]
+pub use wsl_version::SemverConversionError;
 pub use wsl_version::{WSLVersion, WSLVersionParseError};
 
 /// Re-exports procedural macros when the `macro` feature is enabled.

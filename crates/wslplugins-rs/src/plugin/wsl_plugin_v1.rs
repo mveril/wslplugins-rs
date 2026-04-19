@@ -8,11 +8,10 @@
 use super::error::Error;
 use super::error::Result;
 use crate::{
-    wsl_offline_distribution_information::WSLOfflineDistributionInformation,
     wsl_distribution_information::WSLDistributionInformation,
+    wsl_offline_distribution_information::WSLOfflineDistributionInformation,
     wsl_session_information::WSLSessionInformation,
-    wsl_vm_creation_settings::WSLVmCreationSettings,
-    WSLContext,
+    wsl_vm_creation_settings::WSLVmCreationSettings, WSLContext,
 };
 use std::marker::Sized;
 #[cfg(doc)]

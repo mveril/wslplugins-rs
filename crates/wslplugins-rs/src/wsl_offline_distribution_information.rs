@@ -27,28 +27,36 @@ use windows_core::PCWSTR;
 #[repr(transparent)]
 pub struct WSLOfflineDistributionInformation(wslpluginapi_sys::WslOfflineDistributionInformation);
 
-impl From<WSLOfflineDistributionInformation> for wslpluginapi_sys::WslOfflineDistributionInformation {
+impl From<WSLOfflineDistributionInformation>
+    for wslpluginapi_sys::WslOfflineDistributionInformation
+{
     #[inline]
     fn from(value: WSLOfflineDistributionInformation) -> Self {
         value.0
     }
 }
 
-impl From<wslpluginapi_sys::WslOfflineDistributionInformation> for WSLOfflineDistributionInformation {
+impl From<wslpluginapi_sys::WslOfflineDistributionInformation>
+    for WSLOfflineDistributionInformation
+{
     #[inline]
     fn from(value: wslpluginapi_sys::WslOfflineDistributionInformation) -> Self {
         Self(value)
     }
 }
 
-impl AsRef<wslpluginapi_sys::WslOfflineDistributionInformation> for WSLOfflineDistributionInformation {
+impl AsRef<wslpluginapi_sys::WslOfflineDistributionInformation>
+    for WSLOfflineDistributionInformation
+{
     #[inline]
     fn as_ref(&self) -> &wslpluginapi_sys::WslOfflineDistributionInformation {
         &self.0
     }
 }
 
-impl AsRef<WSLOfflineDistributionInformation> for wslpluginapi_sys::WslOfflineDistributionInformation {
+impl AsRef<WSLOfflineDistributionInformation>
+    for wslpluginapi_sys::WslOfflineDistributionInformation
+{
     #[inline]
     fn as_ref(&self) -> &WSLOfflineDistributionInformation {
         // SAFETY: This conversion is safe because of transparency.

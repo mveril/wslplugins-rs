@@ -20,8 +20,7 @@ mod uuid_impl;
 /// When the `serde` feature is enabled, human-readable serializers encode this
 /// type as the canonical GUID string. Non-human-readable serializers encode it
 /// as the native 16-byte Windows GUID memory layout for Windows API interop.
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
-#[derive(Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct UserDistributionID(pub windows_core::GUID);
 
 /// Error type for conversion failures between [`DistributionID`] and [`UserDistributionID`].

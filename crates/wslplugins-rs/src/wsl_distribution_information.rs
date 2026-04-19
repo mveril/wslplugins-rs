@@ -2,7 +2,7 @@
 //!
 //! This module provides a safe abstraction for accessing information about a WSL distribution.
 //! It wraps the `WSLDistributionInformation` structure from the WSL Plugin API and implements
-//! the `CoreWSLDistributionInformation` trait for consistent access to distribution details.
+//! the [`CoreWSLDistributionInformation`] trait for consistent access to distribution details.
 //!
 //! ## Overview
 //! The `WSLDistributionInformation` struct provides methods to retrieve:
@@ -206,9 +206,7 @@ mod tests {
 
     #[test]
     fn test_layouts() {
-        test_transparence::<
-            wslpluginapi_sys::WSLDistributionInformation,
-            WSLDistributionInformation,
-        >();
+        test_transparence::<wslpluginapi_sys::WSLDistributionInformation, WSLDistributionInformation>(
+        );
     }
 }
