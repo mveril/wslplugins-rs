@@ -1,3 +1,9 @@
+//! Serde support for [`crate::UserDistributionID`].
+//!
+//! Human-readable serializers use the canonical GUID string representation.
+//! Compact serializers use the native 16-byte Windows GUID memory layout rather
+//! than RFC 4122 byte order so the encoded bytes match Windows API expectations.
+
 use std::{ptr, slice};
 use windows_core::GUID;
 
