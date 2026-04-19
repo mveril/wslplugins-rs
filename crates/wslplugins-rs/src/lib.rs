@@ -74,7 +74,7 @@ mod wsl_version;
 pub use api::WSLCommandExecution;
 #[cfg(feature = "semver")]
 pub use wsl_version::SemverConversionError;
-pub use wsl_version::WSLVersion;
+pub use wsl_version::{WSLVersion, WSLVersionParseError};
 
 /// Re-exports procedural macros when the `macro` feature is enabled.
 /// It allow to mark a plugin struct (that implement [`WSLPluginV1`] trait) to be easely integrated to the WSL plugin system without writing manually C code for entry point or hooks.

@@ -9,10 +9,17 @@ use fmt::DefaultFormatter;
 pub use parse_error::ParseError;
 
 use crate::{CoreDistributionInformation, DistributionID};
+#[cfg(feature = "serde")]
+mod serde_impl;
 #[cfg(feature = "uuid")]
 mod uuid_impl;
 
 #[repr(transparent)]
+/// Identifier for a user-installed WSL distribution.
+///
+/// When the `serde` feature is enabled, human-readable serializers encode this
+/// type as the canonical GUID string. Non-human-readable serializers encode it
+/// as the native 16-byte Windows GUID memory layout for Windows API interop.
 #[derive(Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub struct UserDistributionID(pub windows_core::GUID);
 
