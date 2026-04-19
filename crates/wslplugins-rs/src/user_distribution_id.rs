@@ -8,7 +8,7 @@ mod parse_error;
 use fmt::DefaultFormatter;
 pub use parse_error::ParseError;
 
-use crate::{CoreDistributionInformation, DistributionID};
+use crate::{CoreWSLDistributionInformation, DistributionID};
 #[cfg(feature = "serde")]
 mod serde_impl;
 #[cfg(feature = "uuid")]
@@ -20,7 +20,8 @@ mod uuid_impl;
 /// When the `serde` feature is enabled, human-readable serializers encode this
 /// type as the canonical GUID string. Non-human-readable serializers encode it
 /// as the native 16-byte Windows GUID memory layout for Windows API interop.
-#[derive(Clone, Copy, Default, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Default)]
 pub struct UserDistributionID(pub windows_core::GUID);
 
 /// Error type for conversion failures between [`DistributionID`] and [`UserDistributionID`].
@@ -48,8 +49,7 @@ impl From<wslpluginapi_sys::windows_sys::core::GUID> for UserDistributionID {
     }
 }
 
-impl<T: CoreDistributionInformation> From<&T> for UserDistributionID {
-    /// Converts a reference to a type implementing `CoreDistributionInformation` into a `UserDistributionID`.
+impl<T: CoreWSLDistributionInformation> From<&T> for UserDistributionID {
     #[inline]
     fn from(value: &T) -> Self {
         value.id()
@@ -58,6 +58,7 @@ impl<T: CoreDistributionInformation> From<&T> for UserDistributionID {
 
 impl TryFrom<DistributionID> for UserDistributionID {
     type Error = UserDistributionIDConversionError;
+
     #[inline]
     fn try_from(value: DistributionID) -> Result<Self, Self::Error> {
         match value {

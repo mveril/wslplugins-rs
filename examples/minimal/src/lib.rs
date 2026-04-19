@@ -78,7 +78,7 @@ impl WSLPluginV1 for Plugin {
     fn on_distribution_started(
         &self,
         session: &WSLSessionInformation,
-        distribution: &DistributionInformation,
+        distribution: &WSLDistributionInformation,
     ) -> PluginResult<()> {
         let init_pid = distribution.init_pid()?;
         writeln!(
@@ -100,7 +100,7 @@ impl WSLPluginV1 for Plugin {
     fn on_distribution_stopping(
         &self,
         session: &WSLSessionInformation,
-        distribution: &DistributionInformation,
+        distribution: &WSLDistributionInformation,
     ) -> WinResult<()> {
         let init_pid = distribution.init_pid()?;
         writeln!(
@@ -122,7 +122,7 @@ impl WSLPluginV1 for Plugin {
     fn on_distribution_registered(
         &self,
         session: &WSLSessionInformation,
-        distribution: &OfflineDistributionInformation,
+        distribution: &WSLOfflineDistributionInformation,
     ) -> WinResult<()> {
         write!(
             &self.log_file,
@@ -141,7 +141,7 @@ impl WSLPluginV1 for Plugin {
     fn on_distribution_unregistered(
         &self,
         session: &WSLSessionInformation,
-        distribution: &OfflineDistributionInformation,
+        distribution: &WSLOfflineDistributionInformation,
     ) -> WinResult<()> {
         write!(
             &self.log_file,

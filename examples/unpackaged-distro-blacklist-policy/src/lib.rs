@@ -62,7 +62,7 @@ impl WSLPluginV1 for Plugin {
     fn on_distribution_started(
         &self,
         _session: &WSLSessionInformation,
-        distribution: &DistributionInformation,
+        distribution: &WSLDistributionInformation,
     ) -> PluginResult<()> {
         #[allow(
             clippy::option_if_let_else,

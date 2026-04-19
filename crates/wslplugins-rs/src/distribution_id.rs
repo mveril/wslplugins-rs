@@ -1,21 +1,23 @@
-//! Distribution identifiers used by the crate.
+//! # Module `DistributionID`
 //!
-//! [`DistributionID`] models the two kinds of distributions exposed by WSL:
-//! the shared system distribution and user-installed distributions identified by
-//! a [`UserDistributionID`].
+//! This module defines an abstraction to represent WSL distributions through a
+//! [`DistributionID`]. It supports two types of identifiers: system-level distributions
+//! and user-specific installed distributions identified by a GUID.
 //!
-//! The module also exposes the conversions commonly needed by the API surface:
+//! ## Key Features
 //!
-//! - converting from a [`UserDistributionID`] or `Option<UserDistributionID>`
-//!   into a [`DistributionID`],
-//! - converting a [`DistributionID`] back into `Option<UserDistributionID>`,
-//! - retrieving a distribution identifier from any
-//!   [`CoreDistributionInformation`] implementation.
+//! - Bi-directional conversion between [`DistributionID`] and [`UserDistributionID`].
+//! - Robust error handling for conversions via [`ConversionError`].
+//! - Display implementation ([Display]) and support for other idiomatic conversions.
 //!
-//! When a caller needs a user distribution identifier and receives
-//! [`DistributionID::System`] instead, [`UserDistributionIDConversionError`] is returned.
+//! ## Usage Context
+//!
+//! This abstraction is particularly useful in environments where WSL requires
+//! distribution identification via GUIDs or when a distinction between a system-level
+//! distribution and a user-specific distribution is necessary. The associated functions
+//! and conversions simplify integration with APIs like those defined in `WslPluginApi`.
 
-use crate::{CoreDistributionInformation, UserDistributionID};
+use crate::{CoreWSLDistributionInformation, UserDistributionID};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -42,7 +44,6 @@ pub use crate::user_distribution_id::UserDistributionIDConversionError;
 ///   user distributions for operations like Linux GUI apps.
 /// - User distributions provide isolated environments for specific Linux distributions, allowing
 ///   users to install and run various Linux distributions on their Windows machines.
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DistributionID {
@@ -60,6 +61,7 @@ impl DistributionID {
     pub const fn is_user(&self) -> bool {
         matches!(*self, Self::User(_))
     }
+
     /// Checks if the distribution is the system distribution.
     #[must_use]
     #[inline]
@@ -82,8 +84,8 @@ impl From<&UserDistributionID> for DistributionID {
     }
 }
 
-impl<T: CoreDistributionInformation> From<&T> for DistributionID {
-    /// Converts a reference to a type implementing `CoreDistributionInformation` into a `DistributionID`.
+impl<T: CoreWSLDistributionInformation> From<&T> for DistributionID {
+    /// Converts a reference to a type implementing `CoreWSLDistributionInformation` into a `DistributionID`.
     #[inline]
     fn from(value: &T) -> Self {
         value.id().into()
@@ -134,7 +136,7 @@ mod tests {
         id: UserDistributionID,
     }
 
-    impl CoreDistributionInformation for TestDistribution {
+    impl CoreWSLDistributionInformation for TestDistribution {
         fn id(&self) -> UserDistributionID {
             self.id
         }

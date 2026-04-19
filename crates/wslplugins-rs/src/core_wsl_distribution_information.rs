@@ -1,11 +1,11 @@
-//! # Core Distribution Information
+//! # Core WSL Distribution Information
 //!
 //! This module defines a trait to represent core information about a WSL distribution.
 //! It provides methods to retrieve essential details such as the distribution ID, name,
 //! and package family name, offering a consistent interface for interacting with WSL distributions.
 //!
 //! ## Overview
-//! The `CoreDistributionInformation` trait is designed to abstract the key properties
+//! The `CoreWSLDistributionInformation` trait is designed to abstract the key properties
 //! of a distribution. Implementing this trait allows for seamless integration with systems
 //! that need to handle multiple distributions in a consistent manner.
 
@@ -16,7 +16,7 @@ use std::ffi::OsString;
 ///
 /// This trait abstracts the common properties of a WSL distribution, such as its unique ID,
 /// display name, and package family name (if applicable).
-pub trait CoreDistributionInformation {
+pub trait CoreWSLDistributionInformation {
     /// Retrieves the unique ID of the distribution.
     ///
     /// The ID is guaranteed to remain the same across reboots.

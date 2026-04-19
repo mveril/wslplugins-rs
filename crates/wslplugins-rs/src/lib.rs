@@ -37,8 +37,9 @@
 pub mod api;
 
 // Internal modules for managing specific WSL features.
-mod core_distribution_information;
+mod core_wsl_distribution_information;
 pub(crate) mod cstring_ext;
+mod wsl_offline_distribution_information;
 mod session_id;
 pub mod user_distribution_id;
 pub use windows_core;
@@ -46,10 +47,9 @@ pub use windows_core;
 #[cfg(feature = "macro")]
 pub mod __private;
 pub mod distribution_id;
-mod distribution_information;
-mod offline_distribution_information;
 mod utils;
 mod wsl_context;
+mod wsl_distribution_information;
 mod wsl_session_information;
 mod wsl_vm_creation_settings;
 #[cfg(doc)]
@@ -63,17 +63,19 @@ pub mod plugin;
 pub mod prelude;
 
 // Re-exports for core structures to simplify usage.
-pub use core_distribution_information::CoreDistributionInformation;
+pub use core_wsl_distribution_information::CoreWSLDistributionInformation;
 pub use distribution_id::DistributionID;
-pub use distribution_information::DistributionInformation;
-pub use offline_distribution_information::OfflineDistributionInformation;
+pub use wsl_offline_distribution_information::WSLOfflineDistributionInformation;
 pub use wsl_context::WSLContext;
+pub use wsl_distribution_information::WSLDistributionInformation;
 pub use wsl_session_information::WSLSessionInformation;
 pub use wsl_vm_creation_settings::WSLVmCreationSettings;
 mod wsl_version;
 pub use api::WSLCommandExecution;
 #[cfg(feature = "semver")]
 pub use wsl_version::SemverConversionError;
+pub use session_id::{HasSessionId, SessionID};
+pub use user_distribution_id::UserDistributionID;
 pub use wsl_version::{WSLVersion, WSLVersionParseError};
 
 /// Re-exports procedural macros when the `macro` feature is enabled.
@@ -84,6 +86,3 @@ pub use wslplugins_macro::wsl_plugin_v1;
 /// Re-exports the `wslpluginapi_sys` crate as `sys` when the `sys` feature is enabled.
 #[cfg(feature = "sys")]
 pub use wslpluginapi_sys as sys;
-
-pub use session_id::{HasSessionId, SessionID};
-pub use user_distribution_id::UserDistributionID;

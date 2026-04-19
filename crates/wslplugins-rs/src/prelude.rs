@@ -21,8 +21,8 @@ pub use crate::windows_core::{Error as WinError, Result as WinResult};
 pub use crate::SemverConversionError;
 pub use crate::WSLVersionParseError;
 pub use crate::{
-    CoreDistributionInformation, DistributionID, DistributionInformation, HasSessionId,
-    OfflineDistributionInformation, SessionID, UserDistributionID, WSLContext,
+    CoreWSLDistributionInformation, DistributionID, HasSessionId, SessionID, UserDistributionID,
+    WSLContext, WSLDistributionInformation, WSLOfflineDistributionInformation,
     WSLSessionInformation, WSLUserConfiguration, WSLVersion, WSLVmCreationSettings,
 };
 

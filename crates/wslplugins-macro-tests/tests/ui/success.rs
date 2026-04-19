@@ -1,5 +1,5 @@
 use windows::core::Result as WinResult;
-use wslplugins_rs::plugin::{WSLPluginV1, Result};
+use wslplugins_rs::plugin::{Result, WSLPluginV1};
 use wslplugins_rs::*;
 
 pub(crate) struct Plugin {
@@ -27,7 +27,7 @@ impl WSLPluginV1 for Plugin {
     fn on_distribution_started(
         &self,
         session: &WSLSessionInformation,
-        distribution: &DistributionInformation,
+        distribution: &WSLDistributionInformation,
     ) -> Result<()> {
         println!(
             "Distribution started. Sessionid= {:}, Id={:?} Name={:}, Package={}, PidNs={}, InitPid={}",
@@ -49,7 +49,7 @@ impl WSLPluginV1 for Plugin {
     fn on_distribution_stopping(
         &self,
         session: &WSLSessionInformation,
-        distribution: &DistributionInformation,
+        distribution: &WSLDistributionInformation,
     ) -> WinResult<()> {
         println!(
             "Distribution Stopping. SessionId={}, Id={:?} name={}, package={}, PidNs={}, InitPid={}",
