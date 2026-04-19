@@ -6,12 +6,7 @@ use crate::UserDistributionID;
 #[inline]
 const fn guid_to_windows_bytes(guid: &windows_core::GUID) -> &[u8] {
     // SAFETY: The layout of windows_core::GUID is guaranteed to be 16 bytes and match the Windows GUID layout
-    unsafe {
-        slice::from_raw_parts(
-            std::ptr::from_ref::<GUID>(guid).cast::<u8>(),
-            16,
-        )
-    }
+    unsafe { slice::from_raw_parts(std::ptr::from_ref::<GUID>(guid).cast::<u8>(), 16) }
 }
 
 #[inline]
@@ -122,16 +117,14 @@ impl<'de> serde::Deserialize<'de> for UserDistributionID {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use crate::UserDistributionID;
     use serde_test::{assert_tokens, Configure, Token};
+    use std::str::FromStr;
+    use windows_core::GUID;
 
     #[test]
     fn serde_roundtrip_uses_guid_string() {
-        let value = UserDistributionID(GUID::from_u128(
-            0x12345678_9abc_def0_1357_2468ace0bdf1,
-        ));
+        let value = UserDistributionID(GUID::from_u128(0x12345678_9abc_def0_1357_2468ace0bdf1));
         assert_tokens(
             &value.readable(),
             &[Token::Str("12345678-9ABC-DEF0-1357-2468ACE0BDF1")],
@@ -140,9 +133,7 @@ mod tests {
 
     #[test]
     fn serde_compact_uses_windows_guid_bytes() {
-        let value = UserDistributionID(GUID::from_u128(
-            0x12345678_9abc_def0_1357_2468ace0bdf1,
-        ));
+        let value = UserDistributionID(GUID::from_u128(0x12345678_9abc_def0_1357_2468ace0bdf1));
 
         assert_tokens(
             &value.compact(),
