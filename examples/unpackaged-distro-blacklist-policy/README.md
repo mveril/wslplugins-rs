@@ -4,7 +4,7 @@ This example demonstrates a WSL plugin that blocks unpackaged distributions at s
 
 It is intended as a reference for:
 - enforcing a simple host-side policy with [`wslplugins_rs`]
-- inspecting [`DistributionInformation`] when a distribution starts
+- inspecting [`WSLDistributionInformation`] when a distribution starts
 - returning a structured [`PluginError`] to deny an operation
 - emitting file-based diagnostics with [`tracing`]
 
