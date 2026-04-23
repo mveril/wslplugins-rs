@@ -1,5 +1,5 @@
 use windows::core::Result as WinResult;
-use wslplugins_rs::plugin::{Result, WSLPluginV1};
+use wslplugins_rs::plugin::{WSLPluginV1, Result};
 use wslplugins_rs::*;
 
 pub(crate) struct Plugin {

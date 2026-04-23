@@ -1,4 +1,4 @@
-//! # WSL Distribution Information
+//! # Distribution Information
 //!
 //! This module provides a safe abstraction for accessing information about a WSL distribution.
 //! It wraps the `WSLDistributionInformation` structure from the WSL Plugin API and implements
@@ -168,7 +168,7 @@ impl Display for WSLDistributionInformation {
 impl Debug for WSLDistributionInformation {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut dbg = f.debug_struct("WSLDistributionInformation");
+        let mut dbg = f.debug_struct("DistributionInformation");
         dbg.field("name", &self.name())
             .field("id", &self.id())
             .field("package_family_name", &self.package_family_name())

@@ -72,8 +72,6 @@ pub use wsl_session_information::WSLSessionInformation;
 pub use wsl_vm_creation_settings::WSLVmCreationSettings;
 mod wsl_version;
 pub use api::WSLCommandExecution;
-pub use session_id::{HasSessionId, SessionID};
-pub use user_distribution_id::UserDistributionID;
 #[cfg(feature = "semver")]
 pub use wsl_version::SemverConversionError;
 pub use wsl_version::{WSLVersion, WSLVersionParseError};
@@ -86,3 +84,6 @@ pub use wslplugins_macro::wsl_plugin_v1;
 /// Re-exports the `wslpluginapi_sys` crate as `sys` when the `sys` feature is enabled.
 #[cfg(feature = "sys")]
 pub use wslpluginapi_sys as sys;
+
+pub use session_id::{HasSessionId, SessionID};
+pub use user_distribution_id::UserDistributionID;

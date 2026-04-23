@@ -1,21 +1,19 @@
-//! # Module `DistributionID`
+//! Distribution identifiers used by the crate.
 //!
-//! This module defines an abstraction to represent WSL distributions through a
-//! [`DistributionID`]. It supports two types of identifiers: system-level distributions
-//! and user-specific installed distributions identified by a GUID.
+//! [`DistributionID`] models the two kinds of distributions exposed by WSL:
+//! the shared system distribution and user-installed distributions identified by
+//! a [`UserDistributionID`].
 //!
-//! ## Key Features
+//! The module also exposes the conversions commonly needed by the API surface:
 //!
-//! - Bi-directional conversion between [`DistributionID`] and [`UserDistributionID`].
-//! - Robust error handling for conversions via [`ConversionError`].
-//! - Display implementation ([Display]) and support for other idiomatic conversions.
+//! - converting from a [`UserDistributionID`] or `Option<UserDistributionID>`
+//!   into a [`DistributionID`],
+//! - converting a [`DistributionID`] back into `Option<UserDistributionID>`,
+//! - retrieving a distribution identifier from any
+//!   [`CoreWSLDistributionInformation`] implementation.
 //!
-//! ## Usage Context
-//!
-//! This abstraction is particularly useful in environments where WSL requires
-//! distribution identification via GUIDs or when a distinction between a system-level
-//! distribution and a user-specific distribution is necessary. The associated functions
-//! and conversions simplify integration with APIs like those defined in `WslPluginApi`.
+//! When a caller needs a user distribution identifier and receives
+//! [`DistributionID::System`] instead, [`UserDistributionIDConversionError`] is returned.
 
 use crate::{CoreWSLDistributionInformation, UserDistributionID};
 #[cfg(feature = "serde")]
@@ -61,7 +59,6 @@ impl DistributionID {
     pub const fn is_user(&self) -> bool {
         matches!(*self, Self::User(_))
     }
-
     /// Checks if the distribution is the system distribution.
     #[must_use]
     #[inline]

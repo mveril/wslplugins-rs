@@ -1,4 +1,4 @@
-//! # Core WSL Distribution Information
+//! # Core Distribution Information
 //!
 //! This module defines a trait to represent core information about a WSL distribution.
 //! It provides methods to retrieve essential details such as the distribution ID, name,
