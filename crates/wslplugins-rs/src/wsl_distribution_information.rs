@@ -1,11 +1,11 @@
-//! # Distribution Information
+//! # WSL Distribution Information
 //!
 //! This module provides a safe abstraction for accessing information about a WSL distribution.
 //! It wraps the `WSLDistributionInformation` structure from the WSL Plugin API and implements
-//! the `CoreDistributionInformation` trait for consistent access to distribution details.
+//! the [`CoreWSLDistributionInformation`] trait for consistent access to distribution details.
 //!
 //! ## Overview
-//! The `DistributionInformation` struct provides methods to retrieve:
+//! The `WSLDistributionInformation` struct provides methods to retrieve:
 //! - Distribution ID
 //! - Distribution name
 //! - Package family name (if applicable)
@@ -17,7 +17,7 @@ use crate::api::errors::require_update_error::Error;
 use crate::api::{
     errors::require_update_error::Result, utils::check_required_version_result_from_context,
 };
-use crate::core_distribution_information::CoreDistributionInformation;
+use crate::core_wsl_distribution_information::CoreWSLDistributionInformation;
 use crate::utils::opt_wide_str;
 use crate::WSLVersion;
 use crate::{UserDistributionID, WSLContext};
@@ -33,38 +33,38 @@ use windows_core::PCWSTR;
 /// This struct wraps the `WSLDistributionInformation` from the WSL Plugin API and provides
 /// safe, idiomatic Rust access to its fields.
 #[repr(transparent)]
-pub struct DistributionInformation(wslpluginapi_sys::WSLDistributionInformation);
+pub struct WSLDistributionInformation(wslpluginapi_sys::WSLDistributionInformation);
 
-impl AsRef<DistributionInformation> for wslpluginapi_sys::WSLDistributionInformation {
+impl AsRef<WSLDistributionInformation> for wslpluginapi_sys::WSLDistributionInformation {
     #[inline]
-    fn as_ref(&self) -> &DistributionInformation {
+    fn as_ref(&self) -> &WSLDistributionInformation {
         // SAFETY: conveting this kind of ref is safe as it is transparent
-        unsafe { &*ptr::from_ref::<Self>(self).cast::<DistributionInformation>() }
+        unsafe { &*ptr::from_ref::<Self>(self).cast::<WSLDistributionInformation>() }
     }
 }
 
-impl From<DistributionInformation> for wslpluginapi_sys::WSLDistributionInformation {
+impl From<WSLDistributionInformation> for wslpluginapi_sys::WSLDistributionInformation {
     #[inline]
-    fn from(value: DistributionInformation) -> Self {
+    fn from(value: WSLDistributionInformation) -> Self {
         value.0
     }
 }
 
-impl AsRef<wslpluginapi_sys::WSLDistributionInformation> for DistributionInformation {
+impl AsRef<wslpluginapi_sys::WSLDistributionInformation> for WSLDistributionInformation {
     #[inline]
     fn as_ref(&self) -> &wslpluginapi_sys::WSLDistributionInformation {
         &self.0
     }
 }
 
-impl From<wslpluginapi_sys::WSLDistributionInformation> for DistributionInformation {
+impl From<wslpluginapi_sys::WSLDistributionInformation> for WSLDistributionInformation {
     #[inline]
     fn from(value: wslpluginapi_sys::WSLDistributionInformation) -> Self {
         Self(value)
     }
 }
 
-impl DistributionInformation {
+impl WSLDistributionInformation {
     /// Retrieves the PID of the init process.
     ///
     /// This requires API version 2.0.5 or higher. If the current API version does not meet
@@ -95,7 +95,7 @@ impl DistributionInformation {
     }
 }
 
-impl CoreDistributionInformation for DistributionInformation {
+impl CoreWSLDistributionInformation for WSLDistributionInformation {
     #[inline]
     fn id(&self) -> UserDistributionID {
         self.0.Id.into()
@@ -131,9 +131,9 @@ impl CoreDistributionInformation for DistributionInformation {
     }
 }
 
-impl<T> PartialEq<T> for DistributionInformation
+impl<T> PartialEq<T> for WSLDistributionInformation
 where
-    T: CoreDistributionInformation,
+    T: CoreWSLDistributionInformation,
 {
     /// Compares two distributions for equality based on their IDs.
     #[inline]
@@ -142,7 +142,7 @@ where
     }
 }
 
-impl Hash for DistributionInformation {
+impl Hash for WSLDistributionInformation {
     /// Computes a hash based on the distribution's ID.
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -150,7 +150,7 @@ impl Hash for DistributionInformation {
     }
 }
 
-impl Display for DistributionInformation {
+impl Display for WSLDistributionInformation {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // SAFETY: Name is known to be valid
@@ -165,10 +165,10 @@ impl Display for DistributionInformation {
     }
 }
 
-impl Debug for DistributionInformation {
+impl Debug for WSLDistributionInformation {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut dbg = f.debug_struct("DistributionInformation");
+        let mut dbg = f.debug_struct(stringify!(WSLDistributionInformation));
         dbg.field("name", &self.name())
             .field("id", &self.id())
             .field("package_family_name", &self.package_family_name())
@@ -206,7 +206,7 @@ mod tests {
 
     #[test]
     fn test_layouts() {
-        test_transparence::<wslpluginapi_sys::WSLDistributionInformation, DistributionInformation>(
+        test_transparence::<wslpluginapi_sys::WSLDistributionInformation, WSLDistributionInformation>(
         );
     }
 }

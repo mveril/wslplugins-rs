@@ -14,7 +14,7 @@ pub use wsl_command_execution::WSLCommandExecution;
 use smallvec::SmallVec;
 
 #[cfg(doc)]
-use crate::{api::Error as ApiError, CoreDistributionInformation, UserDistributionID};
+use crate::{api::Error as ApiError, CoreWSLDistributionInformation, UserDistributionID};
 mod prepared_wsl_command;
 #[cfg(not(feature = "smallvec"))]
 type ArgVec<'a> = Vec<Cow<'a, str>>;
@@ -277,7 +277,7 @@ impl<'a> WSLCommand<'a> {
     /// - a [`DistributionID`] directly,
     /// - a [`UserDistributionID`],
     /// - an [`Option<UserDistributionID>`],
-    /// - a reference to a type implementing [`CoreDistributionInformation`].
+    /// - a reference to a type implementing [`CoreWSLDistributionInformation`].
     #[inline]
     #[must_use]
     #[allow(clippy::missing_const_for_fn, reason = "Useless const")]
@@ -292,7 +292,7 @@ impl<'a> WSLCommand<'a> {
     /// - a [`DistributionID`] directly,
     /// - a [`UserDistributionID`],
     /// - an [`Option<UserDistributionID>`],
-    /// - a reference to a type implementing [`CoreDistributionInformation`].
+    /// - a reference to a type implementing [`CoreWSLDistributionInformation`].
     #[inline]
     #[must_use]
     #[allow(clippy::missing_const_for_fn, reason = "Useless const")]

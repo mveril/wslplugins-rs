@@ -1,4 +1,4 @@
-//! # Offline Distribution Information
+//! # WSL Offline Distribution Information
 //!
 //! This module provides an abstraction over `WslOfflineDistributionInformation` from the WSL Plugin API,
 //! offering a safe and idiomatic Rust interface for accessing offline distribution details.
@@ -7,7 +7,7 @@ use crate::{
     api::{
         errors::require_update_error::Result, utils::check_required_version_result_from_context,
     },
-    core_distribution_information::CoreDistributionInformation,
+    core_wsl_distribution_information::CoreWSLDistributionInformation,
     utils::opt_wide_str,
     UserDistributionID, WSLContext, WSLVersion,
 };
@@ -25,38 +25,46 @@ use windows_core::PCWSTR;
 /// This struct allows access to the details of an offline WSL distribution, including
 /// its ID, name, and optional package family name.
 #[repr(transparent)]
-pub struct OfflineDistributionInformation(wslpluginapi_sys::WslOfflineDistributionInformation);
+pub struct WSLOfflineDistributionInformation(wslpluginapi_sys::WslOfflineDistributionInformation);
 
-impl From<OfflineDistributionInformation> for wslpluginapi_sys::WslOfflineDistributionInformation {
+impl From<WSLOfflineDistributionInformation>
+    for wslpluginapi_sys::WslOfflineDistributionInformation
+{
     #[inline]
-    fn from(value: OfflineDistributionInformation) -> Self {
+    fn from(value: WSLOfflineDistributionInformation) -> Self {
         value.0
     }
 }
 
-impl From<wslpluginapi_sys::WslOfflineDistributionInformation> for OfflineDistributionInformation {
+impl From<wslpluginapi_sys::WslOfflineDistributionInformation>
+    for WSLOfflineDistributionInformation
+{
     #[inline]
     fn from(value: wslpluginapi_sys::WslOfflineDistributionInformation) -> Self {
         Self(value)
     }
 }
 
-impl AsRef<wslpluginapi_sys::WslOfflineDistributionInformation> for OfflineDistributionInformation {
+impl AsRef<wslpluginapi_sys::WslOfflineDistributionInformation>
+    for WSLOfflineDistributionInformation
+{
     #[inline]
     fn as_ref(&self) -> &wslpluginapi_sys::WslOfflineDistributionInformation {
         &self.0
     }
 }
 
-impl AsRef<OfflineDistributionInformation> for wslpluginapi_sys::WslOfflineDistributionInformation {
+impl AsRef<WSLOfflineDistributionInformation>
+    for wslpluginapi_sys::WslOfflineDistributionInformation
+{
     #[inline]
-    fn as_ref(&self) -> &OfflineDistributionInformation {
+    fn as_ref(&self) -> &WSLOfflineDistributionInformation {
         // SAFETY: This conversion is safe because of transparency.
-        unsafe { &*ptr::from_ref::<Self>(self).cast::<OfflineDistributionInformation>() }
+        unsafe { &*ptr::from_ref::<Self>(self).cast::<WSLOfflineDistributionInformation>() }
     }
 }
 
-impl CoreDistributionInformation for OfflineDistributionInformation {
+impl CoreWSLDistributionInformation for WSLOfflineDistributionInformation {
     #[inline]
     fn id(&self) -> UserDistributionID {
         self.0.Id.into()
@@ -85,7 +93,6 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
             WSLContext::get_current(),
             &WSLVersion::new(2, 4, 4),
         )?;
-
         Ok(opt_wide_str(self.0.Flavor))
     }
 
@@ -99,9 +106,9 @@ impl CoreDistributionInformation for OfflineDistributionInformation {
     }
 }
 
-impl<T> PartialEq<T> for OfflineDistributionInformation
+impl<T> PartialEq<T> for WSLOfflineDistributionInformation
 where
-    T: CoreDistributionInformation,
+    T: CoreWSLDistributionInformation,
 {
     /// Compares two distributions by their IDs for equality.
     #[inline]
@@ -110,7 +117,7 @@ where
     }
 }
 
-impl Hash for OfflineDistributionInformation {
+impl Hash for WSLOfflineDistributionInformation {
     /// Computes a hash based on the distribution's ID.
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -118,7 +125,7 @@ impl Hash for OfflineDistributionInformation {
     }
 }
 
-impl Display for OfflineDistributionInformation {
+impl Display for WSLOfflineDistributionInformation {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // SAFETY: Name is known to be valid
@@ -133,10 +140,10 @@ impl Display for OfflineDistributionInformation {
     }
 }
 
-impl Debug for OfflineDistributionInformation {
+impl Debug for WSLOfflineDistributionInformation {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut dbg = f.debug_struct("DistributionInformation");
+        let mut dbg = f.debug_struct(stringify!(WSLOfflineDistributionInformation));
         dbg.field("name", &self.name())
             .field("id", &self.id())
             .field("package_family_name", &self.package_family_name());
@@ -168,7 +175,7 @@ mod tests {
     fn test_layouts() {
         test_transparence::<
             wslpluginapi_sys::WslOfflineDistributionInformation,
-            OfflineDistributionInformation,
+            WSLOfflineDistributionInformation,
         >();
     }
 }

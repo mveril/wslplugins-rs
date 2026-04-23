@@ -8,7 +8,7 @@ mod parse_error;
 use fmt::DefaultFormatter;
 pub use parse_error::ParseError;
 
-use crate::{CoreDistributionInformation, DistributionID};
+use crate::{CoreWSLDistributionInformation, DistributionID};
 #[cfg(feature = "serde")]
 mod serde_impl;
 #[cfg(feature = "uuid")]
@@ -48,8 +48,8 @@ impl From<wslpluginapi_sys::windows_sys::core::GUID> for UserDistributionID {
     }
 }
 
-impl<T: CoreDistributionInformation> From<&T> for UserDistributionID {
-    /// Converts a reference to a type implementing `CoreDistributionInformation` into a `UserDistributionID`.
+impl<T: CoreWSLDistributionInformation> From<&T> for UserDistributionID {
+    /// Converts a reference to a type implementing `CoreWSLDistributionInformation` into a `UserDistributionID`.
     #[inline]
     fn from(value: &T) -> Self {
         value.id()

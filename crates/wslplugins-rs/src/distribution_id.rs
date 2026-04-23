@@ -10,12 +10,12 @@
 //!   into a [`DistributionID`],
 //! - converting a [`DistributionID`] back into `Option<UserDistributionID>`,
 //! - retrieving a distribution identifier from any
-//!   [`CoreDistributionInformation`] implementation.
+//!   [`CoreWSLDistributionInformation`] implementation.
 //!
 //! When a caller needs a user distribution identifier and receives
 //! [`DistributionID::System`] instead, [`UserDistributionIDConversionError`] is returned.
 
-use crate::{CoreDistributionInformation, UserDistributionID};
+use crate::{CoreWSLDistributionInformation, UserDistributionID};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -42,7 +42,6 @@ pub use crate::user_distribution_id::UserDistributionIDConversionError;
 ///   user distributions for operations like Linux GUI apps.
 /// - User distributions provide isolated environments for specific Linux distributions, allowing
 ///   users to install and run various Linux distributions on their Windows machines.
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DistributionID {
@@ -82,8 +81,8 @@ impl From<&UserDistributionID> for DistributionID {
     }
 }
 
-impl<T: CoreDistributionInformation> From<&T> for DistributionID {
-    /// Converts a reference to a type implementing `CoreDistributionInformation` into a `DistributionID`.
+impl<T: CoreWSLDistributionInformation> From<&T> for DistributionID {
+    /// Converts a reference to a type implementing `CoreWSLDistributionInformation` into a `DistributionID`.
     #[inline]
     fn from(value: &T) -> Self {
         value.id().into()
@@ -134,7 +133,7 @@ mod tests {
         id: UserDistributionID,
     }
 
-    impl CoreDistributionInformation for TestDistribution {
+    impl CoreWSLDistributionInformation for TestDistribution {
         fn id(&self) -> UserDistributionID {
             self.id
         }

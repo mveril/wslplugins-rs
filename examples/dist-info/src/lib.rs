@@ -103,7 +103,7 @@ impl WSLPluginV1 for Plugin {
     fn on_distribution_started(
         &self,
         session: &WSLSessionInformation,
-        distribution: &DistributionInformation,
+        distribution: &WSLDistributionInformation,
     ) -> PluginResult<()> {
         info!(
             "Distribution started. Sessionid= {:?}, Id={:?} Name={:}, Package={}, PidNs={}, InitPid={}",
@@ -129,7 +129,7 @@ impl WSLPluginV1 for Plugin {
     fn on_distribution_stopping(
         &self,
         session: &WSLSessionInformation,
-        distribution: &DistributionInformation,
+        distribution: &WSLDistributionInformation,
     ) -> WinResult<()> {
         info!(
             "Distribution Stopping. SessionId={:?}, Id={:?} name={}, package={}, PidNs={}, InitPid={}",

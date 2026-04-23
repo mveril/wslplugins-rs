@@ -8,8 +8,8 @@
 use super::error::Error;
 use super::error::Result;
 use crate::{
-    distribution_information::DistributionInformation,
-    offline_distribution_information::OfflineDistributionInformation,
+    wsl_distribution_information::WSLDistributionInformation,
+    wsl_offline_distribution_information::WSLOfflineDistributionInformation,
     wsl_session_information::WSLSessionInformation,
     wsl_vm_creation_settings::WSLVmCreationSettings, WSLContext,
 };
@@ -112,7 +112,7 @@ pub trait WSLPluginV1: Sized + Sync {
     fn on_distribution_started(
         &self,
         session: &WSLSessionInformation,
-        distribution: &DistributionInformation,
+        distribution: &WSLDistributionInformation,
     ) -> Result<()> {
         Ok(())
     }
@@ -136,7 +136,7 @@ pub trait WSLPluginV1: Sized + Sync {
     fn on_distribution_stopping(
         &self,
         session: &WSLSessionInformation,
-        distribution: &DistributionInformation,
+        distribution: &WSLDistributionInformation,
     ) -> WinResult<()> {
         Ok(())
     }
@@ -159,7 +159,7 @@ pub trait WSLPluginV1: Sized + Sync {
     fn on_distribution_registered(
         &self,
         session: &WSLSessionInformation,
-        distribution: &OfflineDistributionInformation,
+        distribution: &WSLOfflineDistributionInformation,
     ) -> WinResult<()> {
         Ok(())
     }
@@ -184,7 +184,7 @@ pub trait WSLPluginV1: Sized + Sync {
     fn on_distribution_unregistered(
         &self,
         session: &WSLSessionInformation,
-        distribution: &OfflineDistributionInformation,
+        distribution: &WSLOfflineDistributionInformation,
     ) -> WinResult<()> {
         Ok(())
     }
