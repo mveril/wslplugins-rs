@@ -1,4 +1,4 @@
-//! # Offline Distribution Information
+//! # WSL Offline Distribution Information
 //!
 //! This module provides an abstraction over `WslOfflineDistributionInformation` from the WSL Plugin API,
 //! offering a safe and idiomatic Rust interface for accessing offline distribution details.
@@ -143,7 +143,7 @@ impl Display for WSLOfflineDistributionInformation {
 impl Debug for WSLOfflineDistributionInformation {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut dbg = f.debug_struct("DistributionInformation");
+        let mut dbg = f.debug_struct(stringify!(WSLOfflineDistributionInformation));
         dbg.field("name", &self.name())
             .field("id", &self.id())
             .field("package_family_name", &self.package_family_name());
