@@ -13,7 +13,11 @@
 //! }
 //! ```
 
-pub use crate::api::{ApiV1, PreparedWSLCommand, WSLCommand, WSLCommandExecution};
+pub use crate::api::{
+    ApiV1, ChildWithExitCode, PreparedWSLCommand, PreparedWSLCommandWithExitCode, SimpleChild,
+    WSLChild, WSLCommand, WSLCommandExecution, WSLCommandExecutionError, WSLCommandExecutionResult,
+    WSLStdin, WSLStdout,
+};
 pub use crate::api::{Error as ApiError, Result as ApiResult};
 pub use crate::plugin::{Error as PluginError, Result as PluginResult, WSLPluginV1};
 pub use crate::windows_core::{Error as WinError, Result as WinResult};

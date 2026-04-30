@@ -5,17 +5,29 @@ use std::{borrow::Cow, iter::once, net::TcpStream};
 use typed_path::Utf8UnixPath;
 
 mod into_cow_utf8_unix_path;
+mod prepared_wsl_command;
+mod simple_child;
+mod with_exit_code;
+mod wsl_child;
+mod wsl_stdin;
+mod wsl_stdout;
 pub use into_cow_utf8_unix_path::IntoCowUtf8UnixPath;
 pub use prepared_wsl_command::PreparedWSLCommand;
+pub use simple_child::SimpleChild;
+pub use with_exit_code::{ChildWithExitCode, PreparedWSLCommandWithExitCode};
+pub use wsl_child::WSLChild;
 mod wsl_command_execution;
-pub use wsl_command_execution::WSLCommandExecution;
+pub use wsl_command_execution::{
+    WSLCommandExecution, WSLCommandExecutionError, WSLCommandExecutionResult,
+};
+pub use wsl_stdin::WSLStdin;
+pub use wsl_stdout::WSLStdout;
 
 #[cfg(feature = "smallvec")]
 use smallvec::SmallVec;
 
 #[cfg(doc)]
 use crate::{api::Error as ApiError, CoreWSLDistributionInformation, UserDistributionID};
-mod prepared_wsl_command;
 #[cfg(not(feature = "smallvec"))]
 type ArgVec<'a> = Vec<Cow<'a, str>>;
 
@@ -107,8 +119,8 @@ type ArgVec<'a> = SmallVec<[Cow<'a, str>; 8]>;
 ///
 /// # Notes
 ///
-/// - [`WSLCommand::execute`] consumes the command and returns a connected
-///   [`TcpStream`] to the process stdin/stdout.
+/// - [`WSLCommand::execute`] returns a [`WSLChild`] with stdin/stdout wrappers.
+/// - [`WSLCommand::execute_stream`] returns the raw connected [`TcpStream`].
 /// - stderr is forwarded to `dmesg` on the Linux side.
 /// - This type performs no validation of the Linux path or arguments beyond UTF-8 handling.
 #[doc(alias = "ExecuteBinary")]
@@ -321,11 +333,18 @@ impl<'a> WSLCommand<'a> {
     pub fn prepare(&self) -> PreparedWSLCommand<'a> {
         PreparedWSLCommand::from(self)
     }
+
+    /// Prepare a [`WSLCommand`] that emits its exit code before the stream closes.
+    #[inline]
+    #[must_use]
+    pub fn prepare_with_exit_code(&self) -> PreparedWSLCommandWithExitCode<'a> {
+        PreparedWSLCommandWithExitCode::from(self)
+    }
 }
 
 impl WSLCommandExecution for WSLCommand<'_> {
     #[inline]
-    fn execute(&self) -> ApiResult<TcpStream> {
-        self.prepare().execute()
+    fn execute_stream(&self) -> ApiResult<TcpStream> {
+        self.prepare().execute_stream()
     }
 }

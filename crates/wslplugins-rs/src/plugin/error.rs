@@ -4,7 +4,7 @@
 //! It integrates with Windows APIs, supports error codes and optional error messages,
 //! and provides utility methods for error creation and consumption.
 
-use crate::api::{errors::RequireUpdateError, Error as ApiError};
+use crate::api::{errors::RequireUpdateError, Error as ApiError, WSLCommandExecutionError};
 use crate::WSLContext;
 use std::borrow::ToOwned;
 use std::ffi::{OsStr, OsString};
@@ -210,5 +210,18 @@ impl From<ApiError> for Error {
     #[inline]
     fn from(value: ApiError) -> Self {
         Self::from(HRESULT::from(value))
+    }
+}
+
+impl From<WSLCommandExecutionError> for Error {
+    #[inline]
+    fn from(value: WSLCommandExecutionError) -> Self {
+        let code = value.code();
+        match value {
+            WSLCommandExecutionError::Api(error) => Self::from(error),
+            WSLCommandExecutionError::Split { source, .. } => {
+                Self::with_message(code, source.to_string())
+            }
+        }
     }
 }

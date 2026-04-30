@@ -22,12 +22,12 @@ use crate::{
 /// or `From<WSLCommand>`.
 #[derive(Debug)]
 pub struct PreparedWSLCommand<'a> {
-    api: &'a ApiV1,
-    session_id: SessionID,
-    distribution_id: DistributionID,
-    c_path: Box<[u8]>,
-    argv: Box<[*const u8]>,
-    _c_args: Box<[CString]>,
+    pub(super) api: &'a ApiV1,
+    pub(super) session_id: SessionID,
+    pub(super) distribution_id: DistributionID,
+    pub(super) c_path: Box<[u8]>,
+    pub(super) argv: Box<[*const u8]>,
+    pub(super) _c_args: Box<[CString]>,
 }
 
 impl WSLCommandExecution for PreparedWSLCommand<'_> {
@@ -45,7 +45,7 @@ impl WSLCommandExecution for PreparedWSLCommand<'_> {
     #[doc(alias = "ExecuteBinary")]
     #[doc(alias = "ExecuteBinaryInDistribution")]
     #[inline]
-    fn execute(&self) -> ApiResult<TcpStream> {
+    fn execute_stream(&self) -> ApiResult<TcpStream> {
         match self.distribution_id {
             // Safety: the caller ensures that the path and argv are correctly encoded
             DistributionID::System => unsafe {

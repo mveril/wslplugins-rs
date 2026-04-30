@@ -5,7 +5,10 @@
 
 mod api_v1;
 pub mod errors;
-pub use wsl_command::WSLCommandExecution;
+pub use wsl_command::{
+    ChildWithExitCode, SimpleChild, WSLChild, WSLCommandExecution, WSLCommandExecutionError,
+    WSLCommandExecutionResult, WSLStdin, WSLStdout,
+};
 
 /// The `ApiV1` struct provides an interface to interact with version 1 of the WSL Plugin API.
 ///
@@ -28,7 +31,7 @@ pub use errors::Result;
 /// These utilities simplify common tasks, such as version checking or string manipulation.
 pub mod utils;
 mod wsl_command;
-/// The `PreparedWSLCommand` struct represents a command that has been prepared for execution within the WSL environment and can be reused without re-encoding.
-pub use wsl_command::PreparedWSLCommand;
 /// The `WSLCommand` struct represents a command that can be executed within the WSL environment.
 pub use wsl_command::WSLCommand;
+/// The `PreparedWSLCommand` struct represents a command that has been prepared for execution within the WSL environment and can be reused without re-encoding.
+pub use wsl_command::{PreparedWSLCommand, PreparedWSLCommandWithExitCode};
