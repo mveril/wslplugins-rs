@@ -1,4 +1,5 @@
 use std::io::prelude::*;
+use std::mem::ManuallyDrop;
 use std::net::TcpStream;
 
 pub struct WSLStdout {
@@ -16,6 +17,13 @@ impl WSLStdout {
 
     pub(super) fn peek(&self, buf: &mut [u8]) -> std::io::Result<usize> {
         self.stream.peek(buf)
+    }
+
+    pub(super) fn into_stream_without_shutdown(self) -> TcpStream {
+        let value = ManuallyDrop::new(self);
+        // Safety: `value` is wrapped in `ManuallyDrop`, so moving out of `stream`
+        // cannot leave a partially-dropped `WSLStdout`.
+        unsafe { std::ptr::read(&value.stream) }
     }
 }
 

@@ -6,10 +6,7 @@ pub(super) const MAX_EXIT_CODE_SEQUENCE_LEN: usize =
     EXIT_CODE_OSC_PREFIX.len() + MAX_EXIT_CODE_DIGITS + 1;
 
 pub(super) enum PeekedExitCode {
-    Complete {
-        exit_code: u32,
-        sequence_len: usize,
-    },
+    Complete { exit_code: u32, sequence_len: usize },
     Incomplete,
     NotExitCode,
 }

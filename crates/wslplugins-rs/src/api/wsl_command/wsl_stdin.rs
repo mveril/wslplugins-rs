@@ -1,4 +1,5 @@
 use std::io::prelude::*;
+use std::mem::ManuallyDrop;
 use std::net::TcpStream;
 
 pub struct WSLStdin {
@@ -12,6 +13,13 @@ impl WSLStdin {
 
     pub fn close(&mut self) -> std::io::Result<()> {
         self.stream.shutdown(std::net::Shutdown::Write)
+    }
+
+    pub(super) fn into_stream_without_shutdown(self) -> TcpStream {
+        let value = ManuallyDrop::new(self);
+        // Safety: `value` is wrapped in `ManuallyDrop`, so moving out of `stream`
+        // cannot leave a partially-dropped `WSLStdin`.
+        unsafe { std::ptr::read(&value.stream) }
     }
 }
 

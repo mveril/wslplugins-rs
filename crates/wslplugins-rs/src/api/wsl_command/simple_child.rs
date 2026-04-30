@@ -1,6 +1,5 @@
 use super::{wsl_stdin::WSLStdin, wsl_stdout::WSLStdout};
 use std::io::{Read, Write};
-use std::mem::ManuallyDrop;
 use std::net::TcpStream;
 
 pub struct SimpleChild {
@@ -58,10 +57,9 @@ impl Write for SimpleChild {
 
 impl From<SimpleChild> for TcpStream {
     fn from(value: SimpleChild) -> Self {
-        let value = ManuallyDrop::new(value);
-        // Safety: `value` is wrapped in `ManuallyDrop`, so moving out of `stdin.stream`
-        // cannot leave a partially-dropped `SimpleChild`.
-        unsafe { std::ptr::read(&value.stdin.stream) }
+        let stream = value.stdin.into_stream_without_shutdown();
+        drop(value.stdout.into_stream_without_shutdown());
+        stream
     }
 }
 
