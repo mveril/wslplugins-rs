@@ -1,7 +1,23 @@
+use crate::WSLSessionInformation;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::fmt::{self, Debug, Display};
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SessionID(pub u32);
+
+pub trait HasSessionId {
+    fn session_id(&self) -> SessionID;
+}
+
+impl<T: HasSessionId + ?Sized> HasSessionId for &T {
+    #[inline]
+    fn session_id(&self) -> SessionID {
+        (*self).session_id()
+    }
+}
 
 impl From<u32> for SessionID {
     #[inline]
@@ -14,6 +30,20 @@ impl From<SessionID> for u32 {
     #[inline]
     fn from(value: SessionID) -> Self {
         value.0
+    }
+}
+
+impl From<&WSLSessionInformation> for SessionID {
+    #[inline]
+    fn from(value: &WSLSessionInformation) -> Self {
+        value.id()
+    }
+}
+
+impl HasSessionId for SessionID {
+    #[inline]
+    fn session_id(&self) -> SessionID {
+        *self
     }
 }
 

@@ -15,31 +15,31 @@ windows-core = { workspace = true }
 bitflags = { version = ">0.1.0", optional = true }
 enumflags2 = { version = ">0.5", optional = true }
 flagset = { version = ">0.1.0", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
 tracing = { version = "0.1.43", optional = true }
 thiserror = "2.0.7"
 typed-path = ">0.1"
 widestring = { version = "1", features = ["alloc"] }
-wslplugins-macro = { path = "../wslplugins-macro", optional = true, version = "0.1.0-beta.2" }
+wslplugins-macro = { path = "../wslplugins-macro", optional = true, version = "0.1.0-beta.3" }
 wslpluginapi-sys.workspace = true
 uuid = { version = "1", optional = true }
 smallvec = { workspace = true, optional = true }
-
-
-[dependencies.semver]
-version = ">0.1"
-optional = true
+semver = { version = "1", optional = true }
 
 [dev-dependencies]
 proptest = "1.9.0"
 criterion = "0.8"
+serde_test = "1"
 
 [features]
 default = ["smallvec"]
 sys = []
 smallvec = ["dep:smallvec"]
+serde = ["dep:serde"]
 macro = ["dep:wslplugins-macro", "sys", "dep:tracing"]
 tracing = ["dep:tracing"]
 uuid = ["dep:uuid"]
+semver = ["dep:semver"]
 
 [package.metadata.docs.rs]
 all-features = true

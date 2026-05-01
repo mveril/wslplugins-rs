@@ -75,7 +75,7 @@ impl WSLPluginV1 for Plugin {
         match self
             .context
             .api
-            .new_command(session.id(), "/bin/cat")
+            .new_command(session, "/bin/cat")
             .with_arg("/proc/version")
             .execute()
         {
@@ -103,7 +103,7 @@ impl WSLPluginV1 for Plugin {
     fn on_distribution_started(
         &self,
         session: &WSLSessionInformation,
-        distribution: &DistributionInformation,
+        distribution: &WSLDistributionInformation,
     ) -> PluginResult<()> {
         info!(
             "Distribution started. Sessionid= {:?}, Id={:?} Name={:}, Package={}, PidNs={}, InitPid={}",
@@ -115,7 +115,7 @@ impl WSLPluginV1 for Plugin {
             // Use unknow if init_pid not available
             distribution.init_pid().map(|res| res.to_string()).unwrap_or("Unknow".to_string())
         );
-        self.log_os_release(session.id(), distribution.id().into());
+        self.log_os_release(session.id(), distribution.into());
         Ok(())
     }
 
@@ -129,7 +129,7 @@ impl WSLPluginV1 for Plugin {
     fn on_distribution_stopping(
         &self,
         session: &WSLSessionInformation,
-        distribution: &DistributionInformation,
+        distribution: &WSLDistributionInformation,
     ) -> WinResult<()> {
         info!(
             "Distribution Stopping. SessionId={:?}, Id={:?} name={}, package={}, PidNs={}, InitPid={}",

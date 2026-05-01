@@ -19,8 +19,8 @@ pub(crate) fn check_required_version_result(
         Ok(())
     } else {
         Err(Error {
-            current_version: current_version.clone(),
-            required_version: required_version.clone(),
+            current_version: *current_version,
+            required_version: *required_version,
         })
     }
 }
