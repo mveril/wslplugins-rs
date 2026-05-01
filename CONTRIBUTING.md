@@ -15,6 +15,14 @@ Published library work follows Git Flow:
 
 Changes that are not part of the published libraries can use direct focused branches targeting `main`, such as `doc/*`, `ci/*`, or `example/*`.
 
+## External References
+
+- `wslpluginapi-sys`: https://github.com/mveril/wslpluginapi-sys
+- WSL plugin sample: https://github.com/microsoft/wsl-plugin-sample
+- WSL repository: https://github.com/microsoft/WSL
+- WSL plugin documentation: https://learn.microsoft.com/en-us/windows/wsl/wsl-plugins
+- Microsoft WSL Plugin API NuGet package: https://www.nuget.org/packages/Microsoft.WSL.PluginApi
+
 ## Development
 
 Use Rust 2021 and the repository formatting settings.

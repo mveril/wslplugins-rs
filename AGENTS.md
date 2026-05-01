@@ -17,7 +17,7 @@ Do not run `cargo build --release` during routine work; release DLLs can interfe
 
 ## Coding Style & Naming Conventions
 
-Use Rust 2021 and the repository `rustfmt.toml` setting of hard tabs with width 4. Use `snake_case` for crates, modules, files, functions, methods, and variables; use `PascalCase` for public types and traits. Workspace lints deny `unwrap`, `expect`, `panic!`, `todo!`, `dbg!`, stdout/stderr printing, and process exits. Return typed errors and document unsafe blocks with `SAFETY:` comments.
+Use Rust 2021 and the repository `rustfmt.toml` settings. Use `snake_case` for crates, modules, files, functions, methods, and variables; use `PascalCase` for public types and traits. Workspace lints deny `unwrap`, `expect`, `panic!`, `todo!`, `dbg!`, stdout/stderr printing, and process exits. Return typed errors and document unsafe blocks with `SAFETY:` comments.
 
 ## Testing Guidelines
 
@@ -32,6 +32,14 @@ Changes unrelated to published libraries are not versioned and should use direct
 ## Commit Guidelines
 
 Recent commits use short imperative or descriptive subjects, often with PR numbers after merge, such as `Create unpackaged-distro-blacklist-policy example (#43)` or `Fix: offline distribution information should be public`. Keep commits focused and explain API or behavior changes in the body.
+
+## External References
+
+- `wslpluginapi-sys`: https://github.com/mveril/wslpluginapi-sys
+- WSL plugin sample: https://github.com/microsoft/wsl-plugin-sample
+- WSL repository: https://github.com/microsoft/WSL
+- WSL plugin documentation: https://learn.microsoft.com/en-us/windows/wsl/wsl-plugins
+- Microsoft WSL Plugin API NuGet package: https://www.nuget.org/packages/Microsoft.WSL.PluginApi
 
 ## Security & Configuration Tips
 
