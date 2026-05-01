@@ -33,12 +33,19 @@ Install the following tools on Windows:
 Notes:
 
 - `SignTool.exe` is easiest to access from a Visual Studio Developer Command Prompt or a shell where the Windows SDK tools are on `PATH`.
-- Running the signing step with `-Trust` requires administrator privileges because it installs the generated certificate locally.
+- `sign-plugin.ps1` requires an elevated PowerShell session.
+- Running the signing step with `-Trust` installs the generated certificate into the local machine trusted root store.
 
-## Crates
+## Workspace Overview
 
-- `wslplugins-rs`: main framework crate
-- `wslplugins-macro`: procedural macro crate re-exported by `wslplugins-rs` when the `macro` feature is enabled
+The workspace is organized around a small public API surface and separate macro implementation crates:
+
+- `wslplugins-rs`: the main framework crate, with safe wrappers around the WSL plugin API, shared plugin context, typed identifiers, and plugin traits.
+- `wslplugins-macro`: the procedural macro crate re-exported by `wslplugins-rs` when the `macro` feature is enabled.
+- `wslplugins-macro-core`: the internal parsing and code generation implementation used by the procedural macro.
+- `wslplugins-macro-tests`: compile-time tests for macro-generated plugin code.
+
+This split keeps plugin authors focused on `wslplugins-rs`, while the macro parsing and generated WSL entry-point wiring stay isolated in internal crates.
 
 ## Quick Start
 
@@ -132,6 +139,12 @@ or:
 
 If you do not want to install the certificate automatically, omit `-Trust`.
 
+Microsoft's WSL plugin documentation also requires Windows test signing for test-signed plugin DLLs. If WSL rejects a locally signed plugin with `TRUST_E_NOSIGNATURE`, enable test signing on the test machine and reboot if required:
+
+```powershell
+Bcdedit.exe -set TESTSIGNING ON
+```
+
 ## Registering the Plugin in WSL
 
 Register the signed DLL in the WSL plugins registry key:
@@ -142,11 +155,11 @@ reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss\Plugins" /v min
 
 Adjust the registry value name and DLL path for the plugin you want to load.
 
-Restart the WSL service after registration:
+Restart the WSL service after registration, then run a WSL command to load the plugin:
 
-```cmd
-sc.exe stop wslservice
-sc.exe start wslservice
+```powershell
+Stop-Service -Name "wslservice" -Force
+wsl.exe echo "test"
 ```
 
 ## Verification
@@ -172,7 +185,9 @@ cargo publish --workspace --dry-run
 
 ## Contributing
 
-Contributions are welcome. Open an issue or submit a pull request with tests and a clear description of the change.
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for branch, validation, and pull request guidance.
+
+Please report security issues privately. See [SECURITY.md](SECURITY.md).
 
 ## License
 
