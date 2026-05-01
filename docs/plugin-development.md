@@ -10,7 +10,7 @@ Most plugin crates should depend on `wslplugins-rs` with the `macro` feature ena
 
 ```toml
 [dependencies]
-wslplugins-rs = { version = "0.1.0-beta.2", features = ["macro"] }
+wslplugins-rs = { version = "0.1.0-beta.3", features = ["macro"] }
 ```
 
 The `macro` feature provides the `#[wsl_plugin_v1(...)]` attribute used to generate the WSL plugin entry points.
