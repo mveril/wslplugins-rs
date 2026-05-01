@@ -20,7 +20,8 @@
 //! ### Example
 //!
 //! ```rust
-//! #[cfg(feature = "macro")]
+//! # #[cfg(feature = "macro")]
+//! # mod example {
 //! use wslplugins_rs::prelude::*;
 //! pub(crate) struct MyPlugin {
 //!   context: &'static WSLContext,
@@ -31,6 +32,7 @@
 //!         Ok(MyPlugin { context })
 //!     }
 //! }
+//! # }
 //! ```
 
 /// Provides interfaces for interacting with WSL plugin APIs.
