@@ -18,6 +18,7 @@
 - [ ] Documentation
 - [ ] Examples
 - [ ] CI / release workflow
+- [ ] AGENTS.md instructions
 
 ## Validation
 
