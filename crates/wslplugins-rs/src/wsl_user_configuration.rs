@@ -28,10 +28,15 @@ pub mod enumflags2;
 #[cfg(feature = "flagset")]
 pub mod flagset;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// Represents a WSL user configuration as an integer.
 ///
 /// This struct provides a simple wrapper around a 32-bit integer ([i32]), allowing for
 /// easy conversion to and from [i32] values and also flags depending on the enabled feature.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 pub struct WSLUserConfiguration(i32);
 
