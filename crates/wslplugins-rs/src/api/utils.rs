@@ -36,11 +36,7 @@ pub(crate) fn check_required_version_result_from_context(
 }
 #[inline]
 pub(super) fn encode_c_path(path: &Utf8UnixPath) -> Vec<u8> {
-    let bytes = path.as_str().as_bytes();
-    let mut out = Vec::with_capacity(bytes.len() + 1);
-    out.extend_from_slice(bytes);
-    out.push(0);
-    out
+    CString::from_str_truncate(path.as_str()).into_bytes_with_nul()
 }
 
 #[allow(clippy::similar_names, reason = "naming is clear")]
@@ -94,5 +90,33 @@ mod tests {
         let result = check_required_version_result(&current_version, &required_version);
 
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn encode_c_path_appends_nul_terminator() {
+        let encoded = encode_c_path("/bin/sh".as_ref());
+
+        assert_eq!(encoded, b"/bin/sh\0");
+    }
+
+    #[test]
+    fn encode_c_path_truncates_at_interior_nul() {
+        let encoded = encode_c_path("/bin\0/sh".as_ref());
+
+        assert_eq!(encoded, b"/bin\0");
+    }
+
+    #[test]
+    fn encode_c_argv_truncates_args_and_null_terminates_argv() {
+        let (c_args, argv) = encode_c_argv(["sh", "arg\0ignored"]);
+        let encoded_args: Vec<_> = c_args
+            .iter()
+            .map(|arg| arg.as_c_str().to_bytes_with_nul())
+            .collect();
+
+        assert_eq!(encoded_args, [b"sh\0".as_slice(), b"arg\0".as_slice()]);
+        assert_eq!(argv.len(), 3);
+        assert_eq!(argv.iter().take_while(|ptr| !ptr.is_null()).count(), 2);
+        assert!(argv.last().is_some_and(|ptr| ptr.is_null()));
     }
 }
