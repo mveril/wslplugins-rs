@@ -5,8 +5,7 @@
 
 use super::errors::require_update_error::{Error, Result};
 use crate::cstring_ext::CstringExt;
-use crate::WSLContext;
-use crate::WSLVersion;
+use crate::{WSLContext, WSLVersion, WSLVersionCapability};
 use std::ffi::CString;
 use std::ptr;
 use typed_path::Utf8UnixPath;
@@ -15,7 +14,7 @@ pub(crate) fn check_required_version_result(
     current_version: &WSLVersion,
     required_version: &WSLVersion,
 ) -> Result<()> {
-    if current_version >= required_version {
+    if current_version.is_at_least(*required_version) {
         Ok(())
     } else {
         Err(Error {
@@ -33,6 +32,14 @@ pub(crate) fn check_required_version_result_from_context(
         let current_version = context.api.version();
         check_required_version_result(current_version, required_version)
     })
+}
+
+#[inline]
+pub(crate) fn check_capability_result_from_context(
+    wsl_context: Option<&WSLContext>,
+    capability: WSLVersionCapability,
+) -> Result<()> {
+    check_required_version_result_from_context(wsl_context, &capability.required_version())
 }
 #[inline]
 pub(super) fn encode_c_path(path: &Utf8UnixPath) -> Vec<u8> {

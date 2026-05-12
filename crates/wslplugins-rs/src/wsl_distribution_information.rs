@@ -15,12 +15,11 @@
 #[cfg(doc)]
 use crate::api::errors::require_update_error::Error;
 use crate::api::{
-    errors::require_update_error::Result, utils::check_required_version_result_from_context,
+    errors::require_update_error::Result, utils::check_capability_result_from_context,
 };
 use crate::core_wsl_distribution_information::CoreWSLDistributionInformation;
 use crate::utils::opt_wide_str;
-use crate::WSLVersion;
-use crate::{UserDistributionID, WSLContext};
+use crate::{UserDistributionID, WSLContext, WSLVersionCapability};
 use std::ffi::OsString;
 use std::fmt::{self, Debug, Display};
 use std::hash::{Hash, Hasher};
@@ -76,9 +75,9 @@ impl WSLDistributionInformation {
     /// [Error]: If the runtime version version is insufficient.
     #[inline]
     pub fn init_pid(&self) -> Result<u32> {
-        check_required_version_result_from_context(
+        check_capability_result_from_context(
             WSLContext::get_current(),
-            &WSLVersion::new(2, 0, 5),
+            WSLVersionCapability::DistributionInitPid,
         )?;
         Ok(self.0.InitPid)
     }
@@ -114,18 +113,18 @@ impl CoreWSLDistributionInformation for WSLDistributionInformation {
 
     #[inline]
     fn flavor(&self) -> Result<Option<OsString>> {
-        check_required_version_result_from_context(
+        check_capability_result_from_context(
             WSLContext::get_current(),
-            &WSLVersion::new(2, 4, 4),
+            WSLVersionCapability::DistributionFlavor,
         )?;
         Ok(opt_wide_str(self.0.Flavor))
     }
 
     #[inline]
     fn version(&self) -> Result<Option<OsString>> {
-        check_required_version_result_from_context(
+        check_capability_result_from_context(
             WSLContext::get_current(),
-            &WSLVersion::new(2, 4, 4),
+            WSLVersionCapability::DistributionVersion,
         )?;
         Ok(opt_wide_str(self.0.Version))
     }

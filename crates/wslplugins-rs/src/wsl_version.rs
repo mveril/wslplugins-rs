@@ -4,9 +4,13 @@ use std::{
     ptr,
     str::FromStr,
 };
+use strum::IntoEnumIterator;
 
 mod parse_error;
 pub use parse_error::WSLVersionParseError;
+
+mod capability;
+pub use capability::WSLVersionCapability;
 
 #[cfg(feature = "semver")]
 mod semver_impl;
@@ -87,6 +91,30 @@ impl WSLVersion {
     #[inline]
     pub const fn set_revision(&mut self, revision: u32) {
         self.0.Revision = revision;
+    }
+
+    /// Returns `true` when this version is greater than or equal to `required_version`.
+    #[must_use]
+    #[inline]
+    pub const fn is_at_least(&self, required_version: WSLVersion) -> bool {
+        self.major() > required_version.major()
+            || (self.major() == required_version.major()
+                && (self.minor() > required_version.minor()
+                    || (self.minor() == required_version.minor()
+                        && self.revision() >= required_version.revision())))
+    }
+
+    /// Returns `true` when this version supports the requested capability.
+    #[must_use]
+    #[inline]
+    pub const fn supports(&self, capability: WSLVersionCapability) -> bool {
+        self.is_at_least(capability.required_version())
+    }
+
+    /// Iterates over every capability supported by this version, ordered by required version.
+    #[inline]
+    pub fn capabilities(&self) -> impl Iterator<Item = WSLVersionCapability> + '_ {
+        WSLVersionCapability::iter().filter(|capability| self.supports(*capability))
     }
 }
 
@@ -232,6 +260,54 @@ mod tests {
             Err(WSLVersionParseError::InvalidRevision {
                 input: "2.0.a".to_owned(),
             })
+        );
+    }
+
+    #[test]
+    fn supports_capability_when_version_is_high_enough() {
+        let version = WSLVersion::new(2, 1, 2);
+
+        assert!(version.supports(WSLVersionCapability::DistributionRegisteredHook));
+    }
+
+    #[test]
+    fn rejects_capability_when_version_is_too_low() {
+        let version = WSLVersion::new(2, 1, 1);
+
+        assert!(!version.supports(WSLVersionCapability::DistributionRegisteredHook));
+    }
+
+    #[test]
+    fn capabilities_iterates_supported_capabilities_by_required_version() {
+        let version = WSLVersion::new(2, 4, 4);
+        let capabilities = version.capabilities().collect::<Vec<_>>();
+
+        assert_eq!(
+            capabilities,
+            vec![
+                WSLVersionCapability::DistributionInitPid,
+                WSLVersionCapability::DistributionRegisteredHook,
+                WSLVersionCapability::DistributionUnregisteredHook,
+                WSLVersionCapability::ExecuteBinaryInDistribution,
+                WSLVersionCapability::DistributionFlavor,
+                WSLVersionCapability::DistributionVersion,
+            ]
+        );
+    }
+
+    #[test]
+    fn capabilities_excludes_capabilities_that_require_newer_versions() {
+        let version = WSLVersion::new(2, 1, 2);
+        let capabilities = version.capabilities().collect::<Vec<_>>();
+
+        assert_eq!(
+            capabilities,
+            vec![
+                WSLVersionCapability::DistributionInitPid,
+                WSLVersionCapability::DistributionRegisteredHook,
+                WSLVersionCapability::DistributionUnregisteredHook,
+                WSLVersionCapability::ExecuteBinaryInDistribution,
+            ]
         );
     }
 }

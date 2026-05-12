@@ -39,4 +39,7 @@ pub use wsl_plugin_v1::WSLPluginV1;
 /// A utility function to create a plugin with a specified required version.
 ///
 /// Refer to [`utils::create_plugin_with_required_version`] for more details.
-pub use utils::create_plugin_with_required_version;
+pub use utils::{
+    create_plugin_with_required_capabilities, create_plugin_with_required_capability,
+    create_plugin_with_required_version,
+};

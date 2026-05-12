@@ -10,7 +10,7 @@ use syn::{parse_str, Ident, Lifetime, Result, Type};
 
 // Main function to generate the complete TokenStream for the plugin
 pub fn generate(imp: &ParsedImpl, version: &RequiredVersion) -> Result<TokenStream> {
-    let entry_point: TokenStream = generate_entry_point(imp, version)?;
+    let entry_point = generate_entry_point(imp, version)?;
     let hooks_funcs = generate_hook_fns(imp.hooks.as_ref())?;
     Ok(quote! {
         #entry_point
@@ -68,17 +68,34 @@ fn hook_field_mapping(hooks_struct_name: &Ident, hook: Hooks) -> Result<TokenStr
         #hooks_struct_name.#field = Some(#func);
     };
     let result = match hook {
-        Hooks::OnDistributionRegistered | Hooks::OnDistributionUnregistered => {
-            let required_version = "2.1.2";
+        Hooks::OnDistributionRegistered => {
+            let capability =
+                quote!(::wslplugins_rs::WSLVersionCapability::DistributionRegisteredHook);
             quote! {
-                if current_version >= ::wslplugins_rs::WSLVersion::new(2, 1, 2) {
+                if current_version.supports(#capability) {
                     #base
                 } else {
                     ::wslplugins_rs::__private::debug!(
                         "Hook {} not applied due to insufficient version (found: {}, required: {})",
                         #field_str,
                         current_version,
-                        #required_version
+                        #capability.required_version()
+                    );
+                }
+            }
+        }
+        Hooks::OnDistributionUnregistered => {
+            let capability =
+                quote!(::wslplugins_rs::WSLVersionCapability::DistributionUnregisteredHook);
+            quote! {
+                if current_version.supports(#capability) {
+                    #base
+                } else {
+                    ::wslplugins_rs::__private::debug!(
+                        "Hook {} not applied due to insufficient version (found: {}, required: {})",
+                        #field_str,
+                        current_version,
+                        #capability.required_version()
                     );
                 }
             }
@@ -102,11 +119,18 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
         })
         .unwrap_or_default();
     let hook_set = prepare_hooks(&hooks_ref_name, &imp.hooks)?;
-    let RequiredVersion {
-        major,
-        minor,
-        revision,
-    } = version;
+    let create_plugin = match version {
+        RequiredVersion::Version {
+            major,
+            minor,
+            revision,
+        } => quote! {
+            ::wslplugins_rs::plugin::create_plugin_with_required_version(api, #major, #minor, #revision)?
+        },
+        RequiredVersion::Capabilities(capabilities) => quote! {
+            ::wslplugins_rs::plugin::create_plugin_with_required_capabilities(api, [#(#capabilities),*])?
+        },
+    };
 
     Ok(quote! {
         static PLUGIN: ::std::sync::OnceLock<#static_plugin_type> = ::std::sync::OnceLock::new();
@@ -126,7 +150,7 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
             api: &'static ::wslplugins_rs::sys::WSLPluginAPIV1,
             hooks_ref: &mut ::wslplugins_rs::sys::WSLPluginHooksV1,
         ) -> ::wslplugins_rs::windows_core::Result<()> {
-            let plugin: #static_plugin_type = ::wslplugins_rs::plugin::create_plugin_with_required_version(api, #major, #minor, #revision)?;
+            let plugin: #static_plugin_type = #create_plugin;
             #current_version
             #(#hook_set)*
             PLUGIN.set(plugin).map_err(|_| ::wslplugins_rs::windows_core::Error::from(::wslplugins_rs::windows_core::HRESULT(::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_ABORT)))
@@ -180,18 +204,19 @@ mod tests {
             hook_field_mapping(&hooks_struct_name, hook);
         assert_eq!(
             result.unwrap().to_string(),
-            quote!(
-                if current_version >= ::wslplugins_rs::WSLVersion::new(2, 1, 2) {
-                    hooks_struct.OnDistributionRegistered = Some(on_distribution_registered);
-                } else {
-                    ::wslplugins_rs::__private::debug!(
-                        "Hook {} not applied due to insufficient version (found: {}, required: {})",
-                        "OnDistributionRegistered",
-                        current_version,
-                        "2.1.2"
-                    );
-                }
-            )
+            quote!(if current_version
+                .supports(::wslplugins_rs::WSLVersionCapability::DistributionRegisteredHook)
+            {
+                hooks_struct.OnDistributionRegistered = Some(on_distribution_registered);
+            } else {
+                ::wslplugins_rs::__private::debug!(
+                    "Hook {} not applied due to insufficient version (found: {}, required: {})",
+                    "OnDistributionRegistered",
+                    current_version,
+                    ::wslplugins_rs::WSLVersionCapability::DistributionRegisteredHook
+                        .required_version()
+                );
+            })
             .to_string()
         );
     }
