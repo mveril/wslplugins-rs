@@ -10,7 +10,7 @@ use std::ffi::CString;
 use std::ptr;
 use typed_path::Utf8UnixPath;
 
-pub(crate) fn check_required_version_result(
+pub(crate) const fn check_required_version_result(
     current_version: &WSLVersion,
     required_version: &WSLVersion,
 ) -> Result<()> {

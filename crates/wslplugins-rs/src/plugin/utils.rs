@@ -3,6 +3,8 @@
 //! This module provides utility functions for creating WSL plugins and handling results,
 //! enabling smooth integration with the WSL Plugin API.
 
+use std::iter::once;
+
 use windows_core::{Error as WinError, Result as WinResult, HRESULT};
 use wslpluginapi_sys::{windows_sys::Win32::Foundation::ERROR_ALREADY_INITIALIZED, WSLPluginAPIV1};
 
@@ -65,7 +67,7 @@ pub fn create_plugin_with_required_capability<T: WSLPluginV1>(
     api: &'static WSLPluginAPIV1,
     capability: WSLVersionCapability,
 ) -> WinResult<T> {
-    create_plugin_with_required_capabilities(api, [capability])
+    create_plugin_with_required_capabilities(api, once(capability))
 }
 
 /// Creates a WSL plugin instance with a specified set of required API capabilities.

@@ -96,7 +96,7 @@ impl WSLVersion {
     /// Returns `true` when this version is greater than or equal to `required_version`.
     #[must_use]
     #[inline]
-    pub const fn is_at_least(&self, required_version: WSLVersion) -> bool {
+    pub const fn is_at_least(&self, required_version: Self) -> bool {
         self.major() > required_version.major()
             || (self.major() == required_version.major()
                 && (self.minor() > required_version.minor()

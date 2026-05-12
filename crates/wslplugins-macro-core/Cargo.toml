@@ -14,7 +14,7 @@ syn = { workspace = true, features = ["full", "extra-traits"] }
 quote = { workspace = true }
 "proc-macro2" = { workspace = true }
 heck = "0.5"
-strum = { version = "0.26.3", features = ["derive"] }
+strum = { workspace = true }
 
 [build-dependencies]
 wslpluginapi-sys = { workspace = true, features = ["hooks-field-names"] }

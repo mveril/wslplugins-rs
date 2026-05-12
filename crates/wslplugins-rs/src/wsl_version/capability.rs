@@ -26,11 +26,10 @@ impl WSLVersionCapability {
     pub const fn required_version(self) -> WSLVersion {
         match self {
             Self::DistributionInitPid => WSLVersion::new(2, 0, 5),
-            Self::DistributionRegisteredHook => WSLVersion::new(2, 1, 2),
-            Self::DistributionUnregisteredHook => WSLVersion::new(2, 1, 2),
-            Self::ExecuteBinaryInDistribution => WSLVersion::new(2, 1, 2),
-            Self::DistributionFlavor => WSLVersion::new(2, 4, 4),
-            Self::DistributionVersion => WSLVersion::new(2, 4, 4),
+            Self::DistributionRegisteredHook
+            | Self::DistributionUnregisteredHook
+            | Self::ExecuteBinaryInDistribution => WSLVersion::new(2, 1, 2),
+            Self::DistributionFlavor | Self::DistributionVersion => WSLVersion::new(2, 4, 4),
         }
     }
 }
