@@ -24,19 +24,34 @@ use windows_core::Result as WinResult;
 /// in the WSL plugin system. Each method corresponds to a specific event, such as the start
 /// or stop of a WSL VM or distribution.
 ///
+/// Plugin types are usually registered with the `wsl_plugin_v1` attribute macro
+/// re-exported by `wslplugins-rs` when the `macro` feature is enabled. The macro
+/// generates the exported WSL entry point, initializes [`WSLContext`], creates one
+/// plugin instance through [`WSLPluginV1::try_new`], and wires the trait methods
+/// that are implemented by the plugin.
+///
+/// The macro accepts either no argument, an explicit minimum API version, or one
+/// or more `WSLVersionCapability` values. Use no argument for plugins that only
+/// need the base entry point. Use capabilities when the plugin depends on named
+/// API features such as distribution registration hooks.
+///
 /// # Requirements
 /// - The trait is `Sized` and `Sync`, ensuring safe concurrent usage and instantiation.
 ///
 /// # Example
-/// ```rust
-/// use wslplugins_rs::{plugin::{WSLPluginV1, Result}, WSLContext, WSLSessionInformation, WSLVmCreationSettings};
+/// ```rust,ignore
+/// use wslplugins_rs::prelude::*;
+/// use wslplugins_rs::{WSLSessionInformation, WSLVmCreationSettings};
 /// use wslplugins_rs::windows_core::Result as WinResult;
 ///
-/// struct MyPlugin;
+/// struct MyPlugin {
+///     context: &'static WSLContext,
+/// }
 ///
+/// #[wsl_plugin_v1]
 /// impl WSLPluginV1 for MyPlugin {
 ///     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
-///         Ok(MyPlugin)
+///         Ok(Self { context })
 ///     }
 ///
 ///     fn on_vm_started(
@@ -44,7 +59,7 @@ use windows_core::Result as WinResult;
 ///         session: &WSLSessionInformation,
 ///         user_settings: &WSLVmCreationSettings,
 ///     ) -> Result<()> {
-///         println!("VM started");
+///         let _ = (session, user_settings);
 ///         Ok(())
 ///     }
 /// }

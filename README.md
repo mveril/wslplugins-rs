@@ -79,7 +79,7 @@ pub(crate) struct MyPlugin {
     context: &'static WSLContext,
 }
 
-#[wsl_plugin_v1(2, 0, 5)]
+#[wsl_plugin_v1]
 impl WSLPluginV1 for MyPlugin {
     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
         Ok(Self { context })
@@ -88,6 +88,56 @@ impl WSLPluginV1 for MyPlugin {
 ```
 
 The `macro` feature re-exports the `wsl_plugin_v1` attribute and generates the WSL entry points for a `WSLPluginV1` implementation.
+
+### Choosing the Required API Version
+
+The macro argument controls the minimum WSL Plugin API version checked before
+your plugin is initialized:
+
+```rust
+use wslplugins_rs::prelude::*;
+
+pub(crate) struct MyPlugin {
+    context: &'static WSLContext,
+}
+
+#[wsl_plugin_v1(2, 1, 2)]
+impl WSLPluginV1 for MyPlugin {
+    fn try_new(context: &'static WSLContext) -> WinResult<Self> {
+        Ok(Self { context })
+    }
+}
+```
+
+Use `#[wsl_plugin_v1]` when the plugin only needs the base entry point and no
+specific API capability. Use `#[wsl_plugin_v1(major, minor)]` or
+`#[wsl_plugin_v1(major, minor, revision)]` when the whole plugin requires a
+known API version before it can run.
+
+For plugins that require named API capabilities, pass one or more
+`WSLVersionCapability` values:
+
+```rust
+use wslplugins_rs::prelude::*;
+
+pub(crate) struct RegistrationLogger {
+    context: &'static WSLContext,
+}
+
+#[wsl_plugin_v1(
+    WSLVersionCapability::DistributionRegisteredHook
+    | WSLVersionCapability::DistributionUnregisteredHook
+)]
+impl WSLPluginV1 for RegistrationLogger {
+    fn try_new(context: &'static WSLContext) -> WinResult<Self> {
+        Ok(Self { context })
+    }
+}
+```
+
+Hooks introduced after the base API, such as distribution registration and
+unregistration notifications, are wired only when the host API version supports
+the corresponding capability.
 
 ## Running Commands in WSL
 

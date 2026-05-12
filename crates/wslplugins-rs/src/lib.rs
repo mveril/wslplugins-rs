@@ -14,8 +14,13 @@
 //!
 //! ## Usage
 //!
-//! Use the exposed modules and types to build custom WSL plugins. Conditional features like `macro`
-//! enable procedural macros for simplifying the plugin development process.
+//! Use the exposed modules and types to build custom WSL plugins. The `macro`
+//! feature enables the [`wsl_plugin_v1`] attribute, which generates the WSL
+//! Plugin API entry point and hook wiring for a [`WSLPluginV1`] implementation.
+//!
+//! The macro can be used without arguments for the base API, with an explicit
+//! minimum version, or with one or more [`WSLVersionCapability`] values when the
+//! plugin depends on named API capabilities.
 //!
 //! ### Example
 //!
@@ -26,7 +31,7 @@
 //! pub(crate) struct MyPlugin {
 //!   context: &'static WSLContext,
 //! }
-//! #[wsl_plugin_v1(2, 0, 5)]
+//! #[wsl_plugin_v1]
 //! impl WSLPluginV1 for MyPlugin {
 //!     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
 //!         Ok(MyPlugin { context })
@@ -80,7 +85,10 @@ pub use wsl_version::WSLVersionCapability;
 pub use wsl_version::{WSLVersion, WSLVersionParseError};
 
 /// Re-exports procedural macros when the `macro` feature is enabled.
-/// It allow to mark a plugin struct (that implement [`WSLPluginV1`] trait) to be easely integrated to the WSL plugin system without writing manually C code for entry point or hooks.
+///
+/// Use [`wsl_plugin_v1`] on a [`WSLPluginV1`] implementation to generate the
+/// exported WSL Plugin API entry point and hook table setup without writing the
+/// C ABI glue manually.
 #[cfg(feature = "macro")]
 pub use wslplugins_macro::wsl_plugin_v1;
 
