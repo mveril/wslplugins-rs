@@ -13,8 +13,23 @@ pub enum RequiredVersion {
     },
     Capabilities(Vec<ExprPath>),
 }
+
+impl Default for RequiredVersion {
+    fn default() -> Self {
+        Self::Version {
+            major: 0,
+            minor: 0,
+            revision: 0,
+        }
+    }
+}
+
 impl Parse for RequiredVersion {
     fn parse(input: ParseStream<'_>) -> Result<Self> {
+        if input.is_empty() {
+            return Ok(Self::default());
+        }
+
         if !input.peek(LitInt) {
             let mut capabilities = vec![input.parse::<ExprPath>()?];
             while input.peek(Token![|]) {
@@ -100,6 +115,25 @@ mod tests {
                 assert_eq!(revision, 0);
             }
             RequiredVersion::Capabilities(_) => panic!("expected explicit version"),
+        }
+    }
+
+    #[test]
+    fn test_parse_empty_version_as_minimum_version() {
+        let version_tokens = quote! {};
+        let parsed_version: RequiredVersion = parse2(version_tokens).unwrap();
+
+        match parsed_version {
+            RequiredVersion::Version {
+                major,
+                minor,
+                revision,
+            } => {
+                assert_eq!(major, 0);
+                assert_eq!(minor, 0);
+                assert_eq!(revision, 0);
+            }
+            RequiredVersion::Capabilities(_) => panic!("expected minimum version"),
         }
     }
 
