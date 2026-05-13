@@ -82,7 +82,7 @@ mod tests {
     use syn::parse2;
 
     #[test]
-    #[allow(clippy::panick)]
+    #[allow(clippy::panic)]
     fn test_parse_valid_version_with_revision() {
         let version_tokens = quote! { 1, 2, 3 };
         let parsed_version: RequiredVersion = parse2(version_tokens).unwrap();
