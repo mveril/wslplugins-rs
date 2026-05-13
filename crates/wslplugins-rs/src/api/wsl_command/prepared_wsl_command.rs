@@ -3,6 +3,8 @@ use super::WSLCommand;
 use std::ffi::CString;
 use std::net::TcpStream;
 
+#[cfg(doc)]
+use crate::WSLVersionCapability;
 use crate::{
     api::{utils, ApiV1, Result as ApiResult},
     DistributionID, SessionID,
@@ -37,6 +39,10 @@ impl WSLCommandExecution for PreparedWSLCommand<'_> {
     ///
     /// - [`DistributionID::System`] uses `ExecuteBinary`.
     /// - [`DistributionID::User`] uses `ExecuteBinaryInDistribution`.
+    ///
+    /// This is `PreparedWSLCommand` execution behavior. The
+    /// `ExecuteBinaryInDistribution` path requires
+    /// [`WSLVersionCapability::ExecuteBinaryInDistribution`].
     ///
     /// # Errors
     ///
