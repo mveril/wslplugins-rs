@@ -3,7 +3,7 @@
 //! This module provides utilities to verify that the current WSL version meets the required version for plugin compatibility.
 //! It includes functions to perform version checks and unit tests to ensure correctness.
 
-use super::errors::require_update_error::{Error, Result};
+use super::errors::require_update_error::{Error, RequirementDefinition, Result};
 use crate::cstring_ext::CstringExt;
 use crate::{WSLContext, WSLVersion, WSLVersionCapability};
 use std::ffi::CString;
@@ -19,19 +19,28 @@ pub(crate) const fn check_required_version_result(
     } else {
         Err(Error {
             current_version: *current_version,
-            required_version: *required_version,
+            requirement: RequirementDefinition::Version(*required_version),
         })
     }
 }
 
-pub(crate) fn check_required_version_result_from_context(
-    wsl_context: Option<&WSLContext>,
-    required_version: &WSLVersion,
+pub(crate) fn check_requirement_result(
+    current_version: &WSLVersion,
+    requirement: impl Into<RequirementDefinition>,
 ) -> Result<()> {
-    wsl_context.map_or(Ok(()), |context| {
-        let current_version = context.api.version();
-        check_required_version_result(current_version, required_version)
-    })
+    let requirement = requirement.into();
+    match requirement {
+        RequirementDefinition::Version(version) => {
+            check_required_version_result(current_version, &version)
+        }
+        RequirementDefinition::Capabilities(_) => {
+            if current_version.is_at_least(requirement.version()) {
+                Ok(())
+            } else {
+                Err(Error::from_requirement(*current_version, requirement))
+            }
+        }
+    }
 }
 
 #[inline]
@@ -39,7 +48,10 @@ pub(crate) fn check_capability_result_from_context(
     wsl_context: Option<&WSLContext>,
     capability: WSLVersionCapability,
 ) -> Result<()> {
-    check_required_version_result_from_context(wsl_context, &capability.required_version())
+    wsl_context.map_or(Ok(()), |context| {
+        let current_version = context.api.version();
+        check_requirement_result(current_version, capability)
+    })
 }
 #[inline]
 pub(super) fn encode_c_path(path: &Utf8UnixPath) -> Vec<u8> {

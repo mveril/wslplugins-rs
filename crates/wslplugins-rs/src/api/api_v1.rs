@@ -24,7 +24,7 @@ use crate::DistributionID;
 
 use wslpluginapi_sys::WSLPluginAPIV1;
 
-use super::utils::check_required_version_result;
+use super::utils::check_requirement_result;
 
 /// Represents a structured interface for interacting with the `WSLPluginAPIV1` API.
 ///
@@ -230,12 +230,8 @@ impl ApiV1 {
         WSLCommand::new(self, session_id, program)
     }
 
-    fn check_required_version(&self, version: &WSLVersion) -> UpReqResult<()> {
-        check_required_version_result(self.version(), version)
-    }
-
     fn require_capability(&self, capability: WSLVersionCapability) -> UpReqResult<()> {
-        self.check_required_version(&capability.required_version())
+        check_requirement_result(self.version(), capability)
     }
 }
 
