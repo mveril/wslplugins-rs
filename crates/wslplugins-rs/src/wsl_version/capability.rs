@@ -56,6 +56,12 @@ impl TryFrom<RequirementDefinition> for WSLVersionCapability {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
+    use strum::IntoEnumIterator as _;
+
+    fn arb_capability() -> impl Strategy<Value = WSLVersionCapability> {
+        prop::sample::select(WSLVersionCapability::iter().collect::<Vec<_>>())
+    }
 
     #[test]
     fn single_capability_requirement_can_be_recovered() {
@@ -73,5 +79,14 @@ mod tests {
         ]);
 
         assert!(WSLVersionCapability::try_from(requirement).is_err());
+    }
+
+    proptest! {
+        #[test]
+        fn single_capability_requirement_roundtrips(capability in arb_capability()) {
+            let requirement = RequirementDefinition::from(capability);
+
+            prop_assert_eq!(WSLVersionCapability::try_from(requirement), Ok(capability));
+        }
     }
 }

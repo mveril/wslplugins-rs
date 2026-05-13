@@ -114,6 +114,17 @@ impl Display for RequirementDefinition {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
+    use proptest::sample::select;
+
+    fn arb_wsl_version() -> impl Strategy<Value = WSLVersion> {
+        (any::<u32>(), any::<u32>(), any::<u32>())
+            .prop_map(|(major, minor, revision)| WSLVersion::new(major, minor, revision))
+    }
+
+    fn arb_capability() -> impl Strategy<Value = WSLVersionCapability> {
+        select(WSLVersionCapability::iter().collect::<Vec<_>>())
+    }
 
     #[test]
     fn version_requirement_returns_explicit_version() {
@@ -139,5 +150,29 @@ mod tests {
                 WSLVersionCapability::DistributionVersion,
             ]))
         );
+    }
+
+    proptest! {
+        #[test]
+        fn version_requirement_always_returns_explicit_version(version in arb_wsl_version()) {
+            let requirement = RequirementDefinition::from(version);
+
+            prop_assert_eq!(requirement.version(), version);
+        }
+
+        #[test]
+        fn capability_requirement_returns_maximum_required_version(
+            capabilities in proptest::collection::hash_set(arb_capability(), 0..=6),
+        ) {
+            let expected = capabilities
+                .iter()
+                .copied()
+                .map(WSLVersionCapability::required_version)
+                .max()
+                .unwrap_or(WSLVersion::new(0, 0, 0));
+            let requirement = RequirementDefinition::from(capabilities);
+
+            prop_assert_eq!(requirement.version(), expected);
+        }
     }
 }

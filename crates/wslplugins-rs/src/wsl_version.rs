@@ -209,6 +209,12 @@ impl FromStr for WSLVersion {
 mod tests {
     use super::*;
     use crate::utils::test_transparence;
+    use proptest::prelude::*;
+
+    fn arb_wsl_version() -> impl Strategy<Value = WSLVersion> {
+        (any::<u32>(), any::<u32>(), any::<u32>())
+            .prop_map(|(major, minor, revision)| WSLVersion::new(major, minor, revision))
+    }
 
     #[test]
     fn test_layouts() {
@@ -309,5 +315,39 @@ mod tests {
                 WSLVersionCapability::ExecuteBinaryInDistribution,
             ]
         );
+    }
+
+    proptest! {
+        #[test]
+        fn from_str_roundtrips_displayed_versions(version in arb_wsl_version()) {
+            prop_assert_eq!(version.to_string().parse::<WSLVersion>(), Ok(version));
+        }
+
+        #[test]
+        fn is_at_least_matches_derived_ordering(
+            current in arb_wsl_version(),
+            required in arb_wsl_version(),
+        ) {
+            prop_assert_eq!(current.is_at_least(required), current >= required);
+        }
+
+        #[test]
+        fn supports_matches_capability_required_version(version in arb_wsl_version()) {
+            for capability in WSLVersionCapability::iter() {
+                prop_assert_eq!(
+                    version.supports(capability),
+                    version.is_at_least(capability.required_version())
+                );
+            }
+        }
+
+        #[test]
+        fn capabilities_iterates_exactly_supported_capabilities(version in arb_wsl_version()) {
+            let expected = WSLVersionCapability::iter()
+                .filter(|capability| version.supports(*capability))
+                .collect::<Vec<_>>();
+
+            prop_assert_eq!(version.capabilities().collect::<Vec<_>>(), expected);
+        }
     }
 }

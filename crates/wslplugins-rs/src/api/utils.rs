@@ -88,27 +88,11 @@ where
 mod tests {
     use super::*;
     use crate::WSLVersion;
+    use proptest::prelude::*;
 
-    /// Tests that `check_required_version_result` returns `Ok` when the current version meets the requirement.
-    #[test]
-    fn test_check_required_version_result_ok() {
-        let current_version = WSLVersion::new(2, 1, 3);
-        let required_version = WSLVersion::new(2, 1, 2);
-
-        let result = check_required_version_result(&current_version, &required_version);
-
-        assert!(result.is_ok());
-    }
-
-    /// Tests that `check_required_version_result` returns `Err` when the current version is insufficient.
-    #[test]
-    fn test_check_required_version_result_error() {
-        let current_version = WSLVersion::new(2, 1, 1);
-        let required_version = WSLVersion::new(2, 1, 2);
-
-        let result = check_required_version_result(&current_version, &required_version);
-
-        assert!(result.is_err());
+    fn arb_wsl_version() -> impl Strategy<Value = WSLVersion> {
+        (any::<u32>(), any::<u32>(), any::<u32>())
+            .prop_map(|(major, minor, revision)| WSLVersion::new(major, minor, revision))
     }
 
     #[test]
@@ -137,5 +121,17 @@ mod tests {
         assert_eq!(argv.len(), 3);
         assert_eq!(argv.iter().take_while(|ptr| !ptr.is_null()).count(), 2);
         assert!(argv.last().is_some_and(|ptr| ptr.is_null()));
+    }
+
+    proptest! {
+        #[test]
+        fn check_required_version_result_matches_version_ordering(
+            current_version in arb_wsl_version(),
+            required_version in arb_wsl_version(),
+        ) {
+            let result = check_required_version_result(&current_version, &required_version);
+
+            prop_assert_eq!(result.is_ok(), current_version.is_at_least(required_version));
+        }
     }
 }

@@ -77,6 +77,7 @@ impl Parse for RequiredVersion {
 #[allow(clippy::unwrap_used, clippy::expect_used, reason = "Test code")]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
     use quote::quote;
     use syn::parse2;
 
@@ -217,5 +218,56 @@ mod tests {
             parsed_result.unwrap_err().to_string(),
             "unexpected additional components in version"
         );
+    }
+
+    proptest! {
+        #[test]
+        fn parse_valid_version_with_generated_components(
+            major in any::<u32>(),
+            minor in any::<u32>(),
+            revision in any::<u32>(),
+        ) {
+            let version_tokens = quote! { #major, #minor, #revision };
+            let parsed_version: RequiredVersion = parse2(version_tokens)?;
+
+            match parsed_version {
+                RequiredVersion::Version {
+                    major: parsed_major,
+                    minor: parsed_minor,
+                    revision: parsed_revision,
+                } => {
+                    prop_assert_eq!(parsed_major, major);
+                    prop_assert_eq!(parsed_minor, minor);
+                    prop_assert_eq!(parsed_revision, revision);
+                }
+                RequiredVersion::Capabilities(_) => {
+                    prop_assert!(false, "expected explicit version");
+                }
+            }
+        }
+
+        #[test]
+        fn parse_valid_version_without_generated_revision(
+            major in any::<u32>(),
+            minor in any::<u32>(),
+        ) {
+            let version_tokens = quote! { #major, #minor };
+            let parsed_version: RequiredVersion = parse2(version_tokens)?;
+
+            match parsed_version {
+                RequiredVersion::Version {
+                    major: parsed_major,
+                    minor: parsed_minor,
+                    revision,
+                } => {
+                    prop_assert_eq!(parsed_major, major);
+                    prop_assert_eq!(parsed_minor, minor);
+                    prop_assert_eq!(revision, 0);
+                }
+                RequiredVersion::Capabilities(_) => {
+                    prop_assert!(false, "expected explicit version");
+                }
+            }
+        }
     }
 }
