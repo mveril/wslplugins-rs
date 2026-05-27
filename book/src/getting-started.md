@@ -3,6 +3,9 @@
 This chapter assumes you are creating a plugin crate outside this repository and want to consume
 `wslplugins-rs` as a dependency.
 
+If you want the shortest copy-and-run path first, use the
+[End-to-End Quickstart](./quickstart.md), then return here for the background details.
+
 ## Prerequisites
 
 Install these tools on Windows:
@@ -10,9 +13,14 @@ Install these tools on Windows:
 - Rust stable and Cargo.
 - PowerShell.
 - `SignTool.exe` from the Windows SDK.
+- WSL installed and able to run at least one distribution.
+- A Windows environment that can build native MSVC Rust targets.
 
 `SignTool.exe` is usually easiest to access from a Visual Studio Developer Command Prompt or from a
 shell where the Windows SDK tools are on `PATH`.
+
+Packaging and host validation also require administrator access because local testing can touch the
+machine certificate store, the `HKLM` registry hive, and the WSL service.
 
 ## Create a Plugin Crate
 
@@ -97,3 +105,6 @@ The repository examples show complete plugins for common scenarios:
 - `unpackaged-distro-blacklist-policy`: a policy-style plugin.
 
 Use them as references for plugin behavior, not as required workspace structure.
+
+Next: follow the [End-to-End Quickstart](./quickstart.md) for a complete deployment loop, or read
+[Your First Plugin](./first-plugin.md) to add hook behavior.

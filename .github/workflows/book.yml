@@ -23,8 +23,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  check:
-    name: Check mdBook
+  test-snippets:
+    name: Test Rust snippets
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -43,14 +43,28 @@ jobs:
       - name: Test Rust snippets
         run: mdbook test book -L .tmp/book-doctest-target/debug/deps
 
+  build:
+    name: Build mdBook
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install mdBook
+        uses: taiki-e/install-action@v2
+        with:
+          tool: mdbook
+
       - name: Build
         run: mdbook build book
 
   build-pages:
     name: Build Pages artifact
     if: github.event_name != 'pull_request'
-    needs: check
-    runs-on: windows-latest
+    needs:
+      - build
+      - test-snippets
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4

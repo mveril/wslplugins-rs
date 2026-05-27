@@ -91,3 +91,6 @@ cargo build --release
 ```
 
 After that, sign and register the DLL as described in the packaging chapter.
+
+Next: read [WSL Plugin Model](./wsl-plugin-model.md) for the host model and versioning rules, or
+jump to [Packaging and Deployment](./packaging.md) when you are ready to load the DLL into WSL.

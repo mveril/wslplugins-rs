@@ -8,10 +8,11 @@ WSL loads plugin DLLs from Windows. A development deployment usually has four st
 4. Restart the WSL service and trigger plugin loading.
 
 The underlying Microsoft package for the native API is `Microsoft.WSL.PluginApi` on NuGet. Version
-`2.4.4` is the current package version checked while writing this page, and it contains the
-`WslPluginApi.h` header used to define the native ABI. Rust users normally consume that ABI through
-`wslplugins-rs` and `wslpluginapi-sys`; you do not need to add the NuGet package to a Rust plugin
-crate unless you are comparing against the C header or writing C/C++ interop code.
+`2.4.4` was the current package version checked on 2026-05-27, and it contains the `WslPluginApi.h`
+header used to define the native ABI. Check NuGet for newer versions when updating bindings or
+comparing against the C header. Rust users normally consume that ABI through `wslplugins-rs` and
+`wslpluginapi-sys`; you do not need to add the NuGet package to a Rust plugin crate unless you are
+comparing against the C header or writing C/C++ interop code.
 
 ## Build a DLL
 
@@ -61,8 +62,15 @@ trying again. Consider the security impact before doing that on a daily-use mach
 
 Register the signed DLL under the WSL plugins registry key:
 
-```cmd
-reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss\Plugins" /v my-wsl-plugin /d "C:\path\to\my-wsl-plugin\target\release\my_wsl_plugin.dll" /t REG_SZ
+```powershell
+$PluginName = "my-wsl-plugin"
+$DllPath = "C:\path\to\my-wsl-plugin\target\release\my_wsl_plugin.dll"
+
+Set-ItemProperty `
+    -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss\Plugins" `
+    -Name $PluginName `
+    -Value $DllPath `
+    -Force
 ```
 
 Use a value name and DLL path that match the plugin you are testing.
@@ -70,7 +78,11 @@ Use a value name and DLL path that match the plugin you are testing.
 To unregister the plugin after testing, remove the registry value and restart WSL again:
 
 ```powershell
-Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss\Plugins" -Name "my-wsl-plugin" -Force
+Remove-ItemProperty `
+    -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss\Plugins" `
+    -Name $PluginName `
+    -Force
+
 Stop-Service -Name "wslservice" -Force
 ```
 
@@ -104,6 +116,8 @@ Common WSL plugin load failures include:
 Because plugins run in the WSL service process, treat host validation as a machine-affecting test:
 keep a note of the registry value you added, the certificate you trusted, and the service restart
 commands you ran.
+
+For symptom-by-symptom checks, see [Troubleshooting](./troubleshooting.md).
 
 ## Sources
 

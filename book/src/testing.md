@@ -45,3 +45,19 @@ For the minimal example, the observable output is written to `C:\wsl-plugin-demo
 
 For your own plugin, choose an observable result that fits the behavior: a log file, an allowed or
 blocked operation, a command output, or another side effect that confirms the expected hook ran.
+
+Use commands that trigger the hook you are validating:
+
+```powershell
+wsl.exe echo "vm startup test"
+wsl.exe -d Ubuntu -- echo "distribution startup test"
+```
+
+After rebuilding or changing the registry value, restart the WSL service before testing again:
+
+```powershell
+Stop-Service -Name "wslservice" -Force
+```
+
+If the plugin does not load or the expected hook does not run, use the
+[Troubleshooting](./troubleshooting.md) chapter before changing the plugin code.
