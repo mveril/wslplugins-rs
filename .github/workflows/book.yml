@@ -23,9 +23,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: Build mdBook
-    runs-on: ubuntu-latest
+  check:
+    name: Check mdBook
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,8 +46,24 @@ jobs:
       - name: Build
         run: mdbook build book
 
+  build-pages:
+    name: Build Pages artifact
+    if: github.event_name != 'pull_request'
+    needs: check
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install mdBook
+        uses: taiki-e/install-action@v2
+        with:
+          tool: mdbook
+
+      - name: Build
+        run: mdbook build book
+
       - name: Upload artifact
-        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: target/book
@@ -55,7 +71,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     if: github.event_name != 'pull_request'
-    needs: build
+    needs: build-pages
     runs-on: ubuntu-latest
     environment:
       name: github-pages
