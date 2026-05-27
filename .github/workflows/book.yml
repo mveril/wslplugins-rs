@@ -1,0 +1,66 @@
+name: Book
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - book/**
+      - .github/workflows/book.yml
+  pull_request:
+    paths:
+      - book/**
+      - .github/workflows/book.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build mdBook
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install mdBook
+        uses: taiki-e/install-action@v2
+        with:
+          tool: mdbook
+
+      - name: Build snippet dependencies
+        run: cargo build -p wslplugins-rs --features macro
+        env:
+          CARGO_TARGET_DIR: .tmp/book-doctest-target
+
+      - name: Test Rust snippets
+        run: mdbook test book -L .tmp/book-doctest-target/debug/deps
+
+      - name: Build
+        run: mdbook build book
+
+      - name: Upload artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/book
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

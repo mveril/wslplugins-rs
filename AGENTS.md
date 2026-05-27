@@ -23,6 +23,10 @@ Use Rust 2021 and the repository `rustfmt.toml` settings. Use `snake_case` for c
 
 Place ordinary Rust tests next to the code or in crate-level `tests/` directories. Macro behavior belongs in `crates/wslplugins-macro-tests/tests/`, with UI fixtures under `tests/ui/`. Name tests after behavior, for example `formats_user_distribution_id_as_guid`. Run the full workspace test command before opening a pull request that changes code.
 
+## Documentation Guidelines
+
+The mdBook in `book/` is the user-oriented guide for this library. When changing public APIs, examples, plugin behavior, packaging, validation, or anything users need to understand to build WSL plugins, update the book in the same change. If a change intentionally does not require a book update, make that explicit in the pull request.
+
 ## Git Flow & Pull Requests
 
 Git Flow applies to published library crates: `develop` carries versioned crate work, while `main` remains the stable branch. Create `feature/*` and `fix/*` branches from `develop`, and target their pull requests back to `develop`. Use `release/*` branches for versioned release preparation, final validation, and publishing dry runs before merging to `main` and back to `develop`.
@@ -44,4 +48,3 @@ Recent commits use short imperative or descriptive subjects, often with PR numbe
 ## Security & Configuration Tips
 
 Do not commit private certificates, keys, signed DLLs, or machine-specific registry paths. Treat `sign-plugin.ps1 -Trust`, registry edits, and WSL service restarts as host-affecting operations.
-

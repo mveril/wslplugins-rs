@@ -25,6 +25,7 @@
 - [ ] `cargo test --workspace --all-features`
 - [ ] `cargo clippy --workspace --all-targets --all-features`
 - [ ] `cargo fmt --all -- --check`
+- [ ] `mdbook build book` when the book is changed
 - [ ] Relevant manual testing completed
 
 ## WSL / Windows Notes

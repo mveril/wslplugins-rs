@@ -2,6 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/wslplugins-rs?logo=rust)](https://crates.io/crates/wslplugins-rs)
 [![Docs.rs](https://img.shields.io/badge/docs.rs-wslplugins--rs-blue?logo=docs.rs)](https://docs.rs/wslplugins-rs)
+[![Book](https://img.shields.io/badge/book-mdBook-blue?logo=mdbook)](https://mveril.github.io/wslplugins-rs/)
 [![Build Status](https://github.com/mveril/wslplugins-rs/actions/workflows/rust.yml/badge.svg?logo=github)](https://github.com/mveril/wslplugins-rs/actions)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE-APACHE)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE-MIT)
@@ -46,6 +47,11 @@ The workspace is organized around a small public API surface and separate macro 
 - `wslplugins-macro-tests`: compile-time tests for macro-generated plugin code.
 
 This split keeps plugin authors focused on `wslplugins-rs`, while the macro parsing and generated WSL entry-point wiring stay isolated in internal crates.
+
+## Documentation
+
+- [The wslplugins-rs Book](https://mveril.github.io/wslplugins-rs/) explains the development flow from first plugin to packaging.
+- [docs.rs](https://docs.rs/wslplugins-rs) contains the generated API reference.
 
 ## Quick Start
 
