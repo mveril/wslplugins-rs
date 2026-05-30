@@ -55,7 +55,7 @@ fn setup_logging() -> WinResult<()> {
     Ok(())
 }
 
-#[wsl_plugin_v1(wslplugins_rs::WSLVersionCapability::ExecuteBinaryInDistribution)]
+#[wsl_plugin_v1(WSLVersionCapability::ExecuteBinaryInDistribution)]
 impl WSLPluginV1 for Plugin {
     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
         setup_logging()?;
