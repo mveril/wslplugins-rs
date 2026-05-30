@@ -53,6 +53,14 @@ This split keeps plugin authors focused on `wslplugins-rs`, while the macro pars
 - [The wslplugins-rs Book](https://mveril.github.io/wslplugins-rs/) explains the development flow from first plugin to packaging.
 - [docs.rs](https://docs.rs/wslplugins-rs) contains the generated API reference.
 
+To build the book locally, install [mdBook](https://rust-lang.github.io/mdBook/guide/installation.html)
+with Cargo and run:
+
+```powershell
+cargo install mdbook
+mdbook build book
+```
+
 ## Quick Start
 
 Add the crate with the `macro` feature:

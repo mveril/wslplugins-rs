@@ -53,6 +53,9 @@ wsl.exe echo "vm startup test"
 wsl.exe -d Ubuntu -- echo "distribution startup test"
 ```
 
+For more WSL command examples, see Microsoft's
+[basic WSL commands](https://learn.microsoft.com/en-us/windows/wsl/basic-commands) documentation.
+
 After rebuilding or changing the registry value, restart the WSL service before testing again:
 
 ```powershell

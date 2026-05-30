@@ -10,10 +10,12 @@ If you want the shortest copy-and-run path first, use the
 
 Install these tools on Windows:
 
-- Rust stable and Cargo.
+- [Rust stable and Cargo](https://www.rust-lang.org/tools/install).
 - PowerShell.
-- `SignTool.exe` from the Windows SDK.
-- WSL installed and able to run at least one distribution.
+- [`SignTool.exe`](https://learn.microsoft.com/en-us/windows/win32/seccrypto/signtool) from the
+  Windows SDK.
+- [WSL installed](https://learn.microsoft.com/en-us/windows/wsl/install) and able to run at least
+  one distribution.
 - A Windows environment that can build native MSVC Rust targets.
 
 `SignTool.exe` is usually easiest to access from a Visual Studio Developer Command Prompt or from a

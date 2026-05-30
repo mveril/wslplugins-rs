@@ -105,7 +105,9 @@ Check which hook can fail in that path:
 - `CreateInstance/Plugin/*`: `on_distribution_started`.
 
 Use `PluginResult` with a message for user-facing policy failures. Use ordinary `Result` handling
-for I/O, parsing, and WSL API calls instead of panicking.
+for I/O, parsing, and WSL API calls instead of panicking. See
+[Error Handling](./error-handling.md) for the difference between plugin diagnostics and plain
+Windows errors.
 
 ## Runtime API Is Too Old
 

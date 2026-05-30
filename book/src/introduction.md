@@ -21,7 +21,8 @@ The framework keeps the plugin authoring model small:
 - return errors instead of panicking inside the WSL service process.
 
 WSL loads plugins into a host service process. Reliability and conservative error handling matter
-more than convenience shortcuts.
+more than convenience shortcuts. The [Error Handling](./error-handling.md) chapter explains how to
+turn plugin failures into `WinResult` or `PluginResult` values.
 
 ## What You Build
 
