@@ -69,7 +69,7 @@ pub(crate) struct Plugin {
     context: &'static WSLContext,
 }
 
-#[wsl_plugin_v1(2, 0, 5)]
+#[wsl_plugin_v1]
 impl WSLPluginV1 for Plugin {
     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
         Ok(Self { context })
@@ -79,6 +79,10 @@ impl WSLPluginV1 for Plugin {
 
 Add hook methods only for the events your plugin handles. The default implementation for each hook
 does nothing and returns success.
+
+If a hook or API call is mandatory for the plugin, declare that requirement with
+`#[wsl_plugin_v1(...)]`. Prefer named capabilities where they exist; see
+[Version Capabilities](./version-capabilities.md).
 
 ## Validate During Development
 

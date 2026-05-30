@@ -3,35 +3,54 @@
 //! This module provides utilities to verify that the current WSL version meets the required version for plugin compatibility.
 //! It includes functions to perform version checks and unit tests to ensure correctness.
 
-use super::errors::require_update_error::{Error, Result};
+use super::errors::require_update_error::{Error, RequirementDefinition, Result};
 use crate::cstring_ext::CstringExt;
-use crate::WSLContext;
-use crate::WSLVersion;
+use crate::{WSLContext, WSLVersion, WSLVersionCapability};
 use std::ffi::CString;
 use std::ptr;
 use typed_path::Utf8UnixPath;
 
-pub(crate) fn check_required_version_result(
+pub(crate) const fn check_required_version_result(
     current_version: &WSLVersion,
     required_version: &WSLVersion,
 ) -> Result<()> {
-    if current_version >= required_version {
+    if current_version.is_at_least(*required_version) {
         Ok(())
     } else {
         Err(Error {
             current_version: *current_version,
-            required_version: *required_version,
+            requirement: RequirementDefinition::Version(*required_version),
         })
     }
 }
 
-pub(crate) fn check_required_version_result_from_context(
+pub(crate) fn check_requirement_result(
+    current_version: &WSLVersion,
+    requirement: impl Into<RequirementDefinition>,
+) -> Result<()> {
+    let requirement = requirement.into();
+    match requirement {
+        RequirementDefinition::Version(version) => {
+            check_required_version_result(current_version, &version)
+        }
+        RequirementDefinition::Capabilities(_) => {
+            if current_version.is_at_least(requirement.version()) {
+                Ok(())
+            } else {
+                Err(Error::from_requirement(*current_version, requirement))
+            }
+        }
+    }
+}
+
+#[inline]
+pub(crate) fn check_capability_result_from_context(
     wsl_context: Option<&WSLContext>,
-    required_version: &WSLVersion,
+    capability: WSLVersionCapability,
 ) -> Result<()> {
     wsl_context.map_or(Ok(()), |context| {
         let current_version = context.api.version();
-        check_required_version_result(current_version, required_version)
+        check_requirement_result(current_version, capability)
     })
 }
 #[inline]
@@ -69,27 +88,11 @@ where
 mod tests {
     use super::*;
     use crate::WSLVersion;
+    use proptest::prelude::*;
 
-    /// Tests that `check_required_version_result` returns `Ok` when the current version meets the requirement.
-    #[test]
-    fn test_check_required_version_result_ok() {
-        let current_version = WSLVersion::new(2, 1, 3);
-        let required_version = WSLVersion::new(2, 1, 2);
-
-        let result = check_required_version_result(&current_version, &required_version);
-
-        assert!(result.is_ok());
-    }
-
-    /// Tests that `check_required_version_result` returns `Err` when the current version is insufficient.
-    #[test]
-    fn test_check_required_version_result_error() {
-        let current_version = WSLVersion::new(2, 1, 1);
-        let required_version = WSLVersion::new(2, 1, 2);
-
-        let result = check_required_version_result(&current_version, &required_version);
-
-        assert!(result.is_err());
+    fn arb_wsl_version() -> impl Strategy<Value = WSLVersion> {
+        (any::<u32>(), any::<u32>(), any::<u32>())
+            .prop_map(|(major, minor, revision)| WSLVersion::new(major, minor, revision))
     }
 
     #[test]
@@ -118,5 +121,17 @@ mod tests {
         assert_eq!(argv.len(), 3);
         assert_eq!(argv.iter().take_while(|ptr| !ptr.is_null()).count(), 2);
         assert!(argv.last().is_some_and(|ptr| ptr.is_null()));
+    }
+
+    proptest! {
+        #[test]
+        fn check_required_version_result_matches_version_ordering(
+            current_version in arb_wsl_version(),
+            required_version in arb_wsl_version(),
+        ) {
+            let result = check_required_version_result(&current_version, &required_version);
+
+            prop_assert_eq!(result.is_ok(), current_version.is_at_least(required_version));
+        }
     }
 }

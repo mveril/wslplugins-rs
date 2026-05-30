@@ -16,7 +16,7 @@ reference, use the generated Rust documentation on docs.rs.
 The framework keeps the plugin authoring model small:
 
 - implement `WSLPluginV1` for a Rust type that owns the plugin state;
-- annotate the implementation with `#[wsl_plugin_v1(...)]`;
+- annotate the implementation with `#[wsl_plugin_v1]` or a specific API requirement;
 - use typed wrappers for WSL sessions, distributions, versions, and command execution;
 - return errors instead of panicking inside the WSL service process.
 

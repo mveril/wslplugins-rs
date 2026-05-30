@@ -5,24 +5,26 @@
 //! with WSL APIs.
 
 use crate::WSLVersion;
+mod requirement_definition;
+pub use requirement_definition::RequirementDefinition;
 use thiserror::Error;
 use windows_core::HRESULT;
 
 /// Represents an error when the current WSL version is unsupported.
 ///
 /// This error is returned when the WSL version being used does not satisfy
-/// the required version for a plugin.
+/// the required version or capabilities for a plugin.
 ///
 /// # Fields
 /// - `current_version`: The current WSL version.
-/// - `required_version`: The required WSL version.
-#[derive(Debug, Error, Clone, Copy, PartialEq, Eq, Hash)]
-#[error("WSLVersion unsupported: current version {current_version}, required version {required_version}")]
+/// - `requirement`: The version or capabilities required by the operation.
+#[derive(Debug, Error, Clone, PartialEq, Eq, Hash)]
+#[error("WSLVersion unsupported: current version {current_version}, required {requirement} (minimum version {})", requirement.version())]
 pub struct Error {
     /// The current version of WSL.
     pub current_version: WSLVersion,
-    /// The required version of WSL.
-    pub required_version: WSLVersion,
+    /// The version or capabilities required by the operation.
+    pub requirement: RequirementDefinition,
 }
 
 impl Error {
@@ -39,7 +41,27 @@ impl Error {
     pub const fn new(current_version: WSLVersion, required_version: WSLVersion) -> Self {
         Self {
             current_version,
-            required_version,
+            requirement: RequirementDefinition::Version(required_version),
+        }
+    }
+
+    /// Creates a new `Error` with the specified current WSL version and requirement.
+    ///
+    /// # Arguments
+    /// - `current_version`: The version currently in use.
+    /// - `requirement`: The version or capabilities required for compatibility.
+    ///
+    /// # Returns
+    /// A new instance of `Error`.
+    #[must_use]
+    #[inline]
+    pub fn from_requirement(
+        current_version: WSLVersion,
+        requirement: impl Into<RequirementDefinition>,
+    ) -> Self {
+        Self {
+            current_version,
+            requirement: requirement.into(),
         }
     }
     pub const WSL_E_PLUGIN_REQUIRES_UPDATE: HRESULT =

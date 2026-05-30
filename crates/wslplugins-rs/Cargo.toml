@@ -25,6 +25,7 @@ wslpluginapi-sys.workspace = true
 uuid = { version = "1", optional = true }
 smallvec = { workspace = true, optional = true }
 semver = { version = "1", optional = true }
+strum = { workspace = true }
 
 [dev-dependencies]
 proptest = "1.9.0"

@@ -3,10 +3,12 @@
 //! This module provides utility functions for creating WSL plugins and handling results,
 //! enabling smooth integration with the WSL Plugin API.
 
+use std::iter::once;
+
 use windows_core::{Error as WinError, Result as WinResult, HRESULT};
 use wslpluginapi_sys::{windows_sys::Win32::Foundation::ERROR_ALREADY_INITIALIZED, WSLPluginAPIV1};
 
-use crate::WSLContext;
+use crate::{WSLContext, WSLVersion, WSLVersionCapability};
 
 #[cfg(doc)]
 use super::Error;
@@ -53,6 +55,43 @@ pub fn create_plugin_with_required_version<T: WSLPluginV1>(
     WSLContext::init(api.as_ref())
         .ok_or_else(|| WinError::from_hresult(HRESULT::from_win32(ERROR_ALREADY_INITIALIZED)))
         .and_then(T::try_new)
+}
+
+/// Creates a WSL plugin instance with a specified required API capability.
+///
+/// # Errors
+/// Returns a Windows error if the API version is insufficient or the plugin is
+/// already initialized.
+#[inline]
+pub fn create_plugin_with_required_capability<T: WSLPluginV1>(
+    api: &'static WSLPluginAPIV1,
+    capability: WSLVersionCapability,
+) -> WinResult<T> {
+    create_plugin_with_required_capabilities(api, once(capability))
+}
+
+/// Creates a WSL plugin instance with a specified set of required API capabilities.
+///
+/// The highest required version among the provided capabilities is selected.
+///
+/// # Errors
+/// Returns a Windows error if the API version is insufficient or the plugin is
+/// already initialized.
+#[inline]
+pub fn create_plugin_with_required_capabilities<T, I>(
+    api: &'static WSLPluginAPIV1,
+    capabilities: I,
+) -> WinResult<T>
+where
+    T: WSLPluginV1,
+    I: IntoIterator<Item = WSLVersionCapability>,
+{
+    let version = capabilities
+        .into_iter()
+        .map(WSLVersionCapability::required_version)
+        .max()
+        .unwrap_or(WSLVersion::new(0, 0, 0));
+    create_plugin_with_required_version(api, version.major(), version.minor(), version.revision())
 }
 
 #[expect(clippy::missing_errors_doc)]

@@ -1,7 +1,7 @@
 //! # WSL Distribution Information
 //!
 //! This module provides a safe abstraction for accessing information about a WSL distribution.
-//! It wraps the `WSLDistributionInformation` structure from the WSL Plugin API and implements
+//! It wraps the [`wslpluginapi_sys::WSLDistributionInformation`] structure from the WSL Plugin API and implements
 //! the [`CoreWSLDistributionInformation`] trait for consistent access to distribution details.
 //!
 //! ## Overview
@@ -9,18 +9,18 @@
 //! - Distribution ID
 //! - Distribution name
 //! - Package family name (if applicable)
-//! - Process ID (PID) of the init process (requires API version 2.0.5 or higher)
+//! - Process ID (PID) of the init process (requires
+//!   [`WSLVersionCapability::DistributionInitPid`] (`2.0.5`) capability)
 //! - PID namespace
 
 #[cfg(doc)]
 use crate::api::errors::require_update_error::Error;
 use crate::api::{
-    errors::require_update_error::Result, utils::check_required_version_result_from_context,
+    errors::require_update_error::Result, utils::check_capability_result_from_context,
 };
 use crate::core_wsl_distribution_information::CoreWSLDistributionInformation;
 use crate::utils::opt_wide_str;
-use crate::WSLVersion;
-use crate::{UserDistributionID, WSLContext};
+use crate::{UserDistributionID, WSLContext, WSLVersionCapability};
 use std::ffi::OsString;
 use std::fmt::{self, Debug, Display};
 use std::hash::{Hash, Hasher};
@@ -67,18 +67,18 @@ impl From<wslpluginapi_sys::WSLDistributionInformation> for WSLDistributionInfor
 impl WSLDistributionInformation {
     /// Retrieves the PID of the init process.
     ///
-    /// This requires API version 2.0.5 or higher. If the current API version does not meet
-    /// the requirement, an error is returned.
+    /// This requires [`WSLVersionCapability::DistributionInitPid`] (`2.0.5`). If the current API
+    /// version does not support the capability, an error is returned.
     ///
     /// # Returns
     /// - `Ok(pid)`: The PID of the init process.
     /// # Errors
-    /// [Error]: If the runtime version version is insufficient.
+    /// [Error]: If the runtime API capability is insufficient.
     #[inline]
     pub fn init_pid(&self) -> Result<u32> {
-        check_required_version_result_from_context(
+        check_capability_result_from_context(
             WSLContext::get_current(),
-            &WSLVersion::new(2, 0, 5),
+            WSLVersionCapability::DistributionInitPid,
         )?;
         Ok(self.0.InitPid)
     }
@@ -112,20 +112,26 @@ impl CoreWSLDistributionInformation for WSLDistributionInformation {
         opt_wide_str(self.0.PackageFamilyName)
     }
 
+    /// Retrieves the distribution flavor.
+    ///
+    /// This requires [`WSLVersionCapability::DistributionFlavor`] (`2.4.4`).
     #[inline]
     fn flavor(&self) -> Result<Option<OsString>> {
-        check_required_version_result_from_context(
+        check_capability_result_from_context(
             WSLContext::get_current(),
-            &WSLVersion::new(2, 4, 4),
+            WSLVersionCapability::DistributionFlavor,
         )?;
         Ok(opt_wide_str(self.0.Flavor))
     }
 
+    /// Retrieves the distribution version.
+    ///
+    /// This requires [`WSLVersionCapability::DistributionVersion`] (`2.4.4`).
     #[inline]
     fn version(&self) -> Result<Option<OsString>> {
-        check_required_version_result_from_context(
+        check_capability_result_from_context(
             WSLContext::get_current(),
-            &WSLVersion::new(2, 4, 4),
+            WSLVersionCapability::DistributionVersion,
         )?;
         Ok(opt_wide_str(self.0.Version))
     }

@@ -3,7 +3,7 @@ use super::Error;
 use super::{Result, WSLCommand};
 use crate::api::errors::require_update_error::Result as UpReqResult;
 use crate::api::wsl_command::IntoCowUtf8UnixPath;
-use crate::{HasSessionId, SessionID, UserDistributionID, WSLVersion};
+use crate::{HasSessionId, SessionID, UserDistributionID, WSLVersion, WSLVersionCapability};
 use std::ffi::OsStr;
 use std::fmt::{self, Debug};
 use std::mem::MaybeUninit;
@@ -24,7 +24,7 @@ use crate::DistributionID;
 
 use wslpluginapi_sys::WSLPluginAPIV1;
 
-use super::utils::check_required_version_result;
+use super::utils::check_requirement_result;
 
 /// Represents a structured interface for interacting with the `WSLPluginAPIV1` API.
 ///
@@ -182,7 +182,7 @@ impl ApiV1 {
         c_path: &[u8],
         args: &[*const u8],
     ) -> Result<TcpStream> {
-        self.check_required_version(&WSLVersion::new(2, 1, 2))?;
+        self.require_capability(WSLVersionCapability::ExecuteBinaryInDistribution)?;
         let mut socket = MaybeUninit::<WinSocket>::uninit();
         let guid: wslpluginapi_sys::windows_sys::core::GUID = distribution_id.into();
         // SAFETY: Calling ExecuteBinaryInDistribution is safe with agument correctly prepared.
@@ -230,8 +230,8 @@ impl ApiV1 {
         WSLCommand::new(self, session_id, program)
     }
 
-    fn check_required_version(&self, version: &WSLVersion) -> UpReqResult<()> {
-        check_required_version_result(self.version(), version)
+    fn require_capability(&self, capability: WSLVersionCapability) -> UpReqResult<()> {
+        check_requirement_result(self.version(), capability)
     }
 }
 

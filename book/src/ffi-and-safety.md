@@ -50,9 +50,8 @@ keep these header-level rules in mind:
 - hook input pointers are valid only during the callback;
 - string pointers from WSL may be null where the header allows it, such as `PackageFamilyName`;
 - `ExecuteBinary` argument arrays are null-terminated at the ABI boundary;
-- `WSLDistributionInformation::InitPid` was introduced in API version `2.0.5`;
-- `Flavor` and `Version` exist in the current header; `wslplugins-rs` exposes them through
-  `flavor()` and `version()` and currently requires API version `2.4.4` before reading them.
+- some fields and function pointers are available only when the host API supports the matching
+  `WSLVersionCapability`; see [Version Capabilities](./version-capabilities.md).
 
 These details are useful when debugging ABI mismatches, but ordinary plugin logic should stay on the
 typed Rust side.

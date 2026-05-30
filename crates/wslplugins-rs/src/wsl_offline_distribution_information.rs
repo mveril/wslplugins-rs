@@ -4,12 +4,10 @@
 //! offering a safe and idiomatic Rust interface for accessing offline distribution details.
 
 use crate::{
-    api::{
-        errors::require_update_error::Result, utils::check_required_version_result_from_context,
-    },
+    api::{errors::require_update_error::Result, utils::check_capability_result_from_context},
     core_wsl_distribution_information::CoreWSLDistributionInformation,
     utils::opt_wide_str,
-    UserDistributionID, WSLContext, WSLVersion,
+    UserDistributionID, WSLContext, WSLVersionCapability,
 };
 use std::{
     ffi::OsString,
@@ -87,20 +85,26 @@ impl CoreWSLDistributionInformation for WSLOfflineDistributionInformation {
         opt_wide_str(self.0.PackageFamilyName)
     }
 
+    /// Retrieves the distribution flavor.
+    ///
+    /// This requires [`WSLVersionCapability::DistributionFlavor`] (`2.4.4`).
     #[inline]
     fn flavor(&self) -> Result<Option<OsString>> {
-        check_required_version_result_from_context(
+        check_capability_result_from_context(
             WSLContext::get_current(),
-            &WSLVersion::new(2, 4, 4),
+            WSLVersionCapability::DistributionFlavor,
         )?;
         Ok(opt_wide_str(self.0.Flavor))
     }
 
+    /// Retrieves the distribution version.
+    ///
+    /// This requires [`WSLVersionCapability::DistributionVersion`] (`2.4.4`).
     #[inline]
     fn version(&self) -> Result<Option<OsString>> {
-        check_required_version_result_from_context(
+        check_capability_result_from_context(
             WSLContext::get_current(),
-            &WSLVersion::new(2, 4, 4),
+            WSLVersionCapability::DistributionVersion,
         )?;
         Ok(opt_wide_str(self.0.Version))
     }

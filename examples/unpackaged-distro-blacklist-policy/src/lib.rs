@@ -51,7 +51,7 @@ fn setup_logging() -> WinResult<()> {
 #[derive(Debug)]
 pub(crate) struct Plugin;
 
-#[wsl_plugin_v1(2, 1, 2)]
+#[wsl_plugin_v1]
 impl WSLPluginV1 for Plugin {
     fn try_new(_context: &'static WSLContext) -> WinResult<Self> {
         setup_logging()?;

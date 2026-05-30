@@ -9,6 +9,8 @@
 //! of a distribution. Implementing this trait allows for seamless integration with systems
 //! that need to handle multiple distributions in a consistent manner.
 
+#[cfg(doc)]
+use crate::WSLVersionCapability;
 use crate::{api::errors::require_update_error::Result, UserDistributionID};
 use std::ffi::OsString;
 
@@ -42,6 +44,8 @@ pub trait CoreWSLDistributionInformation {
 
     /// Retrieves the type of distribution (ubuntu, debian, ...), if available.
     ///
+    /// This requires [`WSLVersionCapability::DistributionFlavor`] (`2.4.4`).
+    ///
     /// # Returns
     /// - `Ok(Some(flavor)`: If the distribution has a flavor.
     /// - `Ok(None)`: If the distribution does not have a falvour.
@@ -51,6 +55,8 @@ pub trait CoreWSLDistributionInformation {
     fn flavor(&self) -> Result<Option<OsString>>;
 
     /// Retrieves the version of the distribution, if available
+    ///
+    /// This requires [`WSLVersionCapability::DistributionVersion`] (`2.4.4`).
     ///
     /// # Returns
     /// - `Ok(Some(version)`: If the distribution version is available.

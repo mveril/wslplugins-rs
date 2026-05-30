@@ -4,6 +4,7 @@ mod test {
     #[test]
     fn test_macro_sucess() {
         let t = TestCases::new();
-        t.pass("tests/ui/success.rs")
+        t.pass("tests/ui/success.rs");
+        t.pass("tests/ui/success_capability.rs");
     }
 }
