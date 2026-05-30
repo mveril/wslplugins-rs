@@ -7,17 +7,17 @@ use strum::{Display, EnumIter};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumIter)]
 #[non_exhaustive]
 pub enum WSLVersionCapability {
-    /// Access to `WSLDistributionInformation::InitPid`.
+    /// Access to `WSLDistributionInformation::InitPid` (`2.0.5`).
     DistributionInitPid,
-    /// Notification sent when a distribution is registered.
+    /// Notification sent when a distribution is registered (`2.1.2`).
     DistributionRegisteredHook,
-    /// Notification sent when a distribution is unregistered.
+    /// Notification sent when a distribution is unregistered (`2.1.2`).
     DistributionUnregisteredHook,
-    /// Execute a command inside a specific user distribution.
+    /// Execute a command inside a specific user distribution (`2.1.2`).
     ExecuteBinaryInDistribution,
-    /// Access to the distribution flavor field.
+    /// Access to the distribution flavor field (`2.4.4`).
     DistributionFlavor,
-    /// Access to the distribution version field.
+    /// Access to the distribution version field (`2.4.4`).
     DistributionVersion,
 }
 

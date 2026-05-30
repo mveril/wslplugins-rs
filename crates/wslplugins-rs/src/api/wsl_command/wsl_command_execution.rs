@@ -18,7 +18,7 @@ pub trait WSLCommandExecution {
     /// - The selected execution method depends on [`DistributionID`].
     /// - For `WSLCommand` and `PreparedWSLCommand`, a user distribution target
     ///   uses `ExecuteBinaryInDistribution`, which requires
-    ///   [`WSLVersionCapability::ExecuteBinaryInDistribution`].
+    ///   [`WSLVersionCapability::ExecuteBinaryInDistribution`] (`2.1.2`).
     ///
     /// # Errors
     ///

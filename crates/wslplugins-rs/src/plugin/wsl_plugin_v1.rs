@@ -7,6 +7,8 @@
 #[cfg(doc)]
 use super::error::Error;
 use super::error::Result;
+#[cfg(doc)]
+use crate::WSLVersionCapability;
 use crate::{
     wsl_distribution_information::WSLDistributionInformation,
     wsl_offline_distribution_information::WSLOfflineDistributionInformation,
@@ -166,7 +168,7 @@ pub trait WSLPluginV1: Sized + Sync {
     /// - `WinError`: If the event handling failed.
     /// # Notes
     /// - This hook is wired only when the host API supports
-    ///   `WSLVersionCapability::DistributionRegisteredHook`.
+    ///   [`WSLVersionCapability::DistributionRegisteredHook`] (`2.1.2`).
     #[expect(
         unused_variables,
         reason = "We are on a treit with default methods that return just Ok(())"
@@ -191,7 +193,7 @@ pub trait WSLPluginV1: Sized + Sync {
     ///
     /// # Notes
     /// - This hook is wired only when the host API supports
-    ///   `WSLVersionCapability::DistributionUnregisteredHook`.
+    ///   [`WSLVersionCapability::DistributionUnregisteredHook`] (`2.1.2`).
     #[expect(
         unused_variables,
         reason = "We are on a treit with default methods that return just 

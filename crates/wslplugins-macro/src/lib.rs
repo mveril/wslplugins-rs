@@ -16,7 +16,9 @@ use proc_macro::TokenStream;
 ///   `major.minor.revision` minimum version.
 /// - `#[wsl_plugin_v1(capability)]` or
 ///   `#[wsl_plugin_v1(capability_a | capability_b)]`, which requires the
-///   minimum version for the listed `WSLVersionCapability` value or values.
+///   minimum version for the listed
+///   [`WSLVersionCapability`](https://docs.rs/wslplugins-rs/latest/wslplugins_rs/enum.WSLVersionCapability.html)
+///   value or values.
 ///
 /// # Minimum version example
 /// ```rust, ignore
@@ -35,6 +37,13 @@ use proc_macro::TokenStream;
 /// ```
 ///
 /// # Capability example
+///
+/// This example uses
+/// [`WSLVersionCapability::DistributionRegisteredHook`](https://docs.rs/wslplugins-rs/latest/wslplugins_rs/enum.WSLVersionCapability.html#variant.DistributionRegisteredHook)
+/// (`2.1.2`) and
+/// [`WSLVersionCapability::DistributionUnregisteredHook`](https://docs.rs/wslplugins-rs/latest/wslplugins_rs/enum.WSLVersionCapability.html#variant.DistributionUnregisteredHook)
+/// (`2.1.2`).
+///
 /// ```rust, ignore
 /// #[wsl_plugin_v1(
 ///     WSLVersionCapability::DistributionRegisteredHook

@@ -85,6 +85,9 @@ impl CoreWSLDistributionInformation for WSLOfflineDistributionInformation {
         opt_wide_str(self.0.PackageFamilyName)
     }
 
+    /// Retrieves the distribution flavor.
+    ///
+    /// This requires [`WSLVersionCapability::DistributionFlavor`] (`2.4.4`).
     #[inline]
     fn flavor(&self) -> Result<Option<OsString>> {
         check_capability_result_from_context(
@@ -94,6 +97,9 @@ impl CoreWSLDistributionInformation for WSLOfflineDistributionInformation {
         Ok(opt_wide_str(self.0.Flavor))
     }
 
+    /// Retrieves the distribution version.
+    ///
+    /// This requires [`WSLVersionCapability::DistributionVersion`] (`2.4.4`).
     #[inline]
     fn version(&self) -> Result<Option<OsString>> {
         check_capability_result_from_context(

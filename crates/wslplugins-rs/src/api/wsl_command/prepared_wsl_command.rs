@@ -42,7 +42,7 @@ impl WSLCommandExecution for PreparedWSLCommand<'_> {
     ///
     /// This is `PreparedWSLCommand` execution behavior. The
     /// `ExecuteBinaryInDistribution` path requires
-    /// [`WSLVersionCapability::ExecuteBinaryInDistribution`].
+    /// [`WSLVersionCapability::ExecuteBinaryInDistribution`] (`2.1.2`).
     ///
     /// # Errors
     ///

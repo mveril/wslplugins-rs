@@ -42,7 +42,7 @@ type ArgVec<'a> = SmallVec<[Cow<'a, str>; 8]>;
 /// - The execution target can be the system context or a specific distribution.
 /// - When this command targets a user distribution, execution uses the WSL
 ///   Plugin API `ExecuteBinaryInDistribution` entry and requires
-///   [`WSLVersionCapability::ExecuteBinaryInDistribution`].
+///   [`WSLVersionCapability::ExecuteBinaryInDistribution`] (`2.1.2`).
 ///
 /// # Argument semantics
 ///
@@ -99,7 +99,7 @@ type ArgVec<'a> = SmallVec<[Cow<'a, str>; 8]>;
 ///
 /// In `WSLCommand`, selecting a user distribution target switches execution
 /// from `ExecuteBinary` to `ExecuteBinaryInDistribution`. That command path
-/// requires [`WSLVersionCapability::ExecuteBinaryInDistribution`], which is
+/// requires [`WSLVersionCapability::ExecuteBinaryInDistribution`] (`2.1.2`), which is
 /// checked when the command is executed.
 ///
 /// ```no_run
@@ -122,7 +122,7 @@ type ArgVec<'a> = SmallVec<[Cow<'a, str>; 8]>;
 ///   [`TcpStream`] to the process stdin/stdout.
 /// - stderr is forwarded to `dmesg` on the Linux side.
 /// - The `ExecuteBinaryInDistribution` capability requirement is specific to
-///   this command execution path; it is not a general property of distribution
+///   this command execution path (`2.1.2`); it is not a general property of distribution
 ///   identifiers.
 /// - This type performs no validation of the Linux path or arguments beyond UTF-8 handling.
 #[doc(alias = "ExecuteBinary")]
@@ -289,7 +289,7 @@ impl<'a> WSLCommand<'a> {
     ///
     /// For `WSLCommand`, a user distribution target is executed through the WSL
     /// Plugin API `ExecuteBinaryInDistribution` entry. That path requires
-    /// [`WSLVersionCapability::ExecuteBinaryInDistribution`] and the check is
+    /// [`WSLVersionCapability::ExecuteBinaryInDistribution`] (`2.1.2`) and the check is
     /// performed during [`WSLCommandExecution::execute`].
     ///
     /// This accepts any value convertible into a [`DistributionID`], including:
@@ -309,7 +309,7 @@ impl<'a> WSLCommand<'a> {
     ///
     /// For `WSLCommand`, a user distribution target is executed through the WSL
     /// Plugin API `ExecuteBinaryInDistribution` entry. That path requires
-    /// [`WSLVersionCapability::ExecuteBinaryInDistribution`] and the check is
+    /// [`WSLVersionCapability::ExecuteBinaryInDistribution`] (`2.1.2`) and the check is
     /// performed during [`WSLCommandExecution::execute`].
     ///
     /// This accepts any value convertible into a [`DistributionID`], including:

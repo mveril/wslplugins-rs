@@ -1,7 +1,7 @@
 //! # WSL Distribution Information
 //!
 //! This module provides a safe abstraction for accessing information about a WSL distribution.
-//! It wraps the `WSLDistributionInformation` structure from the WSL Plugin API and implements
+//! It wraps the [`wslpluginapi_sys::WSLDistributionInformation`] structure from the WSL Plugin API and implements
 //! the [`CoreWSLDistributionInformation`] trait for consistent access to distribution details.
 //!
 //! ## Overview
@@ -9,7 +9,8 @@
 //! - Distribution ID
 //! - Distribution name
 //! - Package family name (if applicable)
-//! - Process ID (PID) of the init process (requires `DistributionInitPid` capability)
+//! - Process ID (PID) of the init process (requires
+//!   [`WSLVersionCapability::DistributionInitPid`] (`2.0.5`) capability)
 //! - PID namespace
 
 #[cfg(doc)]
@@ -66,8 +67,8 @@ impl From<wslpluginapi_sys::WSLDistributionInformation> for WSLDistributionInfor
 impl WSLDistributionInformation {
     /// Retrieves the PID of the init process.
     ///
-    /// This requires [`WSLVersionCapability::DistributionInitPid`]. If the current API version
-    /// does not support the capability, an error is returned.
+    /// This requires [`WSLVersionCapability::DistributionInitPid`] (`2.0.5`). If the current API
+    /// version does not support the capability, an error is returned.
     ///
     /// # Returns
     /// - `Ok(pid)`: The PID of the init process.
@@ -111,6 +112,9 @@ impl CoreWSLDistributionInformation for WSLDistributionInformation {
         opt_wide_str(self.0.PackageFamilyName)
     }
 
+    /// Retrieves the distribution flavor.
+    ///
+    /// This requires [`WSLVersionCapability::DistributionFlavor`] (`2.4.4`).
     #[inline]
     fn flavor(&self) -> Result<Option<OsString>> {
         check_capability_result_from_context(
@@ -120,6 +124,9 @@ impl CoreWSLDistributionInformation for WSLDistributionInformation {
         Ok(opt_wide_str(self.0.Flavor))
     }
 
+    /// Retrieves the distribution version.
+    ///
+    /// This requires [`WSLVersionCapability::DistributionVersion`] (`2.4.4`).
     #[inline]
     fn version(&self) -> Result<Option<OsString>> {
         check_capability_result_from_context(

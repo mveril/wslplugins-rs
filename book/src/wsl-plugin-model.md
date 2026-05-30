@@ -85,8 +85,11 @@ minimum versions are listed in [Version Capabilities](./version-capabilities.md)
 ## Versioned Hooks
 
 Some hooks are only available in newer WSL plugin API versions. Distribution registration and
-unregistration are represented by `WSLVersionCapability::DistributionRegisteredHook` and
-`WSLVersionCapability::DistributionUnregisteredHook`.
+unregistration are represented by
+[`WSLVersionCapability::DistributionRegisteredHook`](./version-capabilities.md#distribution-registered-hook)
+(`2.1.2`) and
+[`WSLVersionCapability::DistributionUnregisteredHook`](./version-capabilities.md#distribution-unregistered-hook)
+(`2.1.2`).
 
 Choose the requirement passed to `#[wsl_plugin_v1(...)]` according to the hooks and API calls that
 are mandatory for the plugin. A plugin that only handles basic VM lifecycle events can use
@@ -136,7 +139,8 @@ fn describe_distribution(distribution: &WSLDistributionInformation) -> PluginRes
 If the runtime API is too old for `init_pid()`, the call returns a `RequiresUpdate` error that maps
 to `WSL_E_PLUGIN_REQUIRES_UPDATE`. The same pattern is used by distribution-scoped command
 execution: `with_distribution_id(DistributionID::User(...)).execute()` requires
-`WSLVersionCapability::ExecuteBinaryInDistribution` and can return an API error on an older runtime.
+[`WSLVersionCapability::ExecuteBinaryInDistribution`](./version-capabilities.md#execute-binary-in-distribution)
+(`2.1.2`) and can return an API error on an older runtime.
 
 Use runtime `Result` checks when the feature is optional:
 
@@ -155,9 +159,11 @@ fn optional_flavor(distribution: &WSLDistributionInformation) -> Option<String> 
 
 Use the macro version requirement when the plugin cannot behave correctly without the newer hook,
 field, or API call. For example, a plugin whose main purpose is to run commands inside a specific
-user distribution should require `WSLVersionCapability::ExecuteBinaryInDistribution`; a plugin that
-only uses `flavor()` as a nicer log detail can keep a lower macro requirement and treat that field
-as optional. See [Version Capabilities](./version-capabilities.md) for the full capability list.
+user distribution should require
+[`WSLVersionCapability::ExecuteBinaryInDistribution`](./version-capabilities.md#execute-binary-in-distribution)
+(`2.1.2`); a plugin that only uses `flavor()` as a nicer log detail can keep a lower macro
+requirement and treat that field as optional. See [Version Capabilities](./version-capabilities.md)
+for the full capability list.
 
 ## Hook Failure Semantics
 

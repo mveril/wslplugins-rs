@@ -12,12 +12,12 @@ matrix below is the canonical list for this book; other chapters link here inste
 
 | Capability | Enables | Minimum API version |
 | --- | --- | --- |
-| `DistributionInitPid` | `WSLDistributionInformation::init_pid()` | `2.0.5` |
-| `DistributionRegisteredHook` | `on_distribution_registered` hook wiring | `2.1.2` |
-| `DistributionUnregisteredHook` | `on_distribution_unregistered` hook wiring | `2.1.2` |
-| `ExecuteBinaryInDistribution` | command execution inside a user distribution | `2.1.2` |
-| `DistributionFlavor` | `CoreWSLDistributionInformation::flavor()` | `2.4.4` |
-| `DistributionVersion` | `CoreWSLDistributionInformation::version()` | `2.4.4` |
+| <a id="distribution-init-pid"></a>`DistributionInitPid` | `WSLDistributionInformation::init_pid()` | `2.0.5` |
+| <a id="distribution-registered-hook"></a>`DistributionRegisteredHook` | `on_distribution_registered` hook wiring | `2.1.2` |
+| <a id="distribution-unregistered-hook"></a>`DistributionUnregisteredHook` | `on_distribution_unregistered` hook wiring | `2.1.2` |
+| <a id="execute-binary-in-distribution"></a>`ExecuteBinaryInDistribution` | command execution inside a user distribution | `2.1.2` |
+| <a id="distribution-flavor"></a>`DistributionFlavor` | `CoreWSLDistributionInformation::flavor()` | `2.4.4` |
+| <a id="distribution-version"></a>`DistributionVersion` | `CoreWSLDistributionInformation::version()` | `2.4.4` |
 
 For command execution details, see [Command Execution](./command-execution.md). For the lifecycle
 and registration events exposed by `WSLPluginV1`, see [WSL Plugin Model](./wsl-plugin-model.md).
@@ -126,7 +126,9 @@ fn optional_flavor(distribution: &WSLDistributionInformation) -> Option<String> 
 ```
 
 The same rule applies to command execution. If distribution-scoped command execution is central to
-the plugin, declare `WSLVersionCapability::ExecuteBinaryInDistribution` in `#[wsl_plugin_v1(...)]`.
+the plugin, declare
+[`WSLVersionCapability::ExecuteBinaryInDistribution`](./version-capabilities.md#execute-binary-in-distribution)
+(`2.1.2`) in `#[wsl_plugin_v1(...)]`.
 If it is optional, handle the API error returned by `execute()`.
 
 ## Inspecting Versions
