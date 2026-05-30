@@ -74,6 +74,8 @@ Good pull request descriptions usually include:
 - Test results for the checks that were run.
 - Windows validation notes when the change was actually tested with WSL.
 
+When a pull request changes the public API, update the mdBook in `book/` as much as needed so users can understand the new or changed API surface. If no book update is needed for a public API change, explain why in the pull request.
+
 Keep commits focused. Recent commit subjects use short imperative or descriptive wording, for example:
 
 ```text

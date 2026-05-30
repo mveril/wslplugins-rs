@@ -25,7 +25,7 @@ Place ordinary Rust tests next to the code or in crate-level `tests/` directorie
 
 ## Documentation Guidelines
 
-The mdBook in `book/` is the user-oriented guide for this library. When changing public APIs, examples, plugin behavior, packaging, validation, or anything users need to understand to build WSL plugins, update the book in the same change. If a change intentionally does not require a book update, make that explicit in the pull request.
+The mdBook in `book/` is the user-oriented guide for this library. When changing the public API, update the book as much as needed so users can understand the new or changed API surface. Also update the book when changing examples, plugin behavior, packaging, validation, or anything users need to understand to build WSL plugins. If a change intentionally does not require a book update, make that explicit in the pull request.
 
 ## Git Flow & Pull Requests
 
