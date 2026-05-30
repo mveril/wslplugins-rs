@@ -4,10 +4,16 @@ on:
   push:
     branches:
       - main
+      - develop
+      - release/*
     paths:
       - book/**
       - .github/workflows/book.yml
   pull_request:
+    branches:
+      - main
+      - develop
+      - release/*
     paths:
       - book/**
       - .github/workflows/book.yml
@@ -26,13 +32,34 @@ jobs:
   test-snippets:
     name: Test Rust snippets
     runs-on: windows-latest
+    env:
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -D warnings
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Cache Cargo Registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo Git Index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-index-
+
+      - name: Install Rust
+        shell: pwsh
+        run: rustup update stable && rustup default stable
 
       - name: Install mdbook
         run: cargo install mdbook
-      
+
       - name: Build snippet dependencies
         run: cargo build -p wslplugins-rs --features macro
         env:
@@ -43,15 +70,33 @@ jobs:
 
   build:
     name: Build mdBook
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    env:
+      CARGO_TERM_COLOR: always
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install mdBook
-        uses: taiki-e/install-action@v2
+      - name: Cache Cargo Registry
+        uses: actions/cache@v3
         with:
-          tool: mdbook
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo Git Index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-index-
+
+      - name: Install Rust
+        shell: pwsh
+        run: rustup update stable && rustup default stable
+
+      - name: Install mdbook
+        run: cargo install mdbook
 
       - name: Build
         run: mdbook build book
@@ -62,15 +107,33 @@ jobs:
     needs:
       - build
       - test-snippets
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    env:
+      CARGO_TERM_COLOR: always
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install mdBook
-        uses: taiki-e/install-action@v2
+      - name: Cache Cargo Registry
+        uses: actions/cache@v3
         with:
-          tool: mdbook
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo Git Index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-index-
+
+      - name: Install Rust
+        shell: pwsh
+        run: rustup update stable && rustup default stable
+
+      - name: Install mdbook
+        run: cargo install mdbook
 
       - name: Build
         run: mdbook build book
