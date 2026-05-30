@@ -1,0 +1,13 @@
+[book]
+title = "The wslplugins-rs Book"
+authors = ["Mickaël Véril"]
+language = "en"
+src = "src"
+
+[build]
+build-dir = "../target/book"
+
+[output.html]
+git-repository-url = "https://github.com/mveril/wslplugins-rs"
+edit-url-template = "https://github.com/mveril/wslplugins-rs/edit/main/book/{path}"
+site-url = "/wslplugins-rs/"
