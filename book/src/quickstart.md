@@ -38,7 +38,7 @@ pub(crate) struct Plugin {
     _context: &'static WSLContext,
 }
 
-#[wsl_plugin_v1(2, 0, 5)]
+#[wsl_plugin_v1]
 impl WSLPluginV1 for Plugin {
     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
         Ok(Self { _context: context })

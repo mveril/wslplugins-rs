@@ -2,7 +2,7 @@
 
 The minimal shape of a plugin is a Rust `cdylib` crate containing a type plus an implementation of
 `WSLPluginV1`.
-The `#[wsl_plugin_v1(...)]` macro generates the exported functions and hook wiring expected by WSL.
+The `#[wsl_plugin_v1]` macro generates the exported functions and hook wiring expected by WSL.
 
 ```rust
 # extern crate wslplugins_rs;
@@ -12,7 +12,7 @@ pub(crate) struct MyPlugin {
     context: &'static WSLContext,
 }
 
-#[wsl_plugin_v1(2, 0, 5)]
+#[wsl_plugin_v1]
 impl WSLPluginV1 for MyPlugin {
     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
         Ok(Self { context })
@@ -20,9 +20,9 @@ impl WSLPluginV1 for MyPlugin {
 }
 ```
 
-The version in `#[wsl_plugin_v1(major, minor, revision)]` declares the WSL plugin API version
-required by the plugin. The revision component is optional and defaults to `0`. Use the lowest
-version that provides the hooks and API calls your plugin needs.
+Use a requirement in `#[wsl_plugin_v1(...)]` only when the whole plugin depends on a specific WSL
+Plugin API version or named capability. See [Version Capabilities](./version-capabilities.md) for
+the supported forms and feature gates.
 
 The `context` gives access to the framework API wrapper. Store it if the plugin needs to call WSL
 APIs later from hook methods.
@@ -43,7 +43,7 @@ pub(crate) struct MyPlugin {
     context: &'static WSLContext,
 }
 
-#[wsl_plugin_v1(2, 1, 2)]
+#[wsl_plugin_v1]
 impl WSLPluginV1 for MyPlugin {
     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
         Ok(Self { context })
@@ -71,7 +71,8 @@ impl WSLPluginV1 for MyPlugin {
 ```
 
 Command paths are Linux paths such as `/bin/cat`. `execute()` returns a `TcpStream` connected to the
-process stdin and stdout; stderr is forwarded to Linux `dmesg`.
+process stdin and stdout; stderr is forwarded to Linux `dmesg`. This example runs in the VM root
+namespace; see [Command Execution](./command-execution.md) for distribution-scoped execution.
 
 ## Start from an Example
 
@@ -81,8 +82,9 @@ demonstrates:
 - creating plugin state in `try_new`;
 - logging VM and distribution lifecycle events;
 - running `/bin/cat /proc/version` when the VM starts;
-- using `#[wsl_plugin_v1(2, 1, 3)]` because it handles distribution registration hooks. Those
-  hooks are available starting with API version `2.1.2`; the example currently targets `2.1.3`.
+- using the macro to declare plugin-wide requirements when a hook or API capability is mandatory.
+  New plugins should prefer named capabilities where available; see
+  [Version Capabilities](./version-capabilities.md).
 
 In your own plugin crate, the equivalent release build is:
 
@@ -92,5 +94,5 @@ cargo build --release
 
 After that, sign and register the DLL as described in the packaging chapter.
 
-Next: read [WSL Plugin Model](./wsl-plugin-model.md) for the host model and versioning rules, or
+Next: read [WSL Plugin Model](./wsl-plugin-model.md) for the host model and available events, or
 jump to [Packaging and Deployment](./packaging.md) when you are ready to load the DLL into WSL.

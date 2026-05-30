@@ -38,7 +38,11 @@ root filesystem backed by writable `tmpfs`, so changes made there disappear when
 down.
 
 Use a user-distribution target when the command must run inside a distribution rather than the root
-namespace. That path uses `ExecuteBinaryInDistribution`, which requires API version `2.1.2` or newer.
+namespace. That path uses `ExecuteBinaryInDistribution`, which is represented by
+`WSLVersionCapability::ExecuteBinaryInDistribution`; see
+[Version Capabilities](./version-capabilities.md) for the required API support. If that command path
+is central to the plugin, declare the capability in `#[wsl_plugin_v1(...)]`. If it is optional,
+handle the error returned by `execute()`.
 
 The returned `TcpStream` is connected to the command's stdin and stdout. It does not carry stderr;
 WSL sends stderr output to Linux `dmesg`.

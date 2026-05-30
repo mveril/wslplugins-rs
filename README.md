@@ -89,10 +89,10 @@ impl WSLPluginV1 for MyPlugin {
 
 The `macro` feature re-exports the `wsl_plugin_v1` attribute and generates the WSL entry points for a `WSLPluginV1` implementation.
 
-### Choosing the Required API Version
+### Choosing API Requirements
 
-The macro argument controls the minimum WSL Plugin API version checked before
-your plugin is initialized:
+The macro argument controls the WSL Plugin API support checked before your plugin is initialized.
+Use no argument when the plugin only needs the base entry point:
 
 ```rust
 use wslplugins_rs::prelude::*;
@@ -101,7 +101,7 @@ pub(crate) struct MyPlugin {
     context: &'static WSLContext,
 }
 
-#[wsl_plugin_v1(2, 1, 2)]
+#[wsl_plugin_v1]
 impl WSLPluginV1 for MyPlugin {
     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
         Ok(Self { context })
@@ -109,10 +109,8 @@ impl WSLPluginV1 for MyPlugin {
 }
 ```
 
-Use `#[wsl_plugin_v1]` when the plugin only needs the base entry point and no
-specific API capability. Use `#[wsl_plugin_v1(major, minor)]` or
-`#[wsl_plugin_v1(major, minor, revision)]` when the whole plugin requires a
-known API version before it can run.
+Use `#[wsl_plugin_v1(major, minor)]` or `#[wsl_plugin_v1(major, minor, revision)]` when the whole
+plugin requires a known API version before it can run.
 
 For plugins that require named API capabilities, pass one or more
 `WSLVersionCapability` values:
@@ -137,7 +135,9 @@ impl WSLPluginV1 for RegistrationLogger {
 
 Hooks introduced after the base API, such as distribution registration and
 unregistration notifications, are wired only when the host API version supports
-the corresponding capability.
+the corresponding capability. See the book's
+[Version Capabilities](https://mveril.github.io/wslplugins-rs/version-capabilities.html) chapter
+for the capability list and cross-references to command execution and plugin events.
 
 ## Running Commands in WSL
 
@@ -162,16 +162,19 @@ Notes:
 
 - Program paths must be Linux UTF-8 paths such as `/bin/echo`
 - `argv[0]` defaults to the program path and can be overridden with `with_arg0`
-- `with_distribution_id` targets a specific user distribution
+- `with_distribution_id` targets a specific user distribution and requires the
+  `ExecuteBinaryInDistribution` capability
 - `execute()` returns a `TcpStream` connected to process stdin/stdout
 - stderr is forwarded to Linux `dmesg`
 
 ## Examples
 
-Two example plugins are included:
+Example plugins are included:
 
 - `examples/minimal`: a close Rust translation of Microsoft's sample plugin
 - `examples/dist-info`: a plugin focused on distribution metadata and tracing
+- `examples/unpackaged-distro-blacklist-policy`: a policy plugin that blocks unpackaged
+  distributions
 
 Build one of them in release mode:
 

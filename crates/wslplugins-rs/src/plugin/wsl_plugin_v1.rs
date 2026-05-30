@@ -165,7 +165,8 @@ pub trait WSLPluginV1: Sized + Sync {
     /// # Errors
     /// - `WinError`: If the event handling failed.
     /// # Notes
-    /// - Introduced in API version 2.1.2.
+    /// - This hook is wired only when the host API supports
+    ///   `WSLVersionCapability::DistributionRegisteredHook`.
     #[expect(
         unused_variables,
         reason = "We are on a treit with default methods that return just Ok(())"
@@ -189,7 +190,8 @@ pub trait WSLPluginV1: Sized + Sync {
     /// - `WinError`: If the event handling failed.
     ///
     /// # Notes
-    /// - Introduced in API version 2.1.2.
+    /// - This hook is wired only when the host API supports
+    ///   `WSLVersionCapability::DistributionUnregisteredHook`.
     #[expect(
         unused_variables,
         reason = "We are on a treit with default methods that return just 

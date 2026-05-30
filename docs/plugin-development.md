@@ -36,9 +36,10 @@ impl WSLPluginV1 for MyPlugin {
 
 The macro generates the exported functions expected by WSL, initializes the shared `WSLContext`, creates one plugin instance by calling `try_new`, and wires implemented hook methods into the WSL hook table.
 
-## Required API Version
+## API Requirements
 
-The macro can also check that the host WSL Plugin API is new enough before the plugin is initialized.
+The macro can also check that the host WSL Plugin API supports the version or capability required
+before the plugin is initialized.
 
 Use no argument when the plugin only needs the base entry point:
 
@@ -97,6 +98,9 @@ impl WSLPluginV1 for MyPlugin {
 ```
 
 If the version check fails, WSL receives `WSL_E_PLUGIN_REQUIRES_UPDATE` and the plugin is not initialized.
+
+The complete capability list is maintained in the book's
+[Version Capabilities](../book/src/version-capabilities.md) chapter.
 
 ## Version-Gated Hooks
 

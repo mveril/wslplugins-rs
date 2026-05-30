@@ -9,7 +9,7 @@
 //! - Distribution ID
 //! - Distribution name
 //! - Package family name (if applicable)
-//! - Process ID (PID) of the init process (requires API version 2.0.5 or higher)
+//! - Process ID (PID) of the init process (requires `DistributionInitPid` capability)
 //! - PID namespace
 
 #[cfg(doc)]
@@ -66,13 +66,13 @@ impl From<wslpluginapi_sys::WSLDistributionInformation> for WSLDistributionInfor
 impl WSLDistributionInformation {
     /// Retrieves the PID of the init process.
     ///
-    /// This requires API version 2.0.5 or higher. If the current API version does not meet
-    /// the requirement, an error is returned.
+    /// This requires [`WSLVersionCapability::DistributionInitPid`]. If the current API version
+    /// does not support the capability, an error is returned.
     ///
     /// # Returns
     /// - `Ok(pid)`: The PID of the init process.
     /// # Errors
-    /// [Error]: If the runtime version version is insufficient.
+    /// [Error]: If the runtime API capability is insufficient.
     #[inline]
     pub fn init_pid(&self) -> Result<u32> {
         check_capability_result_from_context(

@@ -111,21 +111,13 @@ Windows errors.
 
 ## Runtime API Is Too Old
 
-If the plugin requests a newer API version than WSL provides, initialization fails with
-`WSL_E_PLUGIN_REQUIRES_UPDATE`.
+If the plugin requests a newer API version or capability than WSL provides, initialization fails
+with `WSL_E_PLUGIN_REQUIRES_UPDATE`.
 
-Use the version in `#[wsl_plugin_v1(major, minor, revision)]` as the minimum API version for the
-plugin as a whole. Keep it as low as practical, and use runtime `Result` checks for optional fields
-or optional behavior.
-
-Common version-sensitive features include:
-
-| Feature | Minimum API version |
-| --- | --- |
-| `init_pid()` | `2.0.5` |
-| Distribution registration hooks | `2.1.2` |
-| `ExecuteBinaryInDistribution` | `2.1.2` |
-| `flavor()` and `version()` | `2.4.4` |
+Use `#[wsl_plugin_v1(...)]` for requirements that are mandatory for the plugin as a whole. Keep the
+requirement as low as practical, and use runtime `Result` checks for optional fields or optional
+behavior. The capability list and minimum API versions are centralized in
+[Version Capabilities](./version-capabilities.md).
 
 ## Cleanup After a Bad Deployment
 

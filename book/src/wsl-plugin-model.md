@@ -32,11 +32,12 @@ The API table contains:
 - `MountFolder`, for creating a Plan 9 mount between Windows and Linux;
 - `ExecuteBinary`, for running a program in the root namespace of the WSL2 VM;
 - `PluginError`, for passing a user-facing failure message back to WSL;
-- `ExecuteBinaryInDistribution`, introduced in API version `2.1.2`, for running a program inside a
-  user distribution.
+- `ExecuteBinaryInDistribution`, for running a program inside a user distribution when the host API
+  supports that capability.
 
 The hook table contains VM lifecycle hooks, distribution lifecycle hooks, and distribution
-registration hooks. The registration hooks were introduced in API version `2.1.2`.
+registration hooks. Registration and unregistration hooks are version-gated capabilities; see
+[Version Capabilities](./version-capabilities.md).
 
 ## Plugin State
 
@@ -71,40 +72,40 @@ The public crate provides typed wrappers for common WSL concepts:
 - `WSLVmCreationSettings`: VM creation settings.
 - `SessionID`, `DistributionID`, and `UserDistributionID`: typed identifiers.
 - `WSLVersion`: parsed WSL version values.
+- `WSLVersionCapability`: named feature gates for version-sensitive API surface.
 
 Prefer these wrappers over raw FFI types in plugin code. Raw access is available behind the `sys`
 feature for cases where a wrapper does not yet expose the needed API.
 
 Online and offline distribution wrappers both implement `CoreWSLDistributionInformation`. That gives
 common access to the distribution ID, name, optional package family name, flavor, and version. The
-crate checks the runtime API version for fields that were added later: `init_pid()` requires
-`2.0.5`, and `flavor()` / `version()` require `2.4.4`.
+crate checks the runtime API capability for fields that were added later. The capability names and
+minimum versions are listed in [Version Capabilities](./version-capabilities.md).
 
 ## Versioned Hooks
 
-Some hooks are only available in newer WSL plugin API versions. For example, distribution
-registration hooks are documented in this crate as introduced in API version `2.1.2`.
+Some hooks are only available in newer WSL plugin API versions. Distribution registration and
+unregistration are represented by `WSLVersionCapability::DistributionRegisteredHook` and
+`WSLVersionCapability::DistributionUnregisteredHook`.
 
-Choose the version passed to `#[wsl_plugin_v1(...)]` according to the hooks and API calls your
-plugin uses. A plugin that only handles basic VM lifecycle events can target an older version than a
-plugin that observes distribution registration.
+Choose the requirement passed to `#[wsl_plugin_v1(...)]` according to the hooks and API calls that
+are mandatory for the plugin. A plugin that only handles basic VM lifecycle events can use
+`#[wsl_plugin_v1]`. A plugin whose core behavior depends on registration events should declare the
+matching capability.
 
-The macro accepts `major, minor` or `major, minor, revision`. If the revision is omitted, it is
-treated as `0`.
-
-If WSL offers an older API version than the one requested by the plugin macro, initialization fails
-with `WSL_E_PLUGIN_REQUIRES_UPDATE`. This is preferable to registering callbacks that rely on fields
-or function pointers the host does not provide.
+If WSL offers an older API version than the requirement requested by the plugin macro,
+initialization fails with `WSL_E_PLUGIN_REQUIRES_UPDATE`. This is preferable when the plugin cannot
+operate correctly without that hook or API call.
 
 ## Version Checks
 
 `wslplugins-rs` uses two complementary version checks.
 
-The first check happens when WSL loads the DLL. The version passed to
-`#[wsl_plugin_v1(...)]` is the minimum API version required by the plugin as a whole. During entry
-point initialization, the generated code compares that requirement with `context.api.version()`. If
-the runtime API is too old, plugin creation stops and WSL receives
-`WSL_E_PLUGIN_REQUIRES_UPDATE`.
+The first check happens when WSL loads the DLL. The requirement passed to `#[wsl_plugin_v1(...)]`
+is the minimum API support required by the plugin as a whole. It can be omitted, expressed as an
+explicit version, or expressed as one or more capabilities. During entry point initialization, the
+generated code compares that requirement with `context.api.version()`. If the runtime API is too
+old, plugin creation stops and WSL receives `WSL_E_PLUGIN_REQUIRES_UPDATE`.
 
 That means WSL does not call `try_new` and the hook table is not registered for that plugin. A hook
 that requires a newer API version will therefore never be called if you declare that version in the
@@ -113,8 +114,7 @@ plugin's behavior.
 
 Hook availability is decided when the plugin is registered with WSL, not lazily when an event
 happens. If the current WSL plugin API version does not provide a hook slot, the method associated
-with that event is never called. For example, on a runtime older than `2.1.2`, distribution
-registration and unregistration notifications are not available, so
+with that event is never called. For example, without the distribution registration capabilities,
 `on_distribution_registered` and `on_distribution_unregistered` cannot run.
 
 The second check happens at runtime on individual APIs or fields. Some wrappers return a `Result`
@@ -135,9 +135,8 @@ fn describe_distribution(distribution: &WSLDistributionInformation) -> PluginRes
 
 If the runtime API is too old for `init_pid()`, the call returns a `RequiresUpdate` error that maps
 to `WSL_E_PLUGIN_REQUIRES_UPDATE`. The same pattern is used by distribution-scoped command
-execution: `ExecuteBinaryInDistribution` requires API version `2.1.2`, so
-`with_distribution_id(DistributionID::User(...)).execute()` can return an API error on an older
-runtime.
+execution: `with_distribution_id(DistributionID::User(...)).execute()` requires
+`WSLVersionCapability::ExecuteBinaryInDistribution` and can return an API error on an older runtime.
 
 Use runtime `Result` checks when the feature is optional:
 
@@ -156,8 +155,9 @@ fn optional_flavor(distribution: &WSLDistributionInformation) -> Option<String> 
 
 Use the macro version requirement when the plugin cannot behave correctly without the newer hook,
 field, or API call. For example, a plugin whose main purpose is to run commands inside a specific
-user distribution should require at least `2.1.2`; a plugin that only uses `flavor()` as a nicer log
-detail can keep a lower macro version and treat that field as optional.
+user distribution should require `WSLVersionCapability::ExecuteBinaryInDistribution`; a plugin that
+only uses `flavor()` as a nicer log detail can keep a lower macro requirement and treat that field
+as optional. See [Version Capabilities](./version-capabilities.md) for the full capability list.
 
 ## Hook Failure Semantics
 

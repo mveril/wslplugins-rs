@@ -8,6 +8,7 @@
 - [End-to-End Quickstart](./quickstart.md)
 - [Your First Plugin](./first-plugin.md)
 - [WSL Plugin Model](./wsl-plugin-model.md)
+- [Version Capabilities](./version-capabilities.md)
 - [Error Handling](./error-handling.md)
 - [Command Execution](./command-execution.md)
 - [FFI and Safety](./ffi-and-safety.md)
