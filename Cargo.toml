@@ -16,7 +16,7 @@ strum = { version = "0.28", features = ["derive"] }
 
 [workspace.package]
 authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]
-version = "0.1.0-beta.3"
+version = "0.1.0-beta.4"
 readme = "README.md"
 edition = "2021"
 license = "Apache-2.0 OR MIT"

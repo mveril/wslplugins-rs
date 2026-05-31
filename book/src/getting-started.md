@@ -47,7 +47,7 @@ Most plugins should enable the `macro` feature so the crate generates the requir
 
 ```toml
 [dependencies]
-wslplugins-rs = { version = "0.1.0-beta.3", features = ["macro"] }
+wslplugins-rs = { version = "0.1.0-beta.4", features = ["macro"] }
 ```
 
 Import the prelude in your plugin code:

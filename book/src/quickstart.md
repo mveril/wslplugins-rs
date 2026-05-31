@@ -25,7 +25,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-wslplugins-rs = { version = "0.1.0-beta.3", features = ["macro"] }
+wslplugins-rs = { version = "0.1.0-beta.4", features = ["macro"] }
 ```
 
 Use this minimal `src/lib.rs`:
