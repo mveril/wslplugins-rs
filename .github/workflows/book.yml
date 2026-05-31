@@ -103,7 +103,7 @@ jobs:
 
   build-pages:
     name: Build Pages artifact
-    if: github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs:
       - build
       - test-snippets
@@ -145,7 +145,7 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    if: github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build-pages
     runs-on: ubuntu-latest
     environment:
