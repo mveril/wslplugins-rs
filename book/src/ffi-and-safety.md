@@ -1,0 +1,57 @@
+# FFI and Safety
+
+WSL plugins run inside the WSL service process. A crash, panic across an FFI boundary, invalid
+pointer, or blocking hook can affect the host service. Treat plugin code like systems code even when
+using safe Rust wrappers.
+
+Because hooks cross an FFI boundary, plugin code should return typed errors instead of panicking.
+See [Error Handling](./error-handling.md) for the `WinResult` and `PluginResult` conventions.
+
+## Unsafe Code
+
+Most plugin code should not need raw FFI access. When unsafe code is necessary:
+
+- keep unsafe blocks as small as possible;
+- document each block with a `SAFETY:` comment;
+- validate pointer lifetimes and ownership before wrapping raw values;
+- avoid storing borrowed FFI data beyond the lifetime guaranteed by WSL.
+
+The `wslplugins-rs` crate centralizes raw API handling so plugin authors can usually work with typed
+Rust values instead.
+
+## Hook Behavior
+
+Hooks are synchronous notifications. Keep them predictable:
+
+- do the minimum required work in the hook;
+- avoid unbounded waits;
+- avoid holding locks while calling into WSL APIs;
+- make logging best-effort and failure-aware;
+- assume hooks may be called multiple times for lifecycle retries.
+
+If a plugin needs heavier work, prefer moving it to a controlled background path with clear
+shutdown behavior.
+
+Microsoft's WSL plugin documentation calls out three operational consequences of this model:
+
+- WSL waits for hook callbacks before continuing the lifecycle operation.
+- Most plugin errors are fatal to the VM or distribution startup path.
+- Plugin code runs in the WSL service process, so a plugin crash can crash the service.
+
+That is why the framework examples keep hooks small and use typed errors instead of process-level
+failure mechanisms.
+
+## Advanced FFI Notes
+
+The `sys` feature re-exports the raw `wslpluginapi-sys` bindings for cases where the safe wrapper
+does not yet expose a field or function. Prefer the safe wrapper first. If raw access is necessary,
+keep these header-level rules in mind:
+
+- hook input pointers are valid only during the callback;
+- string pointers from WSL may be null where the header allows it, such as `PackageFamilyName`;
+- `ExecuteBinary` argument arrays are null-terminated at the ABI boundary;
+- some fields and function pointers are available only when the host API supports the matching
+  `WSLVersionCapability`; see [Version Capabilities](./version-capabilities.md).
+
+These details are useful when debugging ABI mismatches, but ordinary plugin logic should stay on the
+typed Rust side.

@@ -25,6 +25,7 @@
 - [ ] `cargo test --workspace --all-features`
 - [ ] `cargo clippy --workspace --all-targets --all-features`
 - [ ] `cargo fmt --all -- --check`
+- [ ] `mdbook build book` when the book is changed
 - [ ] Relevant manual testing completed
 
 ## WSL / Windows Notes
@@ -36,5 +37,6 @@
 
 - [ ] Tests added or updated when relevant
 - [ ] Documentation updated when relevant
+- [ ] Book updated as needed for public API changes, or the PR explains why no book update is needed
 - [ ] Examples updated when relevant
 - [ ] No unrelated changes included

@@ -2,6 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/wslplugins-rs?logo=rust)](https://crates.io/crates/wslplugins-rs)
 [![Docs.rs](https://img.shields.io/badge/docs.rs-wslplugins--rs-blue?logo=docs.rs)](https://docs.rs/wslplugins-rs)
+[![Book](https://img.shields.io/badge/book-mdBook-blue?logo=mdbook)](https://mveril.github.io/wslplugins-rs/)
 [![Build Status](https://github.com/mveril/wslplugins-rs/actions/workflows/rust.yml/badge.svg?logo=github)](https://github.com/mveril/wslplugins-rs/actions)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE-APACHE)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE-MIT)
@@ -47,13 +48,26 @@ The workspace is organized around a small public API surface and separate macro 
 
 This split keeps plugin authors focused on `wslplugins-rs`, while the macro parsing and generated WSL entry-point wiring stay isolated in internal crates.
 
+## Documentation
+
+- [The wslplugins-rs Book](https://mveril.github.io/wslplugins-rs/) explains the development flow from first plugin to packaging.
+- [docs.rs](https://docs.rs/wslplugins-rs) contains the generated API reference.
+
+To build the book locally, install [mdBook](https://rust-lang.github.io/mdBook/guide/installation.html)
+with Cargo and run:
+
+```powershell
+cargo install mdbook
+mdbook build book
+```
+
 ## Quick Start
 
 Add the crate with the `macro` feature:
 
 ```toml
 [dependencies]
-wslplugins-rs = { version = "0.1.0-beta.3", features = ["macro"] }
+wslplugins-rs = { version = "0.1.0-beta.4", features = ["macro"] }
 ```
 
 Then implement a plugin:
@@ -65,7 +79,7 @@ pub(crate) struct MyPlugin {
     context: &'static WSLContext,
 }
 
-#[wsl_plugin_v1(2, 0, 5)]
+#[wsl_plugin_v1]
 impl WSLPluginV1 for MyPlugin {
     fn try_new(context: &'static WSLContext) -> WinResult<Self> {
         Ok(Self { context })
@@ -74,6 +88,56 @@ impl WSLPluginV1 for MyPlugin {
 ```
 
 The `macro` feature re-exports the `wsl_plugin_v1` attribute and generates the WSL entry points for a `WSLPluginV1` implementation.
+
+### Choosing API Requirements
+
+The macro argument controls the WSL Plugin API support checked before your plugin is initialized.
+Use no argument when the plugin only needs the base entry point:
+
+```rust
+use wslplugins_rs::prelude::*;
+
+pub(crate) struct MyPlugin {
+    context: &'static WSLContext,
+}
+
+#[wsl_plugin_v1]
+impl WSLPluginV1 for MyPlugin {
+    fn try_new(context: &'static WSLContext) -> WinResult<Self> {
+        Ok(Self { context })
+    }
+}
+```
+
+Use `#[wsl_plugin_v1(major, minor)]` or `#[wsl_plugin_v1(major, minor, revision)]` when the whole
+plugin requires a known API version before it can run.
+
+For plugins that require named API capabilities, pass one or more
+`WSLVersionCapability` values:
+
+```rust
+use wslplugins_rs::prelude::*;
+
+pub(crate) struct RegistrationLogger {
+    context: &'static WSLContext,
+}
+
+#[wsl_plugin_v1(
+    WSLVersionCapability::DistributionRegisteredHook
+    | WSLVersionCapability::DistributionUnregisteredHook
+)]
+impl WSLPluginV1 for RegistrationLogger {
+    fn try_new(context: &'static WSLContext) -> WinResult<Self> {
+        Ok(Self { context })
+    }
+}
+```
+
+Hooks introduced after the base API, such as distribution registration and
+unregistration notifications, are wired only when the host API version supports
+the corresponding capability. See the book's
+[Version Capabilities](https://mveril.github.io/wslplugins-rs/version-capabilities.html) chapter
+for the capability list and cross-references to command execution and plugin events.
 
 ## Running Commands in WSL
 
@@ -98,16 +162,19 @@ Notes:
 
 - Program paths must be Linux UTF-8 paths such as `/bin/echo`
 - `argv[0]` defaults to the program path and can be overridden with `with_arg0`
-- `with_distribution_id` targets a specific user distribution
+- `with_distribution_id` targets a specific user distribution and requires the
+  `ExecuteBinaryInDistribution` capability
 - `execute()` returns a `TcpStream` connected to process stdin/stdout
 - stderr is forwarded to Linux `dmesg`
 
 ## Examples
 
-Two example plugins are included:
+Example plugins are included:
 
 - `examples/minimal`: a close Rust translation of Microsoft's sample plugin
 - `examples/dist-info`: a plugin focused on distribution metadata and tracing
+- `examples/unpackaged-distro-blacklist-policy`: a policy plugin that blocks unpackaged
+  distributions
 
 Build one of them in release mode:
 

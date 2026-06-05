@@ -6,7 +6,7 @@
 
 use thiserror::Error;
 pub mod require_update_error;
-pub use require_update_error::Error as RequireUpdateError;
+pub use require_update_error::{Error as RequireUpdateError, RequirementDefinition};
 use windows_core::{Error as WinError, HRESULT};
 use wslpluginapi_sys::WSL_E_PLUGIN_REQUIRES_UPDATE;
 

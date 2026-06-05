@@ -19,6 +19,7 @@ pub use crate::plugin::{Error as PluginError, Result as PluginResult, WSLPluginV
 pub use crate::windows_core::{Error as WinError, Result as WinResult};
 #[cfg(feature = "semver")]
 pub use crate::SemverConversionError;
+pub use crate::WSLVersionCapability;
 pub use crate::WSLVersionParseError;
 pub use crate::{
     CoreWSLDistributionInformation, DistributionID, HasSessionId, SessionID, UserDistributionID,

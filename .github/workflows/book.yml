@@ -1,0 +1,157 @@
+name: Book
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - release/*
+    paths:
+      - book/**
+      - .github/workflows/book.yml
+  pull_request:
+    branches:
+      - main
+      - develop
+      - release/*
+    paths:
+      - book/**
+      - .github/workflows/book.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  test-snippets:
+    name: Test Rust snippets
+    runs-on: windows-latest
+    env:
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -D warnings
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Cache Cargo Registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo Git Index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-index-
+
+      - name: Install Rust
+        shell: pwsh
+        run: rustup update stable && rustup default stable
+
+      - name: Install mdbook
+        run: cargo install mdbook
+
+      - name: Build snippet dependencies
+        run: cargo build -p wslplugins-rs --features macro
+        env:
+          CARGO_TARGET_DIR: .tmp/book-doctest-target
+
+      - name: Test Rust snippets
+        run: mdbook test book -L .tmp/book-doctest-target/debug/deps
+
+  build:
+    name: Build mdBook
+    runs-on: windows-latest
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Cache Cargo Registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo Git Index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-index-
+
+      - name: Install Rust
+        shell: pwsh
+        run: rustup update stable && rustup default stable
+
+      - name: Install mdbook
+        run: cargo install mdbook
+
+      - name: Build
+        run: mdbook build book
+
+  build-pages:
+    name: Build Pages artifact
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs:
+      - build
+      - test-snippets
+    runs-on: windows-latest
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Cache Cargo Registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo Git Index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-index-
+
+      - name: Install Rust
+        shell: pwsh
+        run: rustup update stable && rustup default stable
+
+      - name: Install mdbook
+        run: cargo install mdbook
+
+      - name: Build
+        run: mdbook build book
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/book
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build-pages
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
