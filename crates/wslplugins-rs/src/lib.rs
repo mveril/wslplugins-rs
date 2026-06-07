@@ -12,6 +12,8 @@
 //! built on top of the raw APIs. This crate exports useful modules and types for plugin creation,
 //! such as session management, VM handling, and distribution operations.
 //!
+//! For a more complete user guide, see the [wslplugins-rs Book](https://mveril.github.io/wslplugins-rs/).
+//!
 //! ## Usage
 //!
 //! Use the exposed modules and types to build custom WSL plugins. The `macro`
