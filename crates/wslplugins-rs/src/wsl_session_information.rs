@@ -5,7 +5,7 @@
 
 use crate::{HasSessionId, SessionID};
 use core::hash;
-use std::{fmt, os::windows::raw::HANDLE};
+use std::{fmt, os::windows::io::BorrowedHandle};
 use wslpluginapi_sys::windows_sys::Win32::Security::PSID;
 
 /// Represents session information for a WSL instance.
@@ -29,14 +29,14 @@ impl WSLSessionInformation {
     /// Retrieves the user token for the session.
     ///
     /// # Returns
-    /// A [HANDLE] representing the user token.
+    /// A [BorrowedHandle] representing the user token.
     /// # Safety
-    /// This function returns a raw handle to the user token.
+    /// This function returns a [BorrowedHandle] to the user token.
     /// The handle should be used only during the life of the session and must not be closed
     #[must_use]
     #[inline]
-    pub const unsafe fn user_token(&self) -> HANDLE {
-        self.0.UserToken
+    pub const unsafe fn user_token(&self) -> BorrowedHandle<'_> {
+        BorrowedHandle::borrow_raw(self.0.UserToken)
     }
 
     /// Retrieves the user SID (security identifier) for the session.
