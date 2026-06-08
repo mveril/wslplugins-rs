@@ -37,8 +37,9 @@ serde_test = "1"
 default = ["smallvec"]
 sys = []
 smallvec = ["dep:smallvec"]
-serde = ["dep:serde"]
+serde = ["dep:serde", "win-security-identifier/serde"]
 macro = ["dep:wslplugins-macro", "sys", "dep:tracing"]
+sid-macro = ["win-security-identifier/macro"]
 tracing = ["dep:tracing"]
 uuid = ["dep:uuid"]
 semver = ["dep:semver"]
@@ -55,3 +56,6 @@ workspace = true
 [[bench]]
 name = "user_distribution_id_formatting"
 harness = false
+default = ["smallvec"]
+sys = []
+smallvec = ["dep:smallvec"]

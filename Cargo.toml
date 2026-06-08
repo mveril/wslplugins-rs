@@ -6,7 +6,7 @@ members = [
 ]
 [workspace.dependencies]
 wslpluginapi-sys = "0.2.0"
-win-security-identifier = { version = "0.1.0", git = "https://github.com/mveril/win-security-identifier.git", branch = "release/0.1.0" }
+win-security-identifier = "0.1.0"
 windows-core = ">=0.57.0"
 windows = ">=0.57.0"
 quote = "1"
