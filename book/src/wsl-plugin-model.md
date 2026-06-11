@@ -66,7 +66,9 @@ it must outlive the hook.
 The public crate provides typed wrappers for common WSL concepts:
 
 - `WSLContext`: plugin context and access to `ApiV1`.
-- `WSLSessionInformation`: current WSL session metadata.
+- `WSLSessionInformation`: current WSL session metadata, including borrowed access to
+  the user token and security identifier through `user_token()` and `user_sid()`.
+  These values remain owned by the WSL session and must not be closed or freed.
 - `WSLDistributionInformation`: online distribution metadata.
 - `WSLOfflineDistributionInformation`: offline distribution metadata used by registration hooks.
 - `WSLVmCreationSettings`: VM creation settings.

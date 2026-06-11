@@ -56,6 +56,3 @@ workspace = true
 [[bench]]
 name = "user_distribution_id_formatting"
 harness = false
-default = ["smallvec"]
-sys = []
-smallvec = ["dep:smallvec"]
