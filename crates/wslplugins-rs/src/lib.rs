@@ -62,9 +62,9 @@ mod wsl_vm_creation_settings;
 #[cfg(doc)]
 use crate::plugin::WSLPluginV1;
 pub mod wsl_user_configuration;
+pub use typed_path;
 /// Re-exports the `win-security-identifier` crate for working with Windows SIDs.
 pub use win_security_identifier;
-pub use typed_path;
 pub use wsl_user_configuration::WSLUserConfiguration;
 /// Tools and utilities for creating custom WSL plugins.
 pub mod plugin;
