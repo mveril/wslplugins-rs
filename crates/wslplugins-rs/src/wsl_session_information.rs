@@ -5,8 +5,8 @@
 
 use crate::{HasSessionId, SessionID};
 use core::hash;
-use std::{fmt, os::windows::raw::HANDLE};
-use wslpluginapi_sys::windows_sys::Win32::Security::PSID;
+use std::{fmt, os::windows::io::BorrowedHandle};
+use win_security_identifier::Sid;
 
 /// Represents session information for a WSL instance.
 ///
@@ -26,30 +26,20 @@ impl WSLSessionInformation {
         SessionID(self.0.SessionId)
     }
 
-    /// Retrieves the user token for the session.
-    ///
-    /// # Returns
-    /// A [HANDLE] representing the user token.
-    /// # Safety
-    /// This function returns a raw handle to the user token.
-    /// The handle should be used only during the life of the session and must not be closed
+    /// Retrieves the user token for the session as a [`BorrowedHandle`].
     #[must_use]
     #[inline]
-    pub const unsafe fn user_token(&self) -> HANDLE {
-        self.0.UserToken
+    pub const fn user_token(&self) -> BorrowedHandle<'_> {
+        // SAFETY: The user token is a valid handle for the duration of the session, and we are only borrowing it.
+        unsafe { BorrowedHandle::borrow_raw(self.0.UserToken) }
     }
 
     /// Retrieves the user SID (security identifier) for the session.
-    ///
-    /// # Returns
-    /// A [PSID] representing the user SID.
-    /// # Safety
-    /// This function returns a raw pointer to the user SID.
-    /// This pointer should be used only during the life of the session and must not be freed or modified.
     #[must_use]
     #[inline]
-    pub const unsafe fn user_sid(&self) -> PSID {
-        self.0.UserSid
+    pub const fn user_sid(&self) -> &Sid {
+        // SAFETY: The WSL Plugin API guarantees that the `UserSid` field is a valid pointer to a SID structure.
+        unsafe { Sid::from_raw(self.0.UserSid) }
     }
 }
 
@@ -124,7 +114,7 @@ impl fmt::Debug for WSLSessionInformation {
         f.debug_struct("WSLSessionInformation")
             .field("sessionId", &self.0.SessionId)
             .field("userToken", &self.0.UserToken)
-            .field("userSid", &self.0.UserSid)
+            .field("userSid", &self.user_sid())
             .finish()
     }
 }
