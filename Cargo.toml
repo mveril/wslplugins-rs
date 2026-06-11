@@ -6,6 +6,7 @@ members = [
 ]
 [workspace.dependencies]
 wslpluginapi-sys = "0.2.0"
+win-security-identifier = "0.1.0"
 windows-core = ">=0.57.0"
 windows = ">=0.57.0"
 quote = "1"
@@ -22,7 +23,6 @@ edition = "2021"
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/mveril/wslplugins-rs"
 description = "A Rust framework for developing WSL plugins using safe and idiomatic Rust."
-
 
 [workspace.lints.rust]
 unused = "warn"
