@@ -109,8 +109,8 @@ impl WSLPluginV1 for Plugin {
             "Distribution started. Sessionid= {:?}, Id={:?} Name={:}, Package={}, PidNs={}, InitPid={}",
             session.id(),
             distribution.id(),
-            distribution.name().to_string_lossy(),
-            distribution.package_family_name().unwrap_or_default().to_string_lossy(),
+            distribution.name().display(),
+            distribution.package_family_name().unwrap_or_default().display(),
             distribution.pid_namespace(),
             // Use unknow if init_pid not available
             distribution.init_pid().map(|res| res.to_string()).unwrap_or("Unknow".to_string())
@@ -135,8 +135,8 @@ impl WSLPluginV1 for Plugin {
             "Distribution Stopping. SessionId={:?}, Id={:?} name={}, package={}, PidNs={}, InitPid={}",
             session.id(),
             distribution.id(),
-            distribution.name().to_string_lossy(),
-            distribution.package_family_name().unwrap_or_default().to_string_lossy(),
+            distribution.name().display(),
+            distribution.package_family_name().unwrap_or_default().display(),
             distribution.pid_namespace(),
             // Use unknow if init_pid not available
             distribution.init_pid().map(|res| res.to_string()).unwrap_or("Unknow".to_string())

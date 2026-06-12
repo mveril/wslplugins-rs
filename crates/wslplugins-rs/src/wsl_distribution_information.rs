@@ -25,7 +25,6 @@ use std::fmt::{self, Debug, Display};
 use std::hash::{Hash, Hasher};
 use std::ptr;
 use widestring::U16CStr;
-use windows_core::PCWSTR;
 
 /// Represents detailed information about a WSL distribution.
 ///
@@ -166,14 +165,7 @@ impl Display for WSLDistributionInformation {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // SAFETY: Name is known to be valid
-        unsafe {
-            write!(
-                f,
-                "{} {{{}}}",
-                PCWSTR::from_raw(self.0.Name).display(),
-                self.id()
-            )
-        }
+        write!(f, "{} {{{}}}", self.name().display(), self.id())
     }
 }
 

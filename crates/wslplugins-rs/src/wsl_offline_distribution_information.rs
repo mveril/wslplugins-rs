@@ -15,7 +15,6 @@ use std::{
     ptr,
 };
 use widestring::U16CStr;
-use windows_core::PCWSTR;
 
 /// A wrapper around `WslOfflineDistributionInformation` providing a safe interface.
 ///
@@ -138,15 +137,7 @@ impl Hash for WSLOfflineDistributionInformation {
 impl Display for WSLOfflineDistributionInformation {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // SAFETY: Name is known to be valid
-        unsafe {
-            write!(
-                f,
-                "{} {{{}}}",
-                PCWSTR::from_raw(self.0.Name).display(),
-                self.id()
-            )
-        }
+        write!(f, "{} {{{}}}", self.name().display(), self.id())
     }
 }
 

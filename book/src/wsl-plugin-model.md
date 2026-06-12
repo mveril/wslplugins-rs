@@ -133,7 +133,7 @@ fn describe_distribution(distribution: &WSLDistributionInformation) -> PluginRes
     let init_pid = distribution.init_pid()?;
     Ok(format!(
         "{} is running with init PID {init_pid}",
-        distribution.name().to_string_lossy()
+        distribution.name().display()
     ))
 }
 ```
