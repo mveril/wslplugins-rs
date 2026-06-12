@@ -12,7 +12,7 @@
 #[cfg(doc)]
 use crate::WSLVersionCapability;
 use crate::{api::errors::require_update_error::Result, UserDistributionID};
-use std::ffi::OsString;
+use widestring::U16CStr;
 
 /// A trait representing the core information of a WSL distribution.
 ///
@@ -30,8 +30,8 @@ pub trait CoreWSLDistributionInformation {
     /// Retrieves the name of the distribution.
     ///
     /// # Returns
-    /// An [`OsString`] containing the display name of the distribution.
-    fn name(&self) -> OsString;
+    /// A borrowed UTF-16 string containing the display name of the distribution.
+    fn name(&self) -> &U16CStr;
 
     /// Retrieves the package family name of the distribution, if available.
     ///
@@ -40,7 +40,7 @@ pub trait CoreWSLDistributionInformation {
     /// # Returns
     /// - `Some(package_family_name)`: If the distribution has a package family name.
     /// - `None`: If the distribution is not packaged or the information is unavailable.
-    fn package_family_name(&self) -> Option<OsString>;
+    fn package_family_name(&self) -> Option<&U16CStr>;
 
     /// Retrieves the type of distribution (ubuntu, debian, ...), if available.
     ///
@@ -52,7 +52,7 @@ pub trait CoreWSLDistributionInformation {
     /// - `Err(e)`: if the API version is too low to retrieve this information.
     /// # Errors
     /// Returns an error if the API version is too low to retrieve this information.
-    fn flavor(&self) -> Result<Option<OsString>>;
+    fn flavor(&self) -> Result<Option<&U16CStr>>;
 
     /// Retrieves the version of the distribution, if available
     ///
@@ -64,5 +64,5 @@ pub trait CoreWSLDistributionInformation {
     /// - `Err(e)`: if the API version is too low to retrieve this information.
     /// # Errors
     /// Returns an error if the API version is too low to retrieve this information.
-    fn version(&self) -> Result<Option<OsString>>;
+    fn version(&self) -> Result<Option<&U16CStr>>;
 }

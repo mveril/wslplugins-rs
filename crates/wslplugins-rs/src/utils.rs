@@ -1,27 +1,40 @@
-use std::ffi::OsString;
 #[cfg(test)]
 use std::mem::{align_of, size_of};
-use std::os::windows::ffi::OsStringExt as _;
-use windows_core::PCWSTR;
+use widestring::U16CStr;
 #[cfg(test)]
 pub fn test_transparence<T, U>() {
     assert_eq!(align_of::<T>(), align_of::<U>());
     assert_eq!(size_of::<T>(), size_of::<U>());
 }
 
-pub fn opt_wide_str(ptr: *const u16) -> Option<OsString> {
+/// Borrows a null-terminated UTF-16 string from a raw pointer.
+///
+/// # Safety
+///
+/// `ptr` must point to a valid null-terminated UTF-16 string that remains alive for `'a`.
+pub unsafe fn wide_str<'a>(ptr: *const u16) -> &'a U16CStr {
+    // SAFETY: The caller guarantees that `ptr` points to a valid null-terminated UTF-16 string
+    // for the returned lifetime.
+    unsafe { U16CStr::from_ptr_str(ptr) }
+}
+
+/// Borrows a non-empty null-terminated UTF-16 string from a nullable raw pointer.
+///
+/// # Safety
+///
+/// A non-null `ptr` must point to a valid null-terminated UTF-16 string that remains alive for
+/// `'a`.
+pub unsafe fn opt_wide_str<'a>(ptr: *const u16) -> Option<&'a U16CStr> {
     if ptr.is_null() {
         None
     } else {
-        let wide_str = PCWSTR::from_raw(ptr);
-        // SAFETY: The caller guarantees that `ptr` is valid and points to a null-terminated wide string.
-        unsafe {
-            let wide = wide_str.as_wide();
-            if wide.is_empty() {
-                None
-            } else {
-                Some(OsString::from_wide(wide))
-            }
+        // SAFETY: The caller guarantees that `ptr` points to a valid null-terminated UTF-16
+        // string for the returned lifetime.
+        let wide = unsafe { wide_str(ptr) };
+        if wide.is_empty() {
+            None
+        } else {
+            Some(wide)
         }
     }
 }
@@ -33,13 +46,15 @@ mod tests {
     #[test]
     fn test_empty_as_wide_null() {
         let ptr = std::ptr::null();
-        assert_eq!(opt_wide_str(ptr), None);
+        // SAFETY: Null pointers are explicitly supported by `opt_wide_str`.
+        assert_eq!(unsafe { opt_wide_str(ptr) }, None);
     }
 
     #[test]
     fn test_empty_as_wide_empty() {
         let wide_str = [0u16; 1];
-        assert_eq!(opt_wide_str(wide_str.as_ptr()), None);
+        // SAFETY: `wide_str` is a valid null-terminated UTF-16 string for this scope.
+        assert_eq!(unsafe { opt_wide_str(wide_str.as_ptr()) }, None);
     }
 
     fn null_terminated_wide() -> impl Strategy<Value = Vec<u16>> {
@@ -59,11 +74,13 @@ mod tests {
 
             let ptr = wide.as_ptr();
 
-            let result = opt_wide_str(ptr);
+            // SAFETY: The strategy produces a null-terminated UTF-16 buffer that remains alive
+            // for the duration of the returned borrow.
+            let result = unsafe { opt_wide_str(ptr) };
             #[allow(clippy::indexing_slicing, reason="Safe because we know the last element is the null terminator")]
-            let expected = OsString::from_wide(&wide[..wide.len() - 1]);
+            let expected = &wide[..wide.len() - 1];
 
-            prop_assert_eq!(result, Some(expected));
+            prop_assert_eq!(result.map(U16CStr::as_slice), Some(expected));
         }
     }
 }

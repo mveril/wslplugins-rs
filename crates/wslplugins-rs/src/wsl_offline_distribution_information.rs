@@ -6,16 +6,15 @@
 use crate::{
     api::{errors::require_update_error::Result, utils::check_capability_result_from_context},
     core_wsl_distribution_information::CoreWSLDistributionInformation,
-    utils::opt_wide_str,
+    utils::{opt_wide_str, wide_str},
     UserDistributionID, WSLContext, WSLVersionCapability,
 };
 use std::{
-    ffi::OsString,
     fmt::{self, Debug, Display},
     hash::{Hash, Hasher},
-    os::windows::ffi::OsStringExt as _,
     ptr,
 };
+use widestring::U16CStr;
 use windows_core::PCWSTR;
 
 /// A wrapper around `WslOfflineDistributionInformation` providing a safe interface.
@@ -68,45 +67,52 @@ impl CoreWSLDistributionInformation for WSLOfflineDistributionInformation {
         self.0.Id.into()
     }
 
-    /// Retrieves the name of the offline distribution as an [`OsString`].
+    /// Retrieves the name of the offline distribution as a borrowed UTF-16 string.
     #[inline]
-    fn name(&self) -> OsString {
-        // SAFETY: name is known to be valid
-        unsafe { OsString::from_wide(PCWSTR::from_raw(self.0.Name).as_wide()) }
+    fn name(&self) -> &U16CStr {
+        // SAFETY: The WSL Plugin API guarantees that Name points to a valid null-terminated
+        // UTF-16 string for the lifetime of this distribution information.
+        unsafe { wide_str(self.0.Name) }
     }
 
     /// Retrieves the package family name of the offline distribution, if available.
     ///
     /// # Returns
-    /// - `Some(OsString)`: If the package family name is set.
+    /// - `Some(&U16CStr)`: If the package family name is set.
     /// - `None`: If the package family name is null or empty.
     #[inline]
-    fn package_family_name(&self) -> Option<OsString> {
-        opt_wide_str(self.0.PackageFamilyName)
+    fn package_family_name(&self) -> Option<&U16CStr> {
+        // SAFETY: The WSL Plugin API guarantees that a non-null PackageFamilyName remains valid
+        // for the lifetime of this distribution information.
+        unsafe { opt_wide_str(self.0.PackageFamilyName) }
     }
 
     /// Retrieves the distribution flavor.
     ///
     /// This requires [`WSLVersionCapability::DistributionFlavor`] (`2.4.4`).
     #[inline]
-    fn flavor(&self) -> Result<Option<OsString>> {
+    fn flavor(&self) -> Result<Option<&U16CStr>> {
         check_capability_result_from_context(
             WSLContext::get_current(),
             WSLVersionCapability::DistributionFlavor,
         )?;
-        Ok(opt_wide_str(self.0.Flavor))
+        // SAFETY: The WSL Plugin API guarantees that a non-null Flavor remains valid for the
+        // lifetime of this distribution information.
+        Ok(unsafe { opt_wide_str(self.0.Flavor) })
     }
 
     /// Retrieves the distribution version.
     ///
     /// This requires [`WSLVersionCapability::DistributionVersion`] (`2.4.4`).
     #[inline]
-    fn version(&self) -> Result<Option<OsString>> {
+    fn version(&self) -> Result<Option<&U16CStr>> {
         check_capability_result_from_context(
             WSLContext::get_current(),
             WSLVersionCapability::DistributionVersion,
         )?;
-        Ok(opt_wide_str(self.0.Version))
+        // SAFETY: The WSL Plugin API guarantees that a non-null Version remains valid for the
+        // lifetime of this distribution information.
+        Ok(unsafe { opt_wide_str(self.0.Version) })
     }
 }
 

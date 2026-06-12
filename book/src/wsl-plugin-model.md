@@ -138,6 +138,11 @@ fn describe_distribution(distribution: &WSLDistributionInformation) -> PluginRes
 }
 ```
 
+Distribution string accessors such as `name()` and `package_family_name()` return borrowed
+`U16CStr` values. They expose the UTF-16 strings supplied by the WSL Plugin API without allocating
+or copying. The returned references are valid for the lifetime of the borrowed distribution
+information. Use `to_os_string()` only when an owned native string is required.
+
 If the runtime API is too old for `init_pid()`, the call returns a `RequiresUpdate` error that maps
 to `WSL_E_PLUGIN_REQUIRES_UPDATE`. The same pattern is used by distribution-scoped command
 execution: `with_distribution_id(DistributionID::User(...)).execute()` requires

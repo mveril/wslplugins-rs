@@ -77,7 +77,7 @@ impl WSLPluginV1 for Plugin {
             Ok(())
         } else {
             let mut msg = OsString::from("The WSL distribution `");
-            msg.push(distribution.name());
+            msg.push(distribution.name().to_os_string());
             msg.push("` is not allowed by your organization because it is not packaged.");
             warn!("{}", msg.display());
             Err(PluginError::with_message(E_ACCESSDENIED, &msg))
