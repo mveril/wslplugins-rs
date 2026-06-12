@@ -13,6 +13,7 @@ quote = "1"
 syn = "2"
 proc-macro2 = "1"
 smallvec = "1" 
+widestring = "1"
 strum = { version = "0.28", features = ["derive"] }
 
 [workspace.package]

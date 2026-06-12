@@ -85,7 +85,7 @@ impl WSLPluginV1 for Plugin {
             &self.log_file,
             "Distribution started. Sessionid= {}, Name={}, Package={}, PidNs={}, InitPid={}",
             session.id(),
-            distribution.name().to_string_lossy(),
+            distribution.name().display(),
             distribution
                 .package_family_name()
                 .unwrap_or_default()
@@ -107,7 +107,7 @@ impl WSLPluginV1 for Plugin {
             &self.log_file,
             "Distribution Stopping. SessionId={}, name={}, package={}, PidNs={}, InitPid={}",
             session.id(),
-            distribution.name().to_string_lossy(),
+            distribution.name().display(),
             distribution
                 .package_family_name()
                 .unwrap_or_default()
@@ -128,7 +128,7 @@ impl WSLPluginV1 for Plugin {
             &self.log_file,
             "Distribution registeredd. SessionId={}, name={}, package={}",
             session.id(),
-            distribution.name().to_string_lossy(),
+            distribution.name().display(),
             distribution
                 .package_family_name()
                 .unwrap_or_default()
@@ -147,7 +147,7 @@ impl WSLPluginV1 for Plugin {
             &self.log_file,
             "Distribution unregistered. SessionId={}, name={}, package={}",
             session.id(),
-            distribution.name().to_string_lossy(),
+            distribution.name().display(),
             distribution
                 .package_family_name()
                 .unwrap_or_default()

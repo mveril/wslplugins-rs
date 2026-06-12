@@ -65,6 +65,8 @@ mod wsl_vm_creation_settings;
 use crate::plugin::WSLPluginV1;
 pub mod wsl_user_configuration;
 pub use typed_path;
+/// Re-exports the `widestring` crate for borrowed UTF-16 strings exposed by this API.
+pub use widestring;
 /// Re-exports the `win-security-identifier` crate for working with Windows SIDs.
 pub use win_security_identifier;
 pub use wsl_user_configuration::WSLUserConfiguration;

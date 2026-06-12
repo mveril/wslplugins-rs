@@ -126,7 +126,7 @@ mod tests {
     use super::*;
     use crate::api::errors::require_update_error::Result;
     use proptest::prelude::*;
-    use std::ffi::OsString;
+    use widestring::{u16cstr, U16CStr};
 
     #[derive(Clone, Copy)]
     struct TestDistribution {
@@ -138,19 +138,19 @@ mod tests {
             self.id
         }
 
-        fn name(&self) -> OsString {
-            OsString::from("test")
+        fn name(&self) -> &U16CStr {
+            u16cstr!("test")
         }
 
-        fn package_family_name(&self) -> Option<OsString> {
+        fn package_family_name(&self) -> Option<&U16CStr> {
             None
         }
 
-        fn flavor(&self) -> Result<Option<OsString>> {
+        fn flavor(&self) -> Result<Option<&U16CStr>> {
             Ok(None)
         }
 
-        fn version(&self) -> Result<Option<OsString>> {
+        fn version(&self) -> Result<Option<&U16CStr>> {
             Ok(None)
         }
     }
