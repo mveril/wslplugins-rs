@@ -133,10 +133,15 @@ fn describe_distribution(distribution: &WSLDistributionInformation) -> PluginRes
     let init_pid = distribution.init_pid()?;
     Ok(format!(
         "{} is running with init PID {init_pid}",
-        distribution.name().to_string_lossy()
+        distribution.name().display()
     ))
 }
 ```
+
+Distribution string accessors such as `name()` and `package_family_name()` return borrowed
+`U16CStr` values. They expose the UTF-16 strings supplied by the WSL Plugin API without allocating
+or copying. The returned references are valid for the lifetime of the borrowed distribution
+information. Use `to_os_string()` only when an owned native string is required.
 
 If the runtime API is too old for `init_pid()`, the call returns a `RequiresUpdate` error that maps
 to `WSL_E_PLUGIN_REQUIRES_UPDATE`. The same pattern is used by distribution-scoped command
@@ -155,7 +160,7 @@ fn optional_flavor(distribution: &WSLDistributionInformation) -> Option<String> 
         .flavor()
         .ok()
         .flatten()
-        .map(|value| value.to_string_lossy().into_owned())
+        .map(|value| value.to_string_lossy())
 }
 ```
 

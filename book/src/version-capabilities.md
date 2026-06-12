@@ -121,7 +121,7 @@ fn optional_flavor(distribution: &WSLDistributionInformation) -> Option<String> 
         .flavor()
         .ok()
         .flatten()
-        .map(|value| value.to_string_lossy().into_owned())
+        .map(|value| value.to_string_lossy())
 }
 ```
 
