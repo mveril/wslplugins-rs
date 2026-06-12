@@ -19,7 +19,7 @@ serde = { version = "1", features = ["derive"], optional = true }
 tracing = { version = "0.1.43", optional = true }
 thiserror = "2.0.7"
 typed-path = ">0.1"
-widestring = { version = "1", features = ["alloc"] }
+widestring.workspace = true
 wslplugins-macro = { path = "../wslplugins-macro", optional = true, version = "0.1.0-beta.4" }
 wslpluginapi-sys.workspace = true
 win-security-identifier.workspace = true
