@@ -14,6 +14,13 @@ FFI boundary, abort the process, poison shared state, or leave WSL with only a g
 The host is also allowed to call hooks during lifecycle operations such as VM startup, distribution
 registration, or shutdown; failing predictably is more useful than terminating the service path.
 
+The `#[wsl_plugin_v1]` macro catches Rust panics before they cross the generated FFI boundary. For
+hooks that return `PluginResult`, a string, `OsStr`, or `OsString` panic payload becomes the message
+of a `PluginError` with `E_FAIL`. Other payload types still produce `E_FAIL`, but without a diagnostic
+message. Hooks that return `WinResult` and the generated entry point also convert panics to `E_FAIL`.
+This containment is a last-resort safeguard, not a replacement for returning typed errors: panic
+hooks still run, shared state can still be poisoned, and the requested WSL operation still fails.
+
 Avoiding `unwrap` and `expect` is part of the same rule. A missing field, inaccessible file, invalid
 distribution name, or failed command execution should become an explicit error that WSL can report
 or handle. It should not become an accidental process failure.

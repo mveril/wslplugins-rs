@@ -139,11 +139,16 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
             api: *const ::wslplugins_rs::sys::WSLPluginAPIV1,
             hooks: *mut ::wslplugins_rs::sys::WSLPluginHooksV1,
         ) -> ::wslplugins_rs::windows_core::HRESULT {
-            unsafe {
-                let api_ref: &'static ::wslplugins_rs::sys::WSLPluginAPIV1 = unsafe { &*api};
-                let #hooks_ref_name: &mut ::wslplugins_rs::sys::WSLPluginHooksV1 = unsafe{ &mut *hooks };
-                create_plugin(api_ref, #hooks_ref_name).into()
-            }
+            ::wslplugins_rs::__private::catch_unwind_or(
+                ::wslplugins_rs::windows_core::HRESULT(
+                    ::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_FAIL,
+                ),
+                || unsafe {
+                    let api_ref: &'static ::wslplugins_rs::sys::WSLPluginAPIV1 = &*api;
+                    let #hooks_ref_name: &mut ::wslplugins_rs::sys::WSLPluginHooksV1 = &mut *hooks;
+                    create_plugin(api_ref, #hooks_ref_name).into()
+                },
+            )
         }
 
         fn create_plugin(
@@ -240,5 +245,6 @@ mod tests {
         assert_eq!(result.len(), 1);
         let result_str = result.first().to_token_stream().to_string();
         assert!(result_str.contains("extern \"C\" fn on_vm_started"));
+        assert!(result_str.contains("catch_unwind_plugin"));
     }
 }
