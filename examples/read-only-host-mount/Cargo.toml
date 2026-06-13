@@ -1,0 +1,20 @@
+[package]
+name = "read-only-host-mount"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+readme = "README.md"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wslplugins-rs = { path = "../../crates/wslplugins-rs", features = [
+  "macro",
+], version = "0.1.0-beta.4" }
+
+[lints]
+workspace = true
