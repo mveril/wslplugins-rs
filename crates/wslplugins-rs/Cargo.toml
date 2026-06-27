@@ -12,13 +12,13 @@ readme.workspace = true
 
 [dependencies]
 windows-core = { workspace = true }
-bitflags = { version = ">0.1.0", optional = true }
-enumflags2 = { version = ">0.5", optional = true }
-flagset = { version = ">0.1.0", optional = true }
+bitflags = { version = "2", optional = true }
+enumflags2 = { version = "0.7", optional = true }
+flagset = { version = ">=0.1, <0.5", optional = true }
 serde = { version = "1", features = ["derive"], optional = true }
-tracing = { version = "0.1.43", optional = true }
-thiserror = "2.0.7"
-typed-path = ">0.1"
+tracing = { workspace = true, optional = true }
+thiserror = "2"
+typed-path = ">=0.2, <0.13"
 widestring.workspace = true
 wslplugins-macro = { path = "../wslplugins-macro", optional = true, version = "0.1.0-beta.4" }
 wslpluginapi-sys.workspace = true
@@ -29,7 +29,7 @@ semver = { version = "1", optional = true }
 strum = { workspace = true }
 
 [dev-dependencies]
-proptest = "1.9.0"
+proptest = "1"
 criterion = "0.8"
 serde_test = "1"
 

@@ -5,16 +5,17 @@ members = [
     "examples/*",
 ]
 [workspace.dependencies]
-wslpluginapi-sys = "0.2.0"
+wslpluginapi-sys = "0.2"
 win-security-identifier = "0.1.1"
-windows-core = ">=0.57.0"
-windows = ">=0.57.0"
+windows-core = ">=0.59, <0.63"
+windows = ">=0.59, <0.63"
 quote = "1"
 syn = "2"
 proc-macro2 = "1"
-smallvec = "1" 
+smallvec = "1"
 widestring = "1"
 strum = { version = "0.28", features = ["derive"] }
+tracing = "0.1"
 
 [workspace.package]
 authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]

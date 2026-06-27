@@ -18,11 +18,11 @@ strum = { workspace = true }
 
 [build-dependencies]
 wslpluginapi-sys = { workspace = true, features = ["hooks-field-names"] }
-quote = "1"
+quote.workspace = true
 struct-field-names-as-array = "0.3"
 
 [dev-dependencies]
-proptest = "1.9.0"
+proptest = "1"
 
 [lints]
 workspace = true
