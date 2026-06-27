@@ -21,6 +21,14 @@ message. Hooks that return `WinResult` and the generated entry point also conver
 This containment is a last-resort safeguard, not a replacement for returning typed errors: panic
 hooks still run, shared state can still be poisoned, and the requested WSL operation still fails.
 
+Without this containment, a panic can break the RPC call to the WSL service instead of returning a
+plugin error. For example, a panic during VM startup may surface as:
+
+```text
+Remote procedure call failed.
+Error code: Wsl/Service/RPC_S_CALL_FAILED
+```
+
 Avoiding `unwrap` and `expect` is part of the same rule. A missing field, inaccessible file, invalid
 distribution name, or failed command execution should become an explicit error that WSL can report
 or handle. It should not become an accidental process failure.
