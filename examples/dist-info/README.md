@@ -5,7 +5,7 @@ This example demonstrates a WSL plugin centered on distribution metadata instead
 It is intended as a reference for:
 - wiring a plugin with [`wslplugins_rs`]
 - working with distribution-related types exposed by the framework
-- enriching host-side information with Linux `os-release` data through [`etc_os_release`]
+- enriching host-side information with Linux `os-release` data through [`rs_release`]
 - emitting structured diagnostics with [`tracing`]
 
 Compared with the minimal example, this sample focuses on distro identity and descriptive metadata rather than on reproducing Microsoft's sample plugin behavior.
@@ -19,4 +19,4 @@ The example package enables the following `wslplugins-rs` features:
 
 Additional dependencies are used for documentation-friendly observability:
 - [`tracing_subscriber`] and [`tracing_appender`] to configure log output
-- [`etc_os_release`] to parse Linux distribution metadata when it is available
+- [`rs_release`] to parse Linux distribution metadata when it is available

@@ -20,7 +20,7 @@ wslplugins-rs = { path = "../../crates/wslplugins-rs", features = [
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
-etc-os-release = "0.1.0"
+rs-release = "0.1.11"
 [dependencies.windows]
 workspace = true
 features = ["Win32_Foundation"]
