@@ -1,4 +1,3 @@
-#![allow(clippy::multiple_crate_versions)]
 #![doc = include_str!("../README.md")]
 use rs_release::parse_os_release_str;
 use std::{env, fs::OpenOptions, io::Read, panic};

@@ -33,6 +33,7 @@ all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
 cargo = {level = "warn", priority = -1}
+multiple_crate_versions = "allow" # Checked by cargo-deny.
 # Enable some restriction
 needless_pass_by_value = "warn"
 implicit_clone = "warn"

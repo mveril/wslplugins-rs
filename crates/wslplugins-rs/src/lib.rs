@@ -1,4 +1,3 @@
-#![allow(clippy::multiple_crate_versions)]
 // Enable doc_cfg if docrs
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
