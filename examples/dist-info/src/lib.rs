@@ -1,5 +1,6 @@
+#![allow(clippy::multiple_crate_versions)]
 #![doc = include_str!("../README.md")]
-use etc_os_release::OsRelease;
+use rs_release::parse_os_release_str;
 use std::{env, fs::OpenOptions, io::Read, panic};
 use tracing::{error, info, instrument, warn};
 use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
@@ -155,16 +156,23 @@ impl Plugin {
             .with_distribution_id(distro_id)
             .execute()
         {
-            Ok(stream) => match OsRelease::from_reader(stream) {
-                Ok(release) => {
-                    if let Some(version) = release.version() {
-                        info!("{}: ({})", release.name(), version)
-                    } else {
-                        info!("{}", release.name())
-                    }
+            Ok(mut stream) => {
+                let mut contents = String::new();
+                match stream.read_to_string(&mut contents) {
+                    Ok(_) => match parse_os_release_str(&contents) {
+                        Ok(release) => {
+                            let name = release.get("NAME").map_or("Unknown", String::as_str);
+                            if let Some(version) = release.get("VERSION") {
+                                info!("{}: ({})", name, version)
+                            } else {
+                                info!("{}", name)
+                            }
+                        }
+                        Err(err) => warn!("{err}"),
+                    },
+                    Err(err) => warn!("Unable to read /etc/os-release: {err}"),
                 }
-                Err(err) => warn!("{err}"),
-            },
+            }
             Err(err) => {
                 warn!("Error on binary execution: {err}")
             }

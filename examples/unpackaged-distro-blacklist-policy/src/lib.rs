@@ -1,3 +1,4 @@
+#![allow(clippy::multiple_crate_versions)]
 #![doc = include_str!("../README.md")]
 
 use std::ffi::OsString;
