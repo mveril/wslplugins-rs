@@ -109,6 +109,7 @@ The repository examples show complete plugins for common scenarios:
 - `minimal`: lifecycle hooks and command execution inside a WSL session.
 - `dist-info`: distribution metadata access.
 - `unpackaged-distro-blacklist-policy`: a policy-style plugin.
+- `read-only-host-mount`: a read-only Plan 9 mount from the Windows host into the WSL VM.
 
 Use them as references for plugin behavior, not as required workspace structure.
 

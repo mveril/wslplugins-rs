@@ -175,6 +175,7 @@ Example plugins are included:
 - `examples/dist-info`: a plugin focused on distribution metadata and tracing
 - `examples/unpackaged-distro-blacklist-policy`: a policy plugin that blocks unpackaged
   distributions
+- `examples/read-only-host-mount`: mounts a Windows directory read-only inside the WSL VM
 
 Build one of them in release mode:
 
