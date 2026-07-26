@@ -5,7 +5,7 @@ members = [
     "examples/*",
 ]
 [workspace.dependencies]
-wslpluginapi-sys = "0.2"
+wslpluginapi-sys = "0.3"
 win-security-identifier = "0.2"
 windows-core = ">=0.59, <0.63"
 windows = ">=0.59, <0.63"
@@ -16,6 +16,9 @@ smallvec = "1"
 widestring = "1"
 strum = { version = "0.28", features = ["derive"] }
 tracing = "0.1"
+
+[patch.crates-io]
+wslpluginapi-sys = { git = "https://github.com/mveril/wslpluginapi-sys", branch = "feature/support-wslc-api-2.9.3" }
 
 [workspace.package]
 authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]

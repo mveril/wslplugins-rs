@@ -1,6 +1,6 @@
 #[cfg(doc)]
 use super::Error;
-use super::{Result, WSLCommand};
+use super::{Result, WSLCApi, WSLCommand};
 use crate::api::errors::require_update_error::Result as UpReqResult;
 use crate::api::wsl_command::IntoCowUtf8UnixPath;
 use crate::{HasSessionId, SessionID, UserDistributionID, WSLVersion, WSLVersionCapability};
@@ -228,6 +228,19 @@ impl ApiV1 {
         program: P,
     ) -> WSLCommand<'a> {
         WSLCommand::new(self, session_id, program)
+    }
+
+    /// Returns the API surface dedicated to WSL container sessions.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::RequiresUpdate`] when the host does not provide the
+    /// WSLC API introduced in WSL Plugin API `2.9.0`.
+    #[doc(alias = "WSLC")]
+    #[inline]
+    pub fn wslc(&self) -> Result<WSLCApi<'_>> {
+        self.require_capability(WSLVersionCapability::WSLC)?;
+        Ok(WSLCApi::new(self))
     }
 
     fn require_capability(&self, capability: WSLVersionCapability) -> UpReqResult<()> {

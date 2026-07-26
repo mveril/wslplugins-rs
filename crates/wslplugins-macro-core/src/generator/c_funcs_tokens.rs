@@ -125,6 +125,12 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                 )
             }
         }),
+        Hooks::OnSessionCreated
+        | Hooks::OnSessionStopping
+        | Hooks::ContainerStarted
+        | Hooks::ContainerStopping
+        | Hooks::ImageCreated
+        | Hooks::ImageDeleted => None,
     };
 
     Ok(ok_result)

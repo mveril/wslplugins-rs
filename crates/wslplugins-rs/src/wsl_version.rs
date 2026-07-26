@@ -317,6 +317,15 @@ mod tests {
         );
     }
 
+    #[test]
+    fn capabilities_includes_wslc_from_version_2_9_0() {
+        let version = WSLVersion::new(2, 9, 0);
+
+        assert!(version
+            .capabilities()
+            .any(|capability| capability == WSLVersionCapability::WSLC));
+    }
+
     proptest! {
         #[test]
         fn from_str_roundtrips_displayed_versions(version in arb_wsl_version()) {

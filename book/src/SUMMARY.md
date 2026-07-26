@@ -11,6 +11,7 @@
 - [Version Capabilities](./version-capabilities.md)
 - [Error Handling](./error-handling.md)
 - [Command Execution](./command-execution.md)
+- [WSLC API](./wslc-api.md)
 - [FFI and Safety](./ffi-and-safety.md)
 - [Testing](./testing.md)
 - [Packaging and Deployment](./packaging.md)
