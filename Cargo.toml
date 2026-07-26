@@ -6,7 +6,7 @@ members = [
 ]
 [workspace.dependencies]
 wslpluginapi-sys = "0.2"
-win-security-identifier = "0.1.1"
+win-security-identifier = "0.2"
 windows-core = ">=0.59, <0.63"
 windows = ">=0.59, <0.63"
 quote = "1"
