@@ -7,6 +7,10 @@
 #[cfg(doc)]
 use super::error::Error;
 use super::error::Result;
+#[cfg(feature = "experimental-wslc")]
+use crate::api::{
+    WSLCContainerInformation, WSLCImageInformation, WSLCObjectId, WSLCSessionInformation,
+};
 #[cfg(doc)]
 use crate::WSLVersionCapability;
 use crate::{
@@ -204,6 +208,98 @@ pub trait WSLPluginV1: Sized + Sync {
         &self,
         session: &WSLSessionInformation,
         distribution: &WSLOfflineDistributionInformation,
+    ) -> WinResult<()> {
+        Ok(())
+    }
+
+    /// Called when a WSLC session has been created.
+    ///
+    /// Returning an error prevents the session creation.
+    ///
+    /// # Errors
+    ///
+    /// Return an error to reject session creation.
+    #[cfg(feature = "experimental-wslc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental-wslc")))]
+    #[inline]
+    fn on_session_created(&self, _session: &WSLCSessionInformation) -> WinResult<()> {
+        Ok(())
+    }
+
+    /// Called when a WSLC session is about to stop.
+    ///
+    /// # Errors
+    ///
+    /// Errors are reported to the host, which may ignore them while stopping.
+    #[cfg(feature = "experimental-wslc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental-wslc")))]
+    #[inline]
+    fn on_session_stopping(&self, _session: &WSLCSessionInformation) -> WinResult<()> {
+        Ok(())
+    }
+
+    /// Called when a WSLC container starts.
+    ///
+    /// Returning an error prevents the container creation.
+    ///
+    /// # Errors
+    ///
+    /// Return an error to reject container creation.
+    #[cfg(feature = "experimental-wslc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental-wslc")))]
+    #[inline]
+    fn container_started(
+        &self,
+        _session: &WSLCSessionInformation,
+        _container: &WSLCContainerInformation,
+    ) -> WinResult<()> {
+        Ok(())
+    }
+
+    /// Called when a WSLC container is about to stop.
+    ///
+    /// # Errors
+    ///
+    /// Errors are reported to the host, which may ignore them while stopping.
+    #[cfg(feature = "experimental-wslc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental-wslc")))]
+    #[inline]
+    fn container_stopping(
+        &self,
+        _session: &WSLCSessionInformation,
+        _container_id: &WSLCObjectId,
+    ) -> WinResult<()> {
+        Ok(())
+    }
+
+    /// Called when a WSLC image is pulled or imported.
+    ///
+    /// # Errors
+    ///
+    /// Errors are reported to the host, which currently ignores them.
+    #[cfg(feature = "experimental-wslc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental-wslc")))]
+    #[inline]
+    fn image_created(
+        &self,
+        _session: &WSLCSessionInformation,
+        _image: &WSLCImageInformation,
+    ) -> WinResult<()> {
+        Ok(())
+    }
+
+    /// Called when a WSLC image is deleted.
+    ///
+    /// # Errors
+    ///
+    /// Errors are reported to the host, which currently ignores them.
+    #[cfg(feature = "experimental-wslc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental-wslc")))]
+    #[inline]
+    fn image_deleted(
+        &self,
+        _session: &WSLCSessionInformation,
+        _image_id: &WSLCObjectId,
     ) -> WinResult<()> {
         Ok(())
     }

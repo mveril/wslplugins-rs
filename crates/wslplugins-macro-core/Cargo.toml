@@ -26,3 +26,6 @@ proptest = "1"
 
 [lints]
 workspace = true
+
+[features]
+experimental-wslc = []

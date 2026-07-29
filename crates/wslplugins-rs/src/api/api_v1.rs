@@ -1,6 +1,8 @@
 #[cfg(doc)]
 use super::Error;
-use super::{Result, WSLCApi, WSLCommand};
+#[cfg(feature = "experimental-wslc")]
+use super::WSLCApi;
+use super::{Result, WSLCommand};
 use crate::api::errors::require_update_error::Result as UpReqResult;
 use crate::api::wsl_command::IntoCowUtf8UnixPath;
 use crate::{HasSessionId, SessionID, UserDistributionID, WSLVersion, WSLVersionCapability};
@@ -238,6 +240,8 @@ impl ApiV1 {
     /// WSLC API introduced in WSL Plugin API `2.9.0`.
     #[doc(alias = "WSLC")]
     #[inline]
+    #[cfg(feature = "experimental-wslc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental-wslc")))]
     pub fn wslc(&self) -> Result<WSLCApi<'_>> {
         self.require_capability(WSLVersionCapability::WSLC)?;
         Ok(WSLCApi::new(self))

@@ -3,6 +3,9 @@
 WSL Plugin API `2.9.0` adds operations for WSL container sessions. These sessions use a distinct
 identifier space and process model from regular WSL sessions.
 
+> The complete WSLC surface is currently experimental. Enable the `experimental-wslc` crate
+> feature; names and data wrappers may evolve while the native API stabilizes.
+
 The crate reflects that boundary with two API types:
 
 - `ApiV1` contains the global WSL plugin operations.
@@ -67,7 +70,7 @@ environment entries are encoded as NUL-terminated arrays for the native API:
 # extern crate wslplugins_rs;
 # use wslplugins_rs::prelude::*;
 # fn example(api: &ApiV1, session_id: WSLCSessionID) -> Result<(), Box<dyn std::error::Error>> {
-let process = api
+let mut process = api
     .wslc()?
     .new_command(session_id, "/bin/sh")
     .with_arg0("sh")
@@ -75,27 +78,78 @@ let process = api
     .with_environment("HOME=/root")
     .spawn()?;
 
-let stdout = process.stdout()?;
-let exit_event = process.exit_event()?;
+let mut stdout = process
+    .stdout
+    .take()
+    .ok_or_else(|| std::io::Error::other("stdout is unavailable"))?;
+let mut output = String::new();
+std::io::Read::read_to_string(&mut stdout, &mut output)?;
+let status = process.wait()?;
 
-// Wait for `exit_event` with the Windows synchronization API before reading
-// the final exit code.
-drop(exit_event);
 drop(stdout);
 # drop(process);
 # Ok(())
 # }
 ```
 
-`spawn` reports both the Windows API failure and the Linux `errno` through
-`WSLCCreateProcessError`.
+`WSLCProcess` follows the shape of `std::process::Child`. Its `stdin`, `stdout`, and `stderr`
+fields are optional owned streams, so they can be borrowed in place or moved out with
+`Option::take`. `wait`, `try_wait`, and `wait_with_output` provide the corresponding process
+lifecycle operations. The command builder also provides `status` and `output` convenience methods:
+
+`wait_timeout` additionally waits for at most a `std::time::Duration` and returns `None` when
+the timeout expires. The opaque WSLC process identifier is not a Windows kernel handle, so
+`WSLCProcess` does not implement `AsHandle` or `AsRawHandle`. Use `exit_event` when integrating
+the process with Windows wait APIs.
+
+```rust
+# extern crate wslplugins_rs;
+# use wslplugins_rs::prelude::*;
+# fn example(api: &ApiV1, session_id: WSLCSessionID) -> Result<(), Box<dyn std::error::Error>> {
+let output = api
+    .wslc()?
+    .new_command(session_id, "/bin/echo")
+    .with_arg("container")
+    .output()?;
+
+assert!(output.status.success());
+assert_eq!(output.stdout, b"container\n");
+# Ok(())
+# }
+```
+
+`spawn` reports native process-creation failures, including the Linux `errno`, through
+`WSLCSpawnError`. It can also report a failure to acquire one of the process streams or the exit
+event.
 
 ## Resource Lifetime
 
-`WSLCProcess` owns the opaque native process and releases it on drop. Its stdin, stdout, stderr and
-exit-event methods return owned Windows handles tied to the process borrow. Rust therefore prevents
-the process from being released while one of those handles is still alive, matching the native
-WSLC contract.
+`WSLCProcess` and its stream objects share ownership of the opaque native process. Taking a stream
+out of the process therefore remains safe: dropping `WSLCProcess` does not call
+`WSLCReleaseProcess` until the final detached stream has also been dropped.
 
-After the exit event is signaled, call `WSLCProcess::exit_code`. Drop all process handles before
-dropping the process.
+`WSLCProcess::wait` and `WSLCProcess::wait_timeout` close standard input before waiting, matching
+`std::process::Child::wait`. The `wait_with_output` and command-level `output` operations read
+stdout and stderr concurrently to avoid blocking when either native pipe buffer fills.
+`WSLCCommand::status` drains both streams without retaining their contents.
+
+The shared process state uses reference counting so detached streams remain safe. Output collection
+allocates buffers for the bytes it returns, while `status` avoids those output allocations.
+
+Session hook information exposes its display name as a borrowed `U16CStr` through
+`WSLCSessionInformation::display_name`. Use `display_name_os_string` only when an owned Windows
+string is required.
+
+## Plugin Hooks
+
+With `experimental-wslc` and `macro` enabled, `WSLPluginV1` exposes six optional WSLC hooks:
+
+- `on_session_created` and `on_session_stopping`;
+- `container_started` and `container_stopping`;
+- `image_created` and `image_deleted`.
+
+Only methods explicitly implemented by the plugin are installed in the native hook table. The
+macro also checks the `WSLC` capability before installing them. Session callbacks receive
+`WSLCSessionInformation`; creation callbacks receive typed JSON views
+(`WSLCContainerInformation` or `WSLCImageInformation`), while deletion/stopping callbacks receive
+a `WSLCObjectId`.

@@ -21,7 +21,14 @@ pub fn generate(imp: &ParsedImpl, version: &RequiredVersion) -> Result<TokenStre
 const fn version_gated_hooks(hook: Hooks) -> bool {
     matches!(
         hook,
-        Hooks::OnDistributionRegistered | Hooks::OnDistributionUnregistered
+        Hooks::OnDistributionRegistered
+            | Hooks::OnDistributionUnregistered
+            | Hooks::OnSessionCreated
+            | Hooks::OnSessionStopping
+            | Hooks::ContainerStarted
+            | Hooks::ContainerStopping
+            | Hooks::ImageCreated
+            | Hooks::ImageDeleted
     )
 }
 
@@ -87,6 +94,27 @@ fn hook_field_mapping(hooks_struct_name: &Ident, hook: Hooks) -> Result<TokenStr
         Hooks::OnDistributionUnregistered => {
             let capability =
                 quote!(::wslplugins_rs::WSLVersionCapability::DistributionUnregisteredHook);
+            quote! {
+                if current_version.supports(#capability) {
+                    #base
+                } else {
+                    ::wslplugins_rs::__private::debug!(
+                        "Hook {} not applied due to insufficient version (found: {}, required: {})",
+                        #field_str,
+                        current_version,
+                        #capability.required_version()
+                    );
+                }
+            }
+        }
+        #[cfg(feature = "experimental-wslc")]
+        Hooks::OnSessionCreated
+        | Hooks::OnSessionStopping
+        | Hooks::ContainerStarted
+        | Hooks::ContainerStopping
+        | Hooks::ImageCreated
+        | Hooks::ImageDeleted => {
+            let capability = quote!(::wslplugins_rs::WSLVersionCapability::WSLC);
             quote! {
                 if current_version.supports(#capability) {
                     #base

@@ -5,6 +5,7 @@
 
 mod api_v1;
 pub mod errors;
+#[cfg(feature = "experimental-wslc")]
 mod wslc;
 pub use wsl_command::WSLCommandExecution;
 
@@ -23,9 +24,12 @@ pub use errors::Error;
 ///
 /// This alias simplifies the function signatures by standardizing error handling.
 pub use errors::Result;
+#[cfg(feature = "experimental-wslc")]
 pub use wslc::{
-    WSLCApi, WSLCCommand, WSLCCreateProcessError, WSLCProcess, WSLCProcessFd,
-    WSLCProcessOwnedHandle, WSLCSessionID,
+    WSLCApi, WSLCChildStderr, WSLCChildStdin, WSLCChildStdout, WSLCCommand, WSLCCommandError,
+    WSLCContainerInformation, WSLCCreateProcessError, WSLCExitStatus, WSLCImageInformation,
+    WSLCObjectId, WSLCOutput, WSLCProcess, WSLCProcessFd, WSLCSessionID, WSLCSessionInformation,
+    WSLCSpawnError,
 };
 
 /// The `utils` module provides utility functions and helpers for working with the WSL Plugin API.

@@ -7,5 +7,6 @@ mod test {
         t.pass("tests/ui/success.rs");
         t.pass("tests/ui/success_capability.rs");
         t.pass("tests/ui/success_wslc_capability.rs");
+        t.pass("tests/ui/success_wslc_hooks.rs");
     }
 }
