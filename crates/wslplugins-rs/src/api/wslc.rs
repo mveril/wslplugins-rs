@@ -7,9 +7,9 @@ mod object_id;
 mod session_information;
 
 pub use api::{
-    WSLCApi, WSLCChildStderr, WSLCChildStdin, WSLCChildStdout, WSLCCommand, WSLCCommandError,
-    WSLCCreateProcessError, WSLCExitStatus, WSLCOutput, WSLCProcess, WSLCProcessFd, WSLCSessionID,
-    WSLCSpawnError,
+    PreparedWSLCCommand, WSLCApi, WSLCChildStderr, WSLCChildStdin, WSLCChildStdout, WSLCCommand,
+    WSLCCommandError, WSLCCommandExecution, WSLCCreateProcessError, WSLCExitStatus, WSLCOutput,
+    WSLCProcess, WSLCProcessFd, WSLCSessionID, WSLCSpawnError,
 };
 pub use container_information::WSLCContainerInformation;
 pub use image_information::WSLCImageInformation;

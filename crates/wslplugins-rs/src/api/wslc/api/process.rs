@@ -19,8 +19,6 @@ const E_POINTER: HRESULT = HRESULT(0x8000_4003_u32.cast_signed());
 /// are public optional fields so callers can borrow them or transfer ownership
 /// with [`Option::take`].
 ///
-/// The native process remains alive until both this value and every standard
-/// stream taken from it have been dropped.
 pub struct WSLCProcess<'api> {
     pub(super) inner: Arc<WSLCProcessInner<'api>>,
     /// A handle for writing to the child process's standard input.
@@ -116,7 +114,7 @@ impl WSLCProcess<'_> {
             let stdout_thread = scope.spawn(move || read_stdout(stdout));
             let stderr = read_stderr(stderr);
 
-            let stdout = stdout_thread
+            let stdout: Vec<u8> = stdout_thread
                 .join()
                 .map_err(|_| io::Error::other("WSLC stdout reader thread panicked"))??;
             Ok::<_, io::Error>((stdout, stderr?))
@@ -209,8 +207,8 @@ impl Drop for WSLCProcessInner<'_> {
     fn drop(&mut self) {
         let raw = self.api.raw();
         // SAFETY: this is the final shared owner of the opaque process. All
-        // stream handles retain an `Arc` to this object, so they have already
-        // been closed before this call.
+        // acquired stream handles retain an `Arc` to this object, so they have
+        // already been closed before this call.
         unsafe {
             raw.WSLCReleaseProcess.unwrap_unchecked()(self.handle.as_ptr());
         }

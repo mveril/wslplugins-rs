@@ -1,10 +1,10 @@
 use super::process::WSLCProcessInner;
 use super::{
     WSLCChildStderr, WSLCChildStdin, WSLCChildStdout, WSLCCommand, WSLCCreateProcessError,
-    WSLCProcess, WSLCProcessFd, WSLCSessionID, WSLCSpawnError,
+    WSLCProcess, WSLCProcessFd, WSLCProcessStreams, WSLCSessionID, WSLCSpawnError,
 };
 use crate::api::wsl_command::IntoCowUtf8UnixPath;
-use crate::api::{utils, ApiV1, Result};
+use crate::api::{ApiV1, Result};
 use crate::cstring_ext::CstringExt as _;
 use std::ffi::{c_void, CString};
 use std::fmt;
@@ -115,16 +115,14 @@ impl<'a> WSLCApi<'a> {
         self.api.as_ref()
     }
 
-    pub(super) fn create_process(
+    pub(super) fn create_process_encoded(
         self,
         session_id: WSLCSessionID,
-        executable: &Utf8UnixPath,
-        argv: impl IntoIterator<Item = impl AsRef<str>>,
-        environment: impl IntoIterator<Item = impl AsRef<str>>,
+        executable: &[u8],
+        argv: &[*const u8],
+        environment: &[*const u8],
+        streams: WSLCProcessStreams,
     ) -> std::result::Result<WSLCProcess<'a>, WSLCSpawnError> {
-        let executable = utils::encode_c_path(executable);
-        let (_arguments, argv) = utils::encode_c_argv(argv);
-        let (_environment, environment) = utils::encode_c_argv(environment);
         let mut process = MaybeUninit::<WSLCProcessHandle>::uninit();
         let mut errno = 0;
         let raw = self.raw();
@@ -151,16 +149,25 @@ impl<'a> WSLCApi<'a> {
         let handle = NonNull::new(process.cast())
             .ok_or_else(|| WSLCCreateProcessError::new(WinError::from(E_POINTER), errno))?;
         let process = Arc::new(WSLCProcessInner { api: self, handle });
-        let stdin = self.process_handle(handle, WSLCProcessFd::Stdin)?;
-        let stdout = self.process_handle(handle, WSLCProcessFd::Stdout)?;
-        let stderr = self.process_handle(handle, WSLCProcessFd::Stderr)?;
+        let stdin = streams
+            .contains(WSLCProcessStreams::STDIN)
+            .then(|| self.process_handle(handle, WSLCProcessFd::Stdin))
+            .transpose()?;
+        let stdout = streams
+            .contains(WSLCProcessStreams::STDOUT)
+            .then(|| self.process_handle(handle, WSLCProcessFd::Stdout))
+            .transpose()?;
+        let stderr = streams
+            .contains(WSLCProcessStreams::STDERR)
+            .then(|| self.process_handle(handle, WSLCProcessFd::Stderr))
+            .transpose()?;
         let exit_event = self.process_exit_event(handle)?;
 
         Ok(WSLCProcess {
             inner: Arc::clone(&process),
-            stdin: Some(WSLCChildStdin::new(stdin, Arc::clone(&process))),
-            stdout: Some(WSLCChildStdout::new(stdout, Arc::clone(&process))),
-            stderr: Some(WSLCChildStderr::new(stderr, process)),
+            stdin: stdin.map(|handle| WSLCChildStdin::new(handle, Arc::clone(&process))),
+            stdout: stdout.map(|handle| WSLCChildStdout::new(handle, Arc::clone(&process))),
+            stderr: stderr.map(|handle| WSLCChildStderr::new(handle, process)),
             exit_event,
             exit_status: None,
         })

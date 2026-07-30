@@ -243,7 +243,7 @@ fn command_forwards_argv_environment_and_releases_process() {
         .new_command(WSLCSessionID::new(11), "/bin/sh")
         .with_arg0("sh")
         .with_args(["-c", "exit 42"])
-        .with_environment("HOME=/root")
+        .with_env("HOME", "/root")
         .spawn()
         .unwrap();
 
@@ -273,6 +273,71 @@ fn command_forwards_argv_environment_and_releases_process() {
 }
 
 #[test]
+fn command_borrows_static_and_local_strings_without_copying() {
+    let _guard = TEST_LOCK.lock().unwrap();
+    let api = api(crate::WSLVersion::new(2, 9, 0));
+    let wslc = api.wslc().unwrap();
+    let program = "/bin/echo";
+    let static_argument = "static";
+    let local_argument = String::from("local");
+    let environment_key = "HOME";
+    let environment_value = String::from("/root");
+    let command = wslc
+        .new_command(WSLCSessionID::new(11), program)
+        .with_args([static_argument, local_argument.as_str()])
+        .with_env(environment_key, environment_value.as_str());
+
+    assert!(ptr::eq(
+        command.get_program().as_str().as_ptr(),
+        program.as_ptr()
+    ));
+    let mut arguments = command.get_args();
+    assert!(arguments
+        .next()
+        .is_some_and(|argument| ptr::eq(argument.as_ptr(), static_argument.as_ptr())));
+    assert!(arguments
+        .next()
+        .is_some_and(|argument| ptr::eq(argument.as_ptr(), local_argument.as_ptr())));
+    assert!(command
+        .get_environment()
+        .next()
+        .is_some_and(|(key, value)| {
+            ptr::eq(key.as_ptr(), environment_key.as_ptr())
+                && ptr::eq(value.as_ptr(), environment_value.as_ptr())
+        }));
+}
+
+#[test]
+fn prepared_command_can_spawn_multiple_processes_without_reencoding() {
+    let _guard = TEST_LOCK.lock().unwrap();
+    CREATE_PROCESS_FAILS.store(false, Ordering::SeqCst);
+    HANDLE_CALLS_FAIL.store(false, Ordering::SeqCst);
+    RELEASE_COUNT.store(0, Ordering::SeqCst);
+    let api = api(crate::WSLVersion::new(2, 9, 0));
+    let command = api
+        .wslc()
+        .unwrap()
+        .new_command(WSLCSessionID::new(12), "/bin/echo")
+        .with_arg("prepared")
+        .with_env("LANG", "C");
+    let prepared = command.prepare();
+
+    drop(prepared.spawn().unwrap());
+    drop(prepared.spawn().unwrap());
+
+    assert_eq!(RELEASE_COUNT.load(Ordering::SeqCst), 2);
+    assert_eq!(
+        *PROCESS_CALL.lock().unwrap(),
+        Some(ProcessCall {
+            session_id: 12,
+            executable: "/bin/echo".to_owned(),
+            argv: vec!["/bin/echo".to_owned(), "prepared".to_owned()],
+            environment: vec!["LANG=C".to_owned()],
+        })
+    );
+}
+
+#[test]
 fn detached_stream_keeps_native_process_alive() {
     let _guard = TEST_LOCK.lock().unwrap();
     CREATE_PROCESS_FAILS.store(false, Ordering::SeqCst);
@@ -283,6 +348,7 @@ fn detached_stream_keeps_native_process_alive() {
         .wslc()
         .unwrap()
         .new_command(WSLCSessionID::new(11), "/bin/true")
+        .pipe_stdout()
         .spawn()
         .unwrap();
     let stdout = process.stdout.take().unwrap();
@@ -292,6 +358,47 @@ fn detached_stream_keeps_native_process_alive() {
 
     drop(stdout);
     assert_eq!(RELEASE_COUNT.load(Ordering::SeqCst), 1);
+}
+
+#[test]
+fn spawn_only_acquires_explicitly_requested_streams() {
+    let _guard = TEST_LOCK.lock().unwrap();
+    CREATE_PROCESS_FAILS.store(false, Ordering::SeqCst);
+    HANDLE_CALLS_FAIL.store(false, Ordering::SeqCst);
+    FD_CALLS.lock().unwrap().clear();
+    let api = api(crate::WSLVersion::new(2, 9, 0));
+    let wslc = api.wslc().unwrap();
+
+    let process = wslc
+        .new_command(WSLCSessionID::new(11), "/bin/true")
+        .spawn()
+        .unwrap();
+
+    assert!(process.stdin.is_none());
+    assert!(process.stdout.is_none());
+    assert!(process.stderr.is_none());
+    assert!(FD_CALLS.lock().unwrap().is_empty());
+}
+
+#[test]
+fn output_only_acquires_stdout_and_stderr() {
+    let _guard = TEST_LOCK.lock().unwrap();
+    CREATE_PROCESS_FAILS.store(false, Ordering::SeqCst);
+    HANDLE_CALLS_FAIL.store(false, Ordering::SeqCst);
+    EXIT_EVENT_SIGNALED.store(true, Ordering::SeqCst);
+    FD_CALLS.lock().unwrap().clear();
+    let api = api(crate::WSLVersion::new(2, 9, 0));
+
+    api.wslc()
+        .unwrap()
+        .new_command(WSLCSessionID::new(11), "/bin/true")
+        .output()
+        .unwrap();
+
+    assert_eq!(
+        *FD_CALLS.lock().unwrap(),
+        vec![WSLCProcessFd::Stdout as i32, WSLCProcessFd::Stderr as i32]
+    );
 }
 
 #[test]
@@ -346,6 +453,7 @@ fn process_stream_and_exit_event_failures_are_returned() {
         .wslc()
         .unwrap()
         .new_command(WSLCSessionID::new(1), "/bin/true")
+        .pipe_stdin()
         .spawn()
         .unwrap_err();
 

@@ -1,17 +1,28 @@
 use super::{
-    WSLCApi, WSLCCommandError, WSLCExitStatus, WSLCOutput, WSLCProcess, WSLCSessionID,
-    WSLCSpawnError,
+    PreparedWSLCCommand, WSLCApi, WSLCCommandExecution, WSLCProcessStreams, WSLCSessionID,
 };
 use crate::api::wsl_command::IntoCowUtf8UnixPath;
 use std::borrow::Cow;
 use typed_path::Utf8UnixPath;
+
+#[cfg(feature = "smallvec")]
+type ArgumentVec<'a> = smallvec::SmallVec<[Cow<'a, str>; 8]>;
+#[cfg(not(feature = "smallvec"))]
+type ArgumentVec<'a> = Vec<Cow<'a, str>>;
+
+#[cfg(feature = "smallvec")]
+type EnvironmentVec<'a> = smallvec::SmallVec<[(Cow<'a, str>, Cow<'a, str>); 8]>;
+#[cfg(not(feature = "smallvec"))]
+type EnvironmentVec<'a> = Vec<(Cow<'a, str>, Cow<'a, str>)>;
+
 pub struct WSLCCommand<'api, 'command> {
     api: WSLCApi<'api>,
     session_id: WSLCSessionID,
     program: Cow<'command, Utf8UnixPath>,
     arg0: Option<Cow<'command, str>>,
-    args: Vec<Cow<'command, str>>,
-    environment: Vec<Cow<'command, str>>,
+    args: ArgumentVec<'command>,
+    environment: EnvironmentVec<'command>,
+    streams: WSLCProcessStreams,
 }
 
 impl<'api, 'command> WSLCCommand<'api, 'command> {
@@ -24,9 +35,70 @@ impl<'api, 'command> WSLCCommand<'api, 'command> {
             session_id,
             program: program.into_cow_utf8_unix_path(),
             arg0: None,
-            args: Vec::new(),
-            environment: Vec::new(),
+            args: ArgumentVec::new(),
+            environment: EnvironmentVec::new(),
+            streams: WSLCProcessStreams::default(),
         }
+    }
+
+    /// Acquires a writable handle for the child process's standard input.
+    #[inline]
+    pub fn pipe_stdin(&mut self) -> &mut Self {
+        self.streams.insert(WSLCProcessStreams::STDIN);
+        self
+    }
+
+    /// Acquires a writable handle for the child process's standard input.
+    #[inline]
+    #[mustè_use]
+    pub fn with_pipe_stdin(&mut self) -> Self {
+        self.streams.insert(WSLCProcessStreams::STDIN);
+        self
+    }
+
+    /// Acquires a readable handle for the child process's standard output.
+    #[inline]
+    pub fn pipe_stdout(&mut self) -> &mut Self {
+        self.streams.insert(WSLCProcessStreams::STDOUT);
+        self
+    }
+
+    /// Acquires a readable handle for the child process's standard output.
+    #[inline]
+    #[must_use]
+    pub fn with_pipe_stdout(&mut self) -> Self {
+        self.streams.insert(WSLCProcessStreams::STDOUT);
+        self
+    }
+
+    /// Acquires a readable handle for the child process's standard error.
+    #[inline]
+    pub fn pipe_stderr(&mut self) -> &mut Self {
+        self.streams.insert(WSLCProcessStreams::STDERR);
+        self
+    }
+
+        /// Acquires a readable handle for the child process's standard error.
+    #[inline]
+    #[must_use]
+    pub fn with_pipe_stderr(&mut self) -> Self {
+        self.streams.insert(WSLCProcessStreams::STDERR);
+        self
+    }
+
+    /// Acquires handles for all three standard streams.
+    #[inline]
+    pub fn pipe_standard_streams(&mut self) -> &mut Self {
+        self.streams = WSLCProcessStreams::ALL;
+        self
+    }
+
+    /// Acquires handles for all three standard streams.
+    #[inline]
+    #[must_use]
+    pub fn with_pipe_standard_streams(&mut self) -> Self {
+        self.streams = WSLCProcessStreams::ALL;
+        self
     }
 
     /// Sets `argv[0]`.
@@ -94,36 +166,26 @@ impl<'api, 'command> WSLCCommand<'api, 'command> {
         self
     }
 
-    /// Adds an environment entry in `NAME=VALUE` form.
-    #[inline]
-    pub fn environment<T>(&mut self, entry: T) -> &mut Self
-    where
-        T: Into<Cow<'command, str>>,
-    {
-        self.environment.push(entry.into());
-        self
-    }
-
-    /// Adds an environment entry in `NAME=VALUE` form.
-    #[must_use]
-    #[inline]
-    pub fn with_environment<T>(mut self, entry: T) -> Self
-    where
-        T: Into<Cow<'command, str>>,
-    {
-        self.environment.push(entry.into());
-        self
-    }
-
     /// Sets an environment variable for the child process.
     #[inline]
     pub fn env<K, V>(&mut self, key: K, value: V) -> &mut Self
     where
-        K: AsRef<str>,
-        V: AsRef<str>,
+        K: Into<Cow<'command, str>>,
+        V: Into<Cow<'command, str>>,
     {
-        self.environment
-            .push(Cow::Owned(format!("{}={}", key.as_ref(), value.as_ref())));
+        self.environment.push((key.into(), value.into()));
+        self
+    }
+
+    /// Sets an environment variable for the child process.
+    #[must_use]
+    #[inline]
+    pub fn with_env<K, V>(mut self, key: K, value: V) -> Self
+    where
+        K: Into<Cow<'command, str>>,
+        V: Into<Cow<'command, str>>,
+    {
+        self.environment.push((key.into(), value.into()));
         self
     }
 
@@ -132,13 +194,30 @@ impl<'api, 'command> WSLCCommand<'api, 'command> {
     pub fn envs<I, K, V>(&mut self, variables: I) -> &mut Self
     where
         I: IntoIterator<Item = (K, V)>,
-        K: AsRef<str>,
-        V: AsRef<str>,
+        K: Into<Cow<'command, str>>,
+        V: Into<Cow<'command, str>>,
     {
         self.environment.extend(
             variables
                 .into_iter()
-                .map(|(key, value)| Cow::Owned(format!("{}={}", key.as_ref(), value.as_ref()))),
+                .map(|(key, value)| (key.into(), value.into())),
+        );
+        self
+    }
+
+    /// Sets environment variables for the child process.
+    #[must_use]
+    #[inline]
+    pub fn with_envs<I, K, V>(mut self, variables: I) -> Self
+    where
+        I: IntoIterator<Item = (K, V)>,
+        K: Into<Cow<'command, str>>,
+        V: Into<Cow<'command, str>>,
+    {
+        self.environment.extend(
+            variables
+                .into_iter()
+                .map(|(key, value)| (key.into(), value.into())),
         );
         self
     }
@@ -156,53 +235,39 @@ impl<'api, 'command> WSLCCommand<'api, 'command> {
         self.args.iter().map(AsRef::as_ref)
     }
 
-    /// Returns an iterator over `NAME=VALUE` environment entries.
+    /// Returns an iterator over environment key-value pairs.
+    #[must_use]
     #[inline]
-    pub fn get_environment(&self) -> impl ExactSizeIterator<Item = &str> {
-        self.environment.iter().map(AsRef::as_ref)
+    pub fn get_environment(&self) -> impl ExactSizeIterator<Item = (&str, &str)> {
+        self.environment
+            .iter()
+            .map(|(key, value)| (key.as_ref(), value.as_ref()))
     }
 
-    /// Creates the process.
-    ///
-    /// # Errors
-    ///
-    /// Returns the Windows failure and the Linux `errno` reported by WSL when
-    /// process creation fails.
-    #[doc(alias = "WSLCCreateProcess")]
+    /// Encodes this command for repeated process creation.
+    #[must_use]
     #[inline]
-    pub fn spawn(&self) -> std::result::Result<WSLCProcess<'api>, WSLCSpawnError> {
+    pub fn prepare(&self) -> PreparedWSLCCommand<'api> {
         let arg0 = self.arg0.as_deref().unwrap_or(self.program.as_str());
-        let arguments = std::iter::once(arg0).chain(self.args.iter().map(AsRef::as_ref));
-        self.api.create_process(
+        PreparedWSLCCommand::new(
+            self.api,
             self.session_id,
             &self.program,
-            arguments,
-            self.environment.iter().map(AsRef::as_ref),
+            std::iter::once(arg0).chain(self.args.iter().map(AsRef::as_ref)),
+            self.get_environment(),
+            self.streams,
         )
     }
+}
 
-    /// Executes the command and waits for it to finish.
-    ///
-    /// Standard input is closed immediately. Standard output and standard
-    /// error are drained concurrently.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the process cannot be created, a stream cannot be
-    /// read, or the process status cannot be obtained.
+impl<'api> WSLCCommandExecution<'api> for WSLCCommand<'api, '_> {
     #[inline]
-    pub fn output(&self) -> std::result::Result<WSLCOutput, WSLCCommandError> {
-        self.spawn()?.wait_with_output()
+    fn spawn(&self) -> std::result::Result<super::WSLCProcess<'api>, super::WSLCSpawnError> {
+        self.prepare().spawn()
     }
 
-    /// Executes the command and waits for its exit status.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the process cannot be created or its status cannot
-    /// be obtained.
     #[inline]
-    pub fn status(&self) -> std::result::Result<WSLCExitStatus, WSLCCommandError> {
-        self.spawn()?.wait_with_status()
+    fn output(&self) -> std::result::Result<super::WSLCOutput, super::WSLCCommandError> {
+        self.prepare().spawn_for_output()?.wait_with_output()
     }
 }

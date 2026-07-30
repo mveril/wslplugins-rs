@@ -26,10 +26,10 @@ pub use errors::Error;
 pub use errors::Result;
 #[cfg(feature = "experimental-wslc")]
 pub use wslc::{
-    WSLCApi, WSLCChildStderr, WSLCChildStdin, WSLCChildStdout, WSLCCommand, WSLCCommandError,
-    WSLCContainerInformation, WSLCCreateProcessError, WSLCExitStatus, WSLCImageInformation,
-    WSLCObjectId, WSLCOutput, WSLCProcess, WSLCProcessFd, WSLCSessionID, WSLCSessionInformation,
-    WSLCSpawnError,
+    PreparedWSLCCommand, WSLCApi, WSLCChildStderr, WSLCChildStdin, WSLCChildStdout, WSLCCommand,
+    WSLCCommandError, WSLCCommandExecution, WSLCContainerInformation, WSLCCreateProcessError,
+    WSLCExitStatus, WSLCImageInformation, WSLCObjectId, WSLCOutput, WSLCProcess, WSLCProcessFd,
+    WSLCSessionID, WSLCSessionInformation, WSLCSpawnError,
 };
 
 /// The `utils` module provides utility functions and helpers for working with the WSL Plugin API.

@@ -75,7 +75,8 @@ let mut process = api
     .new_command(session_id, "/bin/sh")
     .with_arg0("sh")
     .with_args(["-c", "printf container"])
-    .with_environment("HOME=/root")
+    .with_env("HOME", "/root")
+    .pipe_stdout()
     .spawn()?;
 
 let mut stdout = process
@@ -97,10 +98,21 @@ fields are optional owned streams, so they can be borrowed in place or moved out
 `Option::take`. `wait`, `try_wait`, and `wait_with_output` provide the corresponding process
 lifecycle operations. The command builder also provides `status` and `output` convenience methods:
 
+`spawn` does not acquire standard-stream handles by default. Call `pipe_stdin`, `pipe_stdout`,
+`pipe_stderr`, or `pipe_standard_streams` before `spawn` to request only the handles that will be
+used. The `output` convenience method requests stdout and stderr automatically.
+
 `wait_timeout` additionally waits for at most a `std::time::Duration` and returns `None` when
 the timeout expires. The opaque WSLC process identifier is not a Windows kernel handle, so
 `WSLCProcess` does not implement `AsHandle` or `AsRawHandle`. Use `exit_event` when integrating
 the process with Windows wait APIs.
+
+Environment variables are supplied as separate key-value pairs with `env`, `with_env`, `envs`, or
+`with_envs`. The command encodes each pair as the native `NAME=VALUE` entry expected by WSLC.
+
+Call `prepare` when the same command will be started multiple times. `PreparedWSLCCommand` retains
+the encoded executable, arguments, environment, and native pointer arrays, so each call to `spawn`
+can invoke WSLC without rebuilding them. Both command types implement `WSLCCommandExecution`.
 
 ```rust
 # extern crate wslplugins_rs;
@@ -128,10 +140,10 @@ event.
 out of the process therefore remains safe: dropping `WSLCProcess` does not call
 `WSLCReleaseProcess` until the final detached stream has also been dropped.
 
-`WSLCProcess::wait` and `WSLCProcess::wait_timeout` close standard input before waiting, matching
+`WSLCProcess::wait` and `WSLCProcess::wait_timeout` close an acquired standard input before waiting, matching
 `std::process::Child::wait`. The `wait_with_output` and command-level `output` operations read
 stdout and stderr concurrently to avoid blocking when either native pipe buffer fills.
-`WSLCCommand::status` drains both streams without retaining their contents.
+`WSLCCommand::status` waits without acquiring stream handles.
 
 The shared process state uses reference counting so detached streams remain safe. Output collection
 allocates buffers for the bytes it returns, while `status` avoids those output allocations.
