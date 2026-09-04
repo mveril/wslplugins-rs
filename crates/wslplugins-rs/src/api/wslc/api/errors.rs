@@ -22,7 +22,7 @@ pub enum WSLCSpawnError {
     Api(#[from] crate::api::Error),
 }
 
-/// Failure returned by [`WSLCCommand::status`] or [`WSLCCommand::output`].
+/// Failure returned by [`WSLCCommandExecution::status`] or [`WSLCCommandExecution::output`].
 #[derive(Debug, Error)]
 pub enum WSLCCommandError {
     /// The process could not be spawned.

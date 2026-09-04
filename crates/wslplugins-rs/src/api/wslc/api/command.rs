@@ -50,8 +50,8 @@ impl<'api, 'command> WSLCCommand<'api, 'command> {
 
     /// Acquires a writable handle for the child process's standard input.
     #[inline]
-    #[mustè_use]
-    pub fn with_pipe_stdin(&mut self) -> Self {
+    #[must_use]
+    pub fn with_pipe_stdin(mut self) -> Self {
         self.streams.insert(WSLCProcessStreams::STDIN);
         self
     }
@@ -66,7 +66,7 @@ impl<'api, 'command> WSLCCommand<'api, 'command> {
     /// Acquires a readable handle for the child process's standard output.
     #[inline]
     #[must_use]
-    pub fn with_pipe_stdout(&mut self) -> Self {
+    pub fn with_pipe_stdout(mut self) -> Self {
         self.streams.insert(WSLCProcessStreams::STDOUT);
         self
     }
@@ -81,7 +81,7 @@ impl<'api, 'command> WSLCCommand<'api, 'command> {
         /// Acquires a readable handle for the child process's standard error.
     #[inline]
     #[must_use]
-    pub fn with_pipe_stderr(&mut self) -> Self {
+    pub fn with_pipe_stderr(mut self) -> Self {
         self.streams.insert(WSLCProcessStreams::STDERR);
         self
     }
@@ -96,7 +96,7 @@ impl<'api, 'command> WSLCCommand<'api, 'command> {
     /// Acquires handles for all three standard streams.
     #[inline]
     #[must_use]
-    pub fn with_pipe_standard_streams(&mut self) -> Self {
+    pub fn with_pipe_standard_streams(mut self) -> Self {
         self.streams = WSLCProcessStreams::ALL;
         self
     }
