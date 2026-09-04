@@ -78,7 +78,7 @@ impl<'api, 'command> WSLCCommand<'api, 'command> {
         self
     }
 
-        /// Acquires a readable handle for the child process's standard error.
+    /// Acquires a readable handle for the child process's standard error.
     #[inline]
     #[must_use]
     pub fn with_pipe_stderr(mut self) -> Self {

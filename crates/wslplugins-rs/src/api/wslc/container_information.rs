@@ -1,6 +1,7 @@
 use std::ffi::CStr;
 use std::fmt;
 use std::str::Utf8Error;
+use wslc_schema_rs::InspectContainer;
 
 /// The JSON container inspection document supplied to a WSLC hook.
 #[repr(transparent)]
@@ -22,6 +23,17 @@ impl WSLCContainerInformation {
         self.0.to_str()
     }
 
+    /// Parses the inspection document into its strongly typed WSLC schema.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the document is not valid JSON or does not match the
+    /// WSLC container inspection schema.
+    #[inline]
+    pub fn parse(&self) -> Result<InspectContainer, serde_json::Error> {
+        serde_json::from_slice(self.0.to_bytes())
+    }
+
     /// Returns the native C string.
     #[must_use]
     #[inline]
@@ -41,5 +53,22 @@ impl fmt::Debug for WSLCContainerInformation {
     #[inline]
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(formatter)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::WSLCContainerInformation;
+
+    #[test]
+    fn parses_container_inspection_document() -> Result<(), Box<dyn std::error::Error>> {
+        let information: &WSLCContainerInformation =
+            c"{\"Id\":\"container-id\",\"Name\":\"example\"}".into();
+
+        let container = information.parse()?;
+
+        assert_eq!(container.id, "container-id");
+        assert_eq!(container.name, "example");
+        Ok(())
     }
 }

@@ -31,6 +31,8 @@ pub use wslc::{
     WSLCExitStatus, WSLCImageInformation, WSLCObjectId, WSLCOutput, WSLCProcess, WSLCProcessFd,
     WSLCSessionID, WSLCSessionInformation, WSLCSpawnError,
 };
+#[cfg(feature = "experimental-wslc")]
+pub use wslc_schema_rs as wslc_schema;
 
 /// The `utils` module provides utility functions and helpers for working with the WSL Plugin API.
 ///

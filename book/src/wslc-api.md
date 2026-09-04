@@ -164,4 +164,6 @@ Only methods explicitly implemented by the plugin are installed in the native ho
 macro also checks the `WSLC` capability before installing them. Session callbacks receive
 `WSLCSessionInformation`; creation callbacks receive typed JSON views
 (`WSLCContainerInformation` or `WSLCImageInformation`), while deletion/stopping callbacks receive
-a `WSLCObjectId`.
+a `WSLCObjectId`. Call `WSLCContainerInformation::parse` or `WSLCImageInformation::parse` to
+deserialize a creation document into the strongly typed `wslc_schema::InspectContainer` or
+`wslc_schema::InspectImage` model. The original UTF-8 JSON remains available through `json`.

@@ -28,6 +28,8 @@ uuid = { version = "1", optional = true }
 smallvec = { workspace = true, optional = true }
 semver = { version = "1", optional = true }
 strum = { workspace = true }
+serde_json = { version = "1", optional = true }
+wslc_schema_rs = { workspace = true, optional = true }
 
 [dev-dependencies]
 proptest = "1"
@@ -44,7 +46,11 @@ sid-macro = ["win-security-identifier/macro"]
 tracing = ["dep:tracing"]
 uuid = ["dep:uuid"]
 semver = ["dep:semver"]
-experimental-wslc = ["wslplugins-macro?/experimental-wslc"]
+experimental-wslc = [
+    "dep:serde_json",
+    "dep:wslc_schema_rs",
+    "wslplugins-macro?/experimental-wslc",
+]
 
 [package.metadata.docs.rs]
 all-features = true

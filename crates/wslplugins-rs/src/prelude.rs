@@ -13,6 +13,8 @@
 //! }
 //! ```
 
+#[cfg(feature = "experimental-wslc")]
+pub use crate::api::wslc_schema;
 pub use crate::api::{ApiV1, PreparedWSLCommand, WSLCommand, WSLCommandExecution};
 pub use crate::api::{Error as ApiError, Result as ApiResult};
 #[cfg(feature = "experimental-wslc")]
