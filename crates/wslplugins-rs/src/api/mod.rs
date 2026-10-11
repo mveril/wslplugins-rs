@@ -5,6 +5,8 @@
 
 mod api_v1;
 pub mod errors;
+#[cfg(feature = "experimental-wslc")]
+mod wslc;
 pub use wsl_command::WSLCommandExecution;
 
 /// The `ApiV1` struct provides an interface to interact with version 1 of the WSL Plugin API.
@@ -22,6 +24,15 @@ pub use errors::Error;
 ///
 /// This alias simplifies the function signatures by standardizing error handling.
 pub use errors::Result;
+#[cfg(feature = "experimental-wslc")]
+pub use wslc::{
+    PreparedWSLCCommand, WSLCApi, WSLCChildStderr, WSLCChildStdin, WSLCChildStdout, WSLCCommand,
+    WSLCCommandError, WSLCCommandExecution, WSLCContainerInformation, WSLCCreateProcessError,
+    WSLCExitStatus, WSLCImageInformation, WSLCObjectId, WSLCOutput, WSLCProcess, WSLCProcessFd,
+    WSLCSessionID, WSLCSessionInformation, WSLCSpawnError,
+};
+#[cfg(feature = "experimental-wslc")]
+pub use wslc_schema_rs as wslc_schema;
 
 /// The `utils` module provides utility functions and helpers for working with the WSL Plugin API.
 ///

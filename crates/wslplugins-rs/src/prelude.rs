@@ -13,8 +13,17 @@
 //! }
 //! ```
 
+#[cfg(feature = "experimental-wslc")]
+pub use crate::api::wslc_schema;
 pub use crate::api::{ApiV1, PreparedWSLCommand, WSLCommand, WSLCommandExecution};
 pub use crate::api::{Error as ApiError, Result as ApiResult};
+#[cfg(feature = "experimental-wslc")]
+pub use crate::api::{
+    PreparedWSLCCommand, WSLCApi, WSLCChildStderr, WSLCChildStdin, WSLCChildStdout, WSLCCommand,
+    WSLCCommandError, WSLCCommandExecution, WSLCContainerInformation, WSLCCreateProcessError,
+    WSLCExitStatus, WSLCImageInformation, WSLCObjectId, WSLCOutput, WSLCProcess, WSLCProcessFd,
+    WSLCSessionID, WSLCSessionInformation, WSLCSpawnError,
+};
 pub use crate::plugin::{Error as PluginError, Result as PluginResult, WSLPluginV1};
 pub use crate::windows_core::{Error as WinError, Result as WinResult};
 #[cfg(feature = "semver")]

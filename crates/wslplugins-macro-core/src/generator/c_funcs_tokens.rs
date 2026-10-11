@@ -125,6 +125,89 @@ pub(super) fn get_c_func_tokens(hook: Hooks) -> Result<Option<TokenStream>> {
                 )
             }
         }),
+        #[cfg(feature = "experimental-wslc")]
+        Hooks::OnSessionCreated | Hooks::OnSessionStopping => Some(quote! {
+            extern "C" fn #c_method_ident(
+                session: *const ::wslplugins_rs::sys::WSLCSessionInformation,
+            ) -> ::wslplugins_rs::sys::windows_sys::core::HRESULT {
+                ::wslplugins_rs::__private::catch_unwind_or(
+                    ::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_FAIL,
+                    || {
+                        let session_ptr = unsafe { &*session };
+                        PLUGIN.get().map(|plugin| {
+                            ::wslplugins_rs::windows_core::HRESULT::from(
+                                plugin.#trait_method_ident(session_ptr.as_ref())
+                            ).0
+                        }).unwrap_or(
+                            ::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_FAIL
+                        )
+                    },
+                )
+            }
+        }),
+        #[cfg(feature = "experimental-wslc")]
+        Hooks::ContainerStarted | Hooks::ImageCreated => Some(quote! {
+            extern "C" fn #c_method_ident(
+                session: *const ::wslplugins_rs::sys::WSLCSessionInformation,
+                information: *const u8,
+            ) -> ::wslplugins_rs::sys::windows_sys::core::HRESULT {
+                ::wslplugins_rs::__private::catch_unwind_or(
+                    ::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_FAIL,
+                    || {
+                        let session_ptr = unsafe { &*session };
+                        let information = unsafe {
+                            ::std::ffi::CStr::from_ptr(information.cast())
+                        };
+                        PLUGIN.get().map(|plugin| {
+                            ::wslplugins_rs::windows_core::HRESULT::from(
+                                plugin.#trait_method_ident(
+                                    session_ptr.as_ref(),
+                                    information.into(),
+                                )
+                            ).0
+                        }).unwrap_or(
+                            ::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_FAIL
+                        )
+                    },
+                )
+            }
+        }),
+        #[cfg(feature = "experimental-wslc")]
+        Hooks::ContainerStopping | Hooks::ImageDeleted => Some(quote! {
+            extern "C" fn #c_method_ident(
+                session: *const ::wslplugins_rs::sys::WSLCSessionInformation,
+                object_id: *const u8,
+            ) -> ::wslplugins_rs::sys::windows_sys::core::HRESULT {
+                ::wslplugins_rs::__private::catch_unwind_or(
+                    ::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_FAIL,
+                    || {
+                        let session_ptr = unsafe { &*session };
+                        let object_id = unsafe {
+                            ::std::ffi::CStr::from_ptr(object_id.cast())
+                        };
+                        let object_id: &::wslplugins_rs::api::WSLCObjectId =
+                            object_id.into();
+                        PLUGIN.get().map(|plugin| {
+                            ::wslplugins_rs::windows_core::HRESULT::from(
+                                plugin.#trait_method_ident(
+                                    session_ptr.as_ref(),
+                                    object_id,
+                                )
+                            ).0
+                        }).unwrap_or(
+                            ::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_FAIL
+                        )
+                    },
+                )
+            }
+        }),
+        #[cfg(not(feature = "experimental-wslc"))]
+        Hooks::OnSessionCreated
+        | Hooks::OnSessionStopping
+        | Hooks::ContainerStarted
+        | Hooks::ContainerStopping
+        | Hooks::ImageCreated
+        | Hooks::ImageDeleted => None,
     };
 
     Ok(ok_result)

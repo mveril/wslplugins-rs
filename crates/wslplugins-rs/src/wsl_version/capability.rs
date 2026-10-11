@@ -19,6 +19,8 @@ pub enum WSLVersionCapability {
     DistributionFlavor,
     /// Access to the distribution version field (`2.4.4`).
     DistributionVersion,
+    /// Access to the WSLC session API (`2.9.0`).
+    WSLC,
 }
 
 impl WSLVersionCapability {
@@ -32,6 +34,7 @@ impl WSLVersionCapability {
             | Self::DistributionUnregisteredHook
             | Self::ExecuteBinaryInDistribution => WSLVersion::new(2, 1, 2),
             Self::DistributionFlavor | Self::DistributionVersion => WSLVersion::new(2, 4, 4),
+            Self::WSLC => WSLVersion::new(2, 9, 0),
         }
     }
 }

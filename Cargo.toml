@@ -5,10 +5,11 @@ members = [
     "examples/*",
 ]
 [workspace.dependencies]
-wslpluginapi-sys = "0.2"
+wslpluginapi-sys = "0.3"
 win-security-identifier = "0.2"
 windows-core = ">=0.59, <0.63"
 windows = ">=0.59, <0.63"
+windows-sys = ">=0.59, <0.62"
 quote = "1"
 syn = "2"
 proc-macro2 = "1"
@@ -16,6 +17,10 @@ smallvec = "1"
 widestring = "1"
 strum = { version = "0.28", features = ["derive"] }
 tracing = "0.1"
+wslc_schema_rs = "0.1"
+
+[patch.crates-io]
+wslc_schema_rs = { git = "https://github.com/mveril/wslc_schema_rs", branch = "develop" }
 
 [workspace.package]
 authors = ["Mickaël Véril <mika.veril@wanadoo.fr>"]

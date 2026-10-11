@@ -18,9 +18,11 @@ matrix below is the canonical list for this book; other chapters link here inste
 | <a id="execute-binary-in-distribution"></a>`ExecuteBinaryInDistribution` | command execution inside a user distribution | `2.1.2` |
 | <a id="distribution-flavor"></a>`DistributionFlavor` | `CoreWSLDistributionInformation::flavor()` | `2.4.4` |
 | <a id="distribution-version"></a>`DistributionVersion` | `CoreWSLDistributionInformation::version()` | `2.4.4` |
+| <a id="wslc"></a>`WSLC` | mounts and process execution in WSL container sessions | `2.9.0` |
 
 For command execution details, see [Command Execution](./command-execution.md). For the lifecycle
 and registration events exposed by `WSLPluginV1`, see [WSL Plugin Model](./wsl-plugin-model.md).
+For container-session operations, see [WSLC API](./wslc-api.md).
 
 ## Plugin Requirements
 

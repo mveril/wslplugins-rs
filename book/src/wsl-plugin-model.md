@@ -34,6 +34,8 @@ The API table contains:
 - `PluginError`, for passing a user-facing failure message back to WSL;
 - `ExecuteBinaryInDistribution`, for running a program inside a user distribution when the host API
   supports that capability.
+- the WSLC mount and process functions, isolated behind `ApiV1::wslc()` when the host supports API
+  version `2.9.0`.
 
 The hook table contains VM lifecycle hooks, distribution lifecycle hooks, and distribution
 registration hooks. Registration and unregistration hooks are version-gated capabilities; see
