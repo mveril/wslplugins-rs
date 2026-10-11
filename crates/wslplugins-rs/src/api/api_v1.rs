@@ -22,48 +22,45 @@ use wslpluginapi_sys::windows_sys::Win32::Networking::WinSock::SOCKET as WinSock
 #[cfg(doc)]
 use crate::DistributionID;
 
-use wslpluginapi_sys::WSLPluginAPIV1;
-
 use super::utils::check_requirement_result;
 
 /// Represents a structured interface for interacting with the `WSLPluginAPIV1` API.
 ///
 /// This struct encapsulates the methods provided by the `WSLPluginAPIV1` API, allowing
 /// idiomatic interaction with the Windows Subsystem for Linux (WSL).
-#[repr(transparent)]
-pub struct ApiV1(WSLPluginAPIV1);
-
-impl From<ApiV1> for WSLPluginAPIV1 {
-    #[inline]
-    fn from(value: ApiV1) -> Self {
-        value.0
-    }
+// Only fields supported by the host version are accessed through this view.
+#[repr(C)]
+pub struct ApiV1 {
+    _private: (),
+    _marker: std::marker::PhantomData<std::marker::PhantomPinned>,
 }
 
-impl From<WSLPluginAPIV1> for ApiV1 {
+impl ApiV1 {
+    /// Borrows a versioned WSL structure without referencing its full current layout.
+    ///
+    /// # Safety
+    /// `raw` must be non-null, correctly aligned, and point to an immutable WSL
+    /// structure containing every field supported by the current host version.
+    /// The allocation must remain valid for `'a`; an API installed in the global
+    /// context must remain valid for the plugin lifetime. The host must support
+    /// shared API calls, since this immutable view is Send and Sync.
     #[inline]
-    fn from(value: WSLPluginAPIV1) -> Self {
-        Self(value)
+    #[must_use]
+    pub const unsafe fn from_raw<'a>(raw: *const wslpluginapi_sys::WSLPluginAPIV1) -> &'a Self {
+        // SAFETY: The caller guarantees the allocation for this opaque borrowed view.
+        unsafe { &*raw.cast::<Self>() }
     }
-}
 
-impl AsRef<WSLPluginAPIV1> for ApiV1 {
+    /// Returns the pointer used for field-by-field ABI access.
     #[inline]
-    fn as_ref(&self) -> &WSLPluginAPIV1 {
-        &self.0
-    }
-}
-
-impl AsRef<ApiV1> for WSLPluginAPIV1 {
-    #[inline]
-    fn as_ref(&self) -> &ApiV1 {
-        // SAFETY: The layout of ApiV1 is transparent over WSLPluginAPIV1, so this cast is safe.
-        unsafe { &*std::ptr::from_ref::<Self>(self).cast::<ApiV1>() }
+    #[must_use]
+    pub const fn as_ptr(&self) -> *const wslpluginapi_sys::WSLPluginAPIV1 {
+        std::ptr::from_ref(self).cast()
     }
 }
 
 impl ApiV1 {
-    /// Retpurns the current version of the WSL API being used.
+    /// Returns the current version of the WSL API being used.
     ///
     /// This is useful for checking compatibility with specific API features.
     ///
@@ -79,8 +76,9 @@ impl ApiV1 {
     /// );
     #[must_use]
     #[inline]
-    pub fn version(&self) -> &WSLVersion {
-        self.0.Version.as_ref()
+    pub const fn version(&self) -> &WSLVersion {
+        // SAFETY: Version is in the baseline ABI and from_raw requires aligned storage.
+        unsafe { &*std::ptr::addr_of!((*self.as_ptr()).Version).cast::<WSLVersion>() }
     }
 
     /// Create plan9 mount between Windows & Linux
@@ -118,8 +116,8 @@ impl ApiV1 {
         let encoded_linux_path = U16CString::from_str_truncate(linux_path.as_ref().as_str());
         let encoded_name = U16CString::from_os_str_truncate(name.as_ref());
         // SAFETY:
-        // - `self.0.MountFolder` comes from the validated `WSLPluginAPIV1` struct provided by WSL.
-        //   The API guarantees that this function pointer is non-null for supported versions.
+        // - MountFolder belongs to the baseline WSL API layout.
+        //   A missing function pointer is reported as E_NOTIMPL.
         // - All `U16CString` instances (`encoded_windows_path`, `encoded_linux_path`, `encoded_name`)
         //   ensure null-termination and valid UTF-16 encoding, so the raw pointers passed to the FFI
         //   are valid for the duration of the call.
@@ -130,7 +128,13 @@ impl ApiV1 {
         // The only `unsafe` operation is the FFI call, which is trusted because it is executed under
         // WSL's documented plugin API contract.
         let result = unsafe {
-            self.0.MountFolder.unwrap_unchecked()(
+            std::ptr::addr_of!((*self.as_ptr()).MountFolder)
+                .read_unaligned()
+                .ok_or_else(|| {
+                    windows_core::Error::from_hresult(HRESULT(
+                        wslpluginapi_sys::windows_sys::Win32::Foundation::E_NOTIMPL,
+                    ))
+                })?(
                 u32::from(session_id),
                 encoded_windows_path.as_ptr(),
                 encoded_linux_path.as_ptr(),
@@ -150,7 +154,13 @@ impl ApiV1 {
         let mut socket = MaybeUninit::<WinSocket>::uninit();
         // SAFETY: Calling ExecuteBinary is safe with agument correctly prepared.
         let stream = unsafe {
-            HRESULT(self.0.ExecuteBinary.unwrap_unchecked()(
+            HRESULT(std::ptr::addr_of!((*self.as_ptr()).ExecuteBinary)
+                .read_unaligned()
+                .ok_or_else(|| {
+                    windows_core::Error::from_hresult(HRESULT(
+                        wslpluginapi_sys::windows_sys::Win32::Foundation::E_NOTIMPL,
+                    ))
+                })?(
                 u32::from(session_id),
                 path.as_ptr(),
                 args.as_ptr().cast_mut(),
@@ -170,7 +180,15 @@ impl ApiV1 {
         let error_utf16 = U16CString::from_os_str_truncate(error);
         HRESULT(
             // SAFETY: We know the pointer is always valid if the API ref is valid
-            unsafe { self.0.PluginError.unwrap_unchecked()(error_utf16.as_ptr()) },
+            unsafe {
+                std::ptr::addr_of!((*self.as_ptr()).PluginError)
+                    .read_unaligned()
+                    .ok_or_else(|| {
+                        windows_core::Error::from_hresult(HRESULT(
+                            wslpluginapi_sys::windows_sys::Win32::Foundation::E_NOTIMPL,
+                        ))
+                    })?(error_utf16.as_ptr())
+            },
         )
         .ok()
     }
@@ -187,7 +205,15 @@ impl ApiV1 {
         let guid: wslpluginapi_sys::windows_sys::core::GUID = distribution_id.into();
         // SAFETY: Calling ExecuteBinaryInDistribution is safe with agument correctly prepared.
         let stream = unsafe {
-            HRESULT(self.0.ExecuteBinaryInDistribution.unwrap_unchecked()(
+            HRESULT(std::ptr::addr_of!(
+                (*self.as_ptr()).ExecuteBinaryInDistribution
+            )
+            .read_unaligned()
+            .ok_or_else(|| {
+                windows_core::Error::from_hresult(HRESULT(
+                    wslpluginapi_sys::windows_sys::Win32::Foundation::E_NOTIMPL,
+                ))
+            })?(
                 u32::from(session_id),
                 (&raw const guid),
                 c_path.as_ptr(),
@@ -247,10 +273,30 @@ impl Debug for ApiV1 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::test_transparence;
+
+    // Original API table, before ExecuteBinaryInDistribution was introduced.
+    #[repr(C)]
+    struct BaselineApi {
+        version: wslpluginapi_sys::WSLVersion,
+        mount_folder: wslpluginapi_sys::WSLPluginAPI_MountFolder,
+        execute_binary: wslpluginapi_sys::WSLPluginAPI_ExecuteBinary,
+        plugin_error: wslpluginapi_sys::WSLPluginAPI_PluginError,
+    }
 
     #[test]
-    fn test_layouts() {
-        test_transparence::<WSLPluginAPIV1, ApiV1>();
+    fn reads_api_version_without_newer_function_slots() {
+        let raw = BaselineApi {
+            version: WSLVersion::new(2, 0, 0).into(),
+            mount_folder: None,
+            execute_binary: None,
+            plugin_error: None,
+        };
+        // SAFETY: The immutable original API table remains alive for this borrow.
+        let api = unsafe { ApiV1::from_raw(std::ptr::from_ref(&raw).cast()) };
+        assert_eq!(*api.version(), WSLVersion::new(2, 0, 0));
+        assert!(api
+            .require_capability(WSLVersionCapability::ExecuteBinaryInDistribution)
+            .is_err());
+        assert!(api.plugin_error(OsStr::new("test")).is_err());
     }
 }

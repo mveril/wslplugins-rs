@@ -60,3 +60,28 @@ keep these header-level rules in mind:
 
 These details are useful when debugging ABI mismatches, but ordinary plugin logic should stay on the
 typed Rust side.
+
+## Versioned ABI Views
+
+An older WSL host may allocate only the prefix of a structure defined by a newer SDK.
+Creating `&sys::WSLDistributionInformation` or `&sys::WSLPluginAPIV1` already requires
+storage for the entire SDK layout, even if newer fields are never used.
+
+`ApiV1`, `WSLDistributionInformation`, and `WSLOfflineDistributionInformation` are
+opaque borrowed views. They project individual fields through raw pointers; optional
+fields are read only after checking the host capability. Without an initialized WSL
+context, distribution tail access returns a version requirement error.
+
+For manual integration, use the unsafe `from_raw` constructor and uphold its lifetime,
+alignment, immutability, and host-version requirements. `as_ptr` returns a raw pointer,
+not a reference to the full SDK structure. The previous by-value `From` and full-layout
+`AsRef` conversions are removed. Plugin creation helpers now accept `&'static ApiV1`.
+The procedural macro handles these conversions for ordinary plugins. It writes hook
+pointers individually, gating newer hooks before projecting their destination field,
+and rejects null entry-point and callback arguments with `E_POINTER`. Missing API
+function pointers return `E_NOTIMPL`.
+
+These views are inhabited structs with private fields, not empty enums. Sharing API
+views requires a host that supports concurrent calls; the API remains immutable during
+the plugin lifetime. Distribution views remain restricted to their callback lifetime.
+See the [Rustonomicon FFI chapter](https://doc.rust-lang.org/stable/nomicon/ffi.html#representing-opaque-structs).

@@ -12,7 +12,6 @@ use crate::{
 use std::{
     fmt::{self, Debug, Display},
     hash::{Hash, Hasher},
-    ptr,
 };
 use widestring::U16CStr;
 
@@ -20,50 +19,44 @@ use widestring::U16CStr;
 ///
 /// This struct allows access to the details of an offline WSL distribution, including
 /// its ID, name, and optional package family name.
-#[repr(transparent)]
-pub struct WSLOfflineDistributionInformation(wslpluginapi_sys::WslOfflineDistributionInformation);
-
-impl From<WSLOfflineDistributionInformation>
-    for wslpluginapi_sys::WslOfflineDistributionInformation
-{
-    #[inline]
-    fn from(value: WSLOfflineDistributionInformation) -> Self {
-        value.0
-    }
+// Only fields supported by the host version are accessed through this view.
+#[repr(C)]
+pub struct WSLOfflineDistributionInformation {
+    _private: (),
+    _marker: std::marker::PhantomData<(*mut u8, std::marker::PhantomPinned)>,
 }
 
-impl From<wslpluginapi_sys::WslOfflineDistributionInformation>
-    for WSLOfflineDistributionInformation
-{
+impl WSLOfflineDistributionInformation {
+    /// Borrows a versioned WSL structure without referencing its full current layout.
+    ///
+    /// # Safety
+    /// `raw` must be non-null, correctly aligned, and point to an immutable WSL
+    /// structure containing every field supported by the current host version.
+    /// The allocation and its pointees must remain valid for `'a`, which must not
+    /// outlive the callback. An initialized context must describe the same host
+    /// version before accessing versioned fields.
     #[inline]
-    fn from(value: wslpluginapi_sys::WslOfflineDistributionInformation) -> Self {
-        Self(value)
+    #[must_use]
+    pub const unsafe fn from_raw<'a>(
+        raw: *const wslpluginapi_sys::WslOfflineDistributionInformation,
+    ) -> &'a Self {
+        // SAFETY: The caller guarantees the allocation for this opaque borrowed view.
+        unsafe { &*raw.cast::<Self>() }
     }
-}
 
-impl AsRef<wslpluginapi_sys::WslOfflineDistributionInformation>
-    for WSLOfflineDistributionInformation
-{
+    /// Returns the pointer used for field-by-field ABI access.
     #[inline]
-    fn as_ref(&self) -> &wslpluginapi_sys::WslOfflineDistributionInformation {
-        &self.0
-    }
-}
-
-impl AsRef<WSLOfflineDistributionInformation>
-    for wslpluginapi_sys::WslOfflineDistributionInformation
-{
-    #[inline]
-    fn as_ref(&self) -> &WSLOfflineDistributionInformation {
-        // SAFETY: This conversion is safe because of transparency.
-        unsafe { &*ptr::from_ref::<Self>(self).cast::<WSLOfflineDistributionInformation>() }
+    #[must_use]
+    pub const fn as_ptr(&self) -> *const wslpluginapi_sys::WslOfflineDistributionInformation {
+        std::ptr::from_ref(self).cast()
     }
 }
 
 impl CoreWSLDistributionInformation for WSLOfflineDistributionInformation {
     #[inline]
     fn id(&self) -> UserDistributionID {
-        self.0.Id.into()
+        // SAFETY: This field belongs to the baseline ABI guaranteed by from_raw.
+        unsafe { std::ptr::addr_of!((*self.as_ptr()).Id).read_unaligned() }.into()
     }
 
     /// Retrieves the name of the offline distribution as a borrowed UTF-16 string.
@@ -71,7 +64,7 @@ impl CoreWSLDistributionInformation for WSLOfflineDistributionInformation {
     fn name(&self) -> &U16CStr {
         // SAFETY: The WSL Plugin API guarantees that Name points to a valid null-terminated
         // UTF-16 string for the lifetime of this distribution information.
-        unsafe { wide_str(self.0.Name) }
+        unsafe { wide_str(std::ptr::addr_of!((*self.as_ptr()).Name).read_unaligned()) }
     }
 
     /// Retrieves the package family name of the offline distribution, if available.
@@ -83,7 +76,9 @@ impl CoreWSLDistributionInformation for WSLOfflineDistributionInformation {
     fn package_family_name(&self) -> Option<&U16CStr> {
         // SAFETY: The WSL Plugin API guarantees that a non-null PackageFamilyName remains valid
         // for the lifetime of this distribution information.
-        unsafe { opt_wide_str(self.0.PackageFamilyName) }
+        unsafe {
+            opt_wide_str(std::ptr::addr_of!((*self.as_ptr()).PackageFamilyName).read_unaligned())
+        }
     }
 
     /// Retrieves the distribution flavor.
@@ -97,7 +92,7 @@ impl CoreWSLDistributionInformation for WSLOfflineDistributionInformation {
         )?;
         // SAFETY: The WSL Plugin API guarantees that a non-null Flavor remains valid for the
         // lifetime of this distribution information.
-        Ok(unsafe { opt_wide_str(self.0.Flavor) })
+        Ok(unsafe { opt_wide_str(std::ptr::addr_of!((*self.as_ptr()).Flavor).read_unaligned()) })
     }
 
     /// Retrieves the distribution version.
@@ -111,7 +106,7 @@ impl CoreWSLDistributionInformation for WSLOfflineDistributionInformation {
         )?;
         // SAFETY: The WSL Plugin API guarantees that a non-null Version remains valid for the
         // lifetime of this distribution information.
-        Ok(unsafe { opt_wide_str(self.0.Version) })
+        Ok(unsafe { opt_wide_str(std::ptr::addr_of!((*self.as_ptr()).Version).read_unaligned()) })
     }
 }
 
@@ -170,13 +165,33 @@ impl Debug for WSLOfflineDistributionInformation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::test_transparence;
+    use wslpluginapi_sys::windows_sys::core::GUID;
+
+    #[repr(C)]
+    struct BaselineOfflineDistribution {
+        id: GUID,
+        name: *const u16,
+        package_family_name: *const u16,
+    }
 
     #[test]
-    fn test_layouts() {
-        test_transparence::<
-            wslpluginapi_sys::WslOfflineDistributionInformation,
-            WSLOfflineDistributionInformation,
-        >();
+    fn reads_offline_prefix_without_flavor_or_version() {
+        let name = [u16::from(b'D'), 0];
+        let raw = BaselineOfflineDistribution {
+            id: GUID {
+                data1: 43,
+                data2: 0,
+                data3: 0,
+                data4: [0; 8],
+            },
+            name: name.as_ptr(),
+            package_family_name: std::ptr::null(),
+        };
+        // SAFETY: This is the original offline layout with live immutable string storage.
+        let view =
+            unsafe { WSLOfflineDistributionInformation::from_raw(std::ptr::from_ref(&raw).cast()) };
+        assert_eq!(view.id(), UserDistributionID::from(raw.id));
+        assert_eq!(view.name().as_slice(), &name[..1]);
+        assert!(view.package_family_name().is_none());
     }
 }

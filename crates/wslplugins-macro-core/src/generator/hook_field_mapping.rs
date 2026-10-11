@@ -65,7 +65,8 @@ fn hook_field_mapping(hooks_struct_name: &Ident, hook: Hooks) -> Result<TokenStr
     let field: Ident = parse_str(&field_str)?;
     let func: Ident = parse_str(&hook.get_c_method_name())?;
     let base = quote! {
-        #hooks_struct_name.#field = Some(#func);
+        // SAFETY: WSL provides writable storage for this hook; newer hooks are version-gated.
+        unsafe { ::std::ptr::addr_of_mut!((*#hooks_struct_name).#field).write(Some(#func)); }
     };
     let result = match hook {
         Hooks::OnDistributionRegistered => {
@@ -115,7 +116,7 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
         .copied()
         .any(version_gated_hooks)
         .then_some(quote! {
-            let current_version = ::wslplugins_rs::WSLVersion::from(api.Version);
+            let current_version = *api.version();
         })
         .unwrap_or_default();
     let hook_set = prepare_hooks(&hooks_ref_name, &imp.hooks)?;
@@ -144,16 +145,22 @@ fn generate_entry_point(imp: &ParsedImpl, version: &RequiredVersion) -> Result<T
                     ::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_FAIL,
                 ),
                 || unsafe {
-                    let api_ref: &'static ::wslplugins_rs::sys::WSLPluginAPIV1 = &*api;
-                    let #hooks_ref_name: &mut ::wslplugins_rs::sys::WSLPluginHooksV1 = &mut *hooks;
+                    if api.is_null() || hooks.is_null() {
+                        return ::wslplugins_rs::windows_core::HRESULT(
+                            ::wslplugins_rs::sys::windows_sys::Win32::Foundation::E_POINTER,
+                        );
+                    }
+                    // SAFETY: WSL keeps the API allocation alive for the plugin lifetime.
+                    let api_ref = ::wslplugins_rs::api::ApiV1::from_raw(api);
+                    let #hooks_ref_name = hooks;
                     create_plugin(api_ref, #hooks_ref_name).into()
                 },
             )
         }
 
         fn create_plugin(
-            api: &'static ::wslplugins_rs::sys::WSLPluginAPIV1,
-            hooks_ref: &mut ::wslplugins_rs::sys::WSLPluginHooksV1,
+            api: &'static ::wslplugins_rs::api::ApiV1,
+            hooks_ref: *mut ::wslplugins_rs::sys::WSLPluginHooksV1,
         ) -> ::wslplugins_rs::windows_core::Result<()> {
             let plugin: #static_plugin_type = #create_plugin;
             #current_version
@@ -196,7 +203,10 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(
             result.unwrap().to_string(),
-            quote!(hooks_struct.OnVMStarted = Some(on_vm_started);).to_string()
+            quote!(unsafe {
+                ::std::ptr::addr_of_mut!((*hooks_struct).OnVMStarted).write(Some(on_vm_started));
+            })
+            .to_string()
         );
     }
 
@@ -212,7 +222,10 @@ mod tests {
             quote!(if current_version
                 .supports(::wslplugins_rs::WSLVersionCapability::DistributionRegisteredHook)
             {
-                hooks_struct.OnDistributionRegistered = Some(on_distribution_registered);
+                unsafe {
+                    ::std::ptr::addr_of_mut!((*hooks_struct).OnDistributionRegistered)
+                        .write(Some(on_distribution_registered));
+                }
             } else {
                 ::wslplugins_rs::__private::debug!(
                     "Hook {} not applied due to insufficient version (found: {}, required: {})",
