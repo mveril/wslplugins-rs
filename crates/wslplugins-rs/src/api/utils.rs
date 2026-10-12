@@ -48,10 +48,13 @@ pub(crate) fn check_capability_result_from_context(
     wsl_context: Option<&WSLContext>,
     capability: WSLVersionCapability,
 ) -> Result<()> {
-    wsl_context.map_or(Ok(()), |context| {
-        let current_version = context.api.version();
-        check_requirement_result(current_version, capability)
-    })
+    wsl_context.map_or_else(
+        || check_requirement_result(&WSLVersion::new(0, 0, 0), capability),
+        |context| {
+            let current_version = context.api.version();
+            check_requirement_result(current_version, capability)
+        },
+    )
 }
 #[inline]
 pub(super) fn encode_c_path(path: &Utf8UnixPath) -> Vec<u8> {
@@ -132,6 +135,22 @@ mod tests {
             let result = check_required_version_result(&current_version, &required_version);
 
             prop_assert_eq!(result.is_ok(), current_version.is_at_least(required_version));
+        }
+    }
+}
+
+#[cfg(test)]
+mod versioned_context_tests {
+    use super::*;
+
+    #[test]
+    fn missing_context_rejects_versioned_distribution_fields() {
+        for capability in [
+            WSLVersionCapability::DistributionInitPid,
+            WSLVersionCapability::DistributionFlavor,
+            WSLVersionCapability::DistributionVersion,
+        ] {
+            assert!(check_capability_result_from_context(None, capability).is_err());
         }
     }
 }

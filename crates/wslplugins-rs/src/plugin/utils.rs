@@ -6,7 +6,7 @@
 use std::iter::once;
 
 use windows_core::{Error as WinError, Result as WinResult, HRESULT};
-use wslpluginapi_sys::{windows_sys::Win32::Foundation::ERROR_ALREADY_INITIALIZED, WSLPluginAPIV1};
+use wslpluginapi_sys::windows_sys::Win32::Foundation::ERROR_ALREADY_INITIALIZED;
 
 use crate::{WSLContext, WSLVersion, WSLVersionCapability};
 
@@ -37,22 +37,17 @@ use super::{Result, WSLPluginV1};
 /// - Returns <code>[WinError]::from([WSL_E_PLUGIN_REQUIRES_UPDATE](wslpluginapi_sys::WSL_E_PLUGIN_REQUIRES_UPDATE))</code> error if the API version is insufficient.
 #[inline]
 pub fn create_plugin_with_required_version<T: WSLPluginV1>(
-    api: &'static WSLPluginAPIV1,
+    api: &'static crate::api::ApiV1,
     required_major: u32,
     required_minor: u32,
     required_revision: u32,
 ) -> WinResult<T> {
-    // SAFETY: As api reference exist it's safe to call it
-    unsafe {
-        HRESULT(wslpluginapi_sys::require_version(
-            required_major,
-            required_minor,
-            required_revision,
-            api,
-        ))
-        .ok()?;
-    };
-    WSLContext::init(api.as_ref())
+    crate::api::utils::check_required_version_result(
+        api.version(),
+        &WSLVersion::new(required_major, required_minor, required_revision),
+    )
+    .map_err(|_| WinError::from_hresult(HRESULT(wslpluginapi_sys::WSL_E_PLUGIN_REQUIRES_UPDATE)))?;
+    WSLContext::init(api)
         .ok_or_else(|| WinError::from_hresult(HRESULT::from_win32(ERROR_ALREADY_INITIALIZED)))
         .and_then(T::try_new)
 }
@@ -64,7 +59,7 @@ pub fn create_plugin_with_required_version<T: WSLPluginV1>(
 /// already initialized.
 #[inline]
 pub fn create_plugin_with_required_capability<T: WSLPluginV1>(
-    api: &'static WSLPluginAPIV1,
+    api: &'static crate::api::ApiV1,
     capability: WSLVersionCapability,
 ) -> WinResult<T> {
     create_plugin_with_required_capabilities(api, once(capability))
@@ -79,7 +74,7 @@ pub fn create_plugin_with_required_capability<T: WSLPluginV1>(
 /// already initialized.
 #[inline]
 pub fn create_plugin_with_required_capabilities<T, I>(
-    api: &'static WSLPluginAPIV1,
+    api: &'static crate::api::ApiV1,
     capabilities: I,
 ) -> WinResult<T>
 where

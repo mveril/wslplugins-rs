@@ -23,42 +23,41 @@ use crate::utils::{opt_wide_str, wide_str};
 use crate::{UserDistributionID, WSLContext, WSLVersionCapability};
 use std::fmt::{self, Debug, Display};
 use std::hash::{Hash, Hasher};
-use std::ptr;
 use widestring::U16CStr;
 
 /// Represents detailed information about a WSL distribution.
 ///
 /// This struct wraps the `WSLDistributionInformation` from the WSL Plugin API and provides
 /// safe, idiomatic Rust access to its fields.
-#[repr(transparent)]
-pub struct WSLDistributionInformation(wslpluginapi_sys::WSLDistributionInformation);
-
-impl AsRef<WSLDistributionInformation> for wslpluginapi_sys::WSLDistributionInformation {
-    #[inline]
-    fn as_ref(&self) -> &WSLDistributionInformation {
-        // SAFETY: conveting this kind of ref is safe as it is transparent
-        unsafe { &*ptr::from_ref::<Self>(self).cast::<WSLDistributionInformation>() }
-    }
+// Only the fields supported by the host version may be read through this view.
+#[repr(C)]
+pub struct WSLDistributionInformation {
+    _private: (),
+    _marker: std::marker::PhantomData<(*mut u8, std::marker::PhantomPinned)>,
 }
 
-impl From<WSLDistributionInformation> for wslpluginapi_sys::WSLDistributionInformation {
+impl WSLDistributionInformation {
+    /// Borrows a versioned WSL structure without referencing its full current layout.
+    ///
+    /// # Safety
+    /// `raw` must be non-null, correctly aligned, and point to a WSL-provided structure, including all
+    /// fields supported by the current host version. The structure and its pointees
+    /// must remain valid and immutable for `'a`. Distribution views must not outlive
+    /// their callback, and versioned access requires the matching initialized context.
     #[inline]
-    fn from(value: WSLDistributionInformation) -> Self {
-        value.0
+    #[must_use]
+    pub const unsafe fn from_raw<'a>(
+        raw: *const wslpluginapi_sys::WSLDistributionInformation,
+    ) -> &'a Self {
+        // SAFETY: The caller guarantees a valid allocation for this opaque borrowed view.
+        unsafe { &*raw.cast::<Self>() }
     }
-}
 
-impl AsRef<wslpluginapi_sys::WSLDistributionInformation> for WSLDistributionInformation {
+    /// Returns the pointer used for field-by-field ABI access.
     #[inline]
-    fn as_ref(&self) -> &wslpluginapi_sys::WSLDistributionInformation {
-        &self.0
-    }
-}
-
-impl From<wslpluginapi_sys::WSLDistributionInformation> for WSLDistributionInformation {
-    #[inline]
-    fn from(value: wslpluginapi_sys::WSLDistributionInformation) -> Self {
-        Self(value)
+    #[must_use]
+    pub const fn as_ptr(&self) -> *const wslpluginapi_sys::WSLDistributionInformation {
+        std::ptr::from_ref(self).cast()
     }
 }
 
@@ -78,7 +77,8 @@ impl WSLDistributionInformation {
             WSLContext::get_current(),
             WSLVersionCapability::DistributionInitPid,
         )?;
-        Ok(self.0.InitPid)
+        // SAFETY: The capability check above guarantees that this field exists.
+        Ok(unsafe { std::ptr::addr_of!((*self.as_ptr()).InitPid).read_unaligned() })
     }
 
     /// Retrieves the PID namespace for the distribution.
@@ -89,28 +89,32 @@ impl WSLDistributionInformation {
     #[inline]
     #[must_use]
     pub const fn pid_namespace(&self) -> u64 {
-        self.0.PidNamespace
+        // SAFETY: This field is part of the baseline ABI guaranteed by from_raw.
+        unsafe { std::ptr::addr_of!((*self.as_ptr()).PidNamespace).read_unaligned() }
     }
 }
 
 impl CoreWSLDistributionInformation for WSLDistributionInformation {
     #[inline]
     fn id(&self) -> UserDistributionID {
-        self.0.Id.into()
+        // SAFETY: This field is part of the baseline ABI guaranteed by from_raw.
+        unsafe { std::ptr::addr_of!((*self.as_ptr()).Id).read_unaligned() }.into()
     }
 
     #[inline]
     fn name(&self) -> &U16CStr {
         // SAFETY: The WSL Plugin API guarantees that Name points to a valid null-terminated
         // UTF-16 string for the lifetime of this distribution information.
-        unsafe { wide_str(self.0.Name) }
+        unsafe { wide_str(std::ptr::addr_of!((*self.as_ptr()).Name).read_unaligned()) }
     }
 
     #[inline]
     fn package_family_name(&self) -> Option<&U16CStr> {
         // SAFETY: The WSL Plugin API guarantees that a non-null PackageFamilyName remains valid
         // for the lifetime of this distribution information.
-        unsafe { opt_wide_str(self.0.PackageFamilyName) }
+        unsafe {
+            opt_wide_str(std::ptr::addr_of!((*self.as_ptr()).PackageFamilyName).read_unaligned())
+        }
     }
 
     /// Retrieves the distribution flavor.
@@ -124,7 +128,8 @@ impl CoreWSLDistributionInformation for WSLDistributionInformation {
         )?;
         // SAFETY: The WSL Plugin API guarantees that a non-null Flavor remains valid for the
         // lifetime of this distribution information.
-        Ok(unsafe { opt_wide_str(self.0.Flavor) })
+        // SAFETY: The capability check above guarantees that this field exists.
+        Ok(unsafe { opt_wide_str(std::ptr::addr_of!((*self.as_ptr()).Flavor).read_unaligned()) })
     }
 
     /// Retrieves the distribution version.
@@ -138,7 +143,8 @@ impl CoreWSLDistributionInformation for WSLDistributionInformation {
         )?;
         // SAFETY: The WSL Plugin API guarantees that a non-null Version remains valid for the
         // lifetime of this distribution information.
-        Ok(unsafe { opt_wide_str(self.0.Version) })
+        // SAFETY: The capability check above guarantees that this field exists.
+        Ok(unsafe { opt_wide_str(std::ptr::addr_of!((*self.as_ptr()).Version).read_unaligned()) })
     }
 }
 
@@ -206,11 +212,40 @@ impl Debug for WSLDistributionInformation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::test_transparence;
+    use wslpluginapi_sys::windows_sys::core::GUID;
+
+    // WSL 2.0.0 did not allocate InitPid, Flavor, or Version.
+    #[repr(C)]
+    struct BaselineDistribution {
+        id: GUID,
+        name: *const u16,
+        pid_namespace: u64,
+        package_family_name: *const u16,
+    }
 
     #[test]
-    fn test_layouts() {
-        test_transparence::<wslpluginapi_sys::WSLDistributionInformation, WSLDistributionInformation>(
+    fn reads_distribution_prefix_without_newer_fields() {
+        let name = [u16::from(b'D'), 0];
+        let raw = BaselineDistribution {
+            id: GUID {
+                data1: 42,
+                data2: 0,
+                data3: 0,
+                data4: [0; 8],
+            },
+            name: name.as_ptr(),
+            pid_namespace: 123,
+            package_family_name: std::ptr::null(),
+        };
+        // SAFETY: This is the baseline host layout, with live immutable string storage.
+        let view = unsafe { WSLDistributionInformation::from_raw(std::ptr::from_ref(&raw).cast()) };
+        assert_eq!(view.id(), UserDistributionID::from(raw.id));
+        assert_eq!(view.name().as_slice(), &name[..1]);
+        assert_eq!(view.pid_namespace(), 123);
+        assert!(view.package_family_name().is_none());
+        assert_eq!(
+            view.as_ptr().cast::<BaselineDistribution>(),
+            std::ptr::from_ref(&raw)
         );
     }
 }
