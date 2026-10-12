@@ -299,4 +299,26 @@ mod tests {
             .is_err());
         assert!(api.plugin_error(OsStr::new("test")).is_err());
     }
+
+    #[test]
+    fn opaque_view_roundtrips_native_pointer_and_reads_native_field() {
+        let native = BaselineApi {
+            version: WSLVersion::new(2, 0, 0).into(),
+            mount_folder: None,
+            execute_binary: None,
+            plugin_error: None,
+        };
+        let native_ptr: *const BaselineApi = std::ptr::from_ref(&native);
+        let api_ptr: *const wslpluginapi_sys::WSLPluginAPIV1 = native_ptr.cast();
+
+        // SAFETY: BaselineApi reproduces the complete API prefix represented by this host version.
+        let opaque: &ApiV1 = unsafe { ApiV1::from_raw(api_ptr) };
+        let roundtripped_ptr: *const BaselineApi = opaque.as_ptr().cast();
+        // SAFETY: The pointer round-trips to the still-live native BaselineApi value.
+        let observed_version =
+            unsafe { std::ptr::addr_of!((*roundtripped_ptr).version).read_unaligned() };
+
+        assert_eq!(roundtripped_ptr, native_ptr);
+        assert_eq!(observed_version, native.version);
+    }
 }

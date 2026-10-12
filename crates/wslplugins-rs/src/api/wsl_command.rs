@@ -260,7 +260,6 @@ impl<'a> WSLCommand<'a> {
 
     /// Returns an iterator over user-provided arguments (`argv[1..]`).
     #[inline]
-    #[must_use]
     pub fn get_args(&self) -> impl ExactSizeIterator<Item = &str> {
         self.args.iter().map(AsRef::as_ref)
     }
