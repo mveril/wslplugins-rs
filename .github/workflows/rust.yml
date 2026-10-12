@@ -74,3 +74,34 @@ jobs:
         run: |
           cargo install cargo-deny || echo "cargo-deny already installed"
           cargo deny check --show-stats
+
+  miri:
+    name: Miri (versioned FFI views)
+    runs-on: windows-latest
+    timeout-minutes: 25
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_INCREMENTAL: 0
+      MIRIFLAGS: -Zmiri-strict-provenance -Zmiri-disable-isolation
+      PROPTEST_CASES: 10
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Miri (nightly)
+        shell: pwsh
+        run: |
+          rustup toolchain install nightly --component miri
+          cargo +nightly miri setup
+
+      # The library is Windows-specific. Only run tests that exercise its
+      # versioned FFI views without invoking native Win32/WSL functions:
+      # Miri does not emulate all host APIs.
+      - name: Check opaque FFI views with Miri
+        shell: pwsh
+        run: |
+          cargo +nightly miri test -p wslplugins-rs --all-features --lib reads_api_version_without_newer_function_slots
+          cargo +nightly miri test -p wslplugins-rs --all-features --lib opaque_view_roundtrips_native_pointer_and_reads_native_field
+          cargo +nightly miri test -p wslplugins-rs --all-features --lib reads_distribution_prefix_without_newer_fields
+          cargo +nightly miri test -p wslplugins-rs --all-features --lib reads_offline_prefix_without_flavor_or_version
