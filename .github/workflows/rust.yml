@@ -76,13 +76,13 @@ jobs:
           cargo deny check --show-stats
 
   miri:
-    name: Miri (versioned FFI views)
+    name: Miri (Tree Borrows, versioned FFI views)
     runs-on: windows-latest
     timeout-minutes: 25
     env:
       CARGO_TERM_COLOR: always
       CARGO_INCREMENTAL: 0
-      MIRIFLAGS: -Zmiri-strict-provenance -Zmiri-disable-isolation
+      MIRIFLAGS: -Zmiri-tree-borrows -Zmiri-strict-provenance -Zmiri-disable-isolation
       PROPTEST_CASES: 10
 
     steps:
@@ -98,7 +98,7 @@ jobs:
       # The library is Windows-specific. Only run tests that exercise its
       # versioned FFI views without invoking native Win32/WSL functions:
       # Miri does not emulate all host APIs.
-      - name: Check opaque FFI views with Miri
+      - name: Check opaque FFI views with Tree Borrows
         shell: bash
         run: |
           set -euo pipefail
