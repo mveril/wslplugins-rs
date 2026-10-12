@@ -99,8 +99,9 @@ jobs:
       # versioned FFI views without invoking native Win32/WSL functions:
       # Miri does not emulate all host APIs.
       - name: Check opaque FFI views with Miri
-        shell: pwsh
+        shell: bash
         run: |
+          set -euo pipefail
           cargo +nightly miri test -p wslplugins-rs --all-features --lib reads_api_version_without_newer_function_slots
           cargo +nightly miri test -p wslplugins-rs --all-features --lib opaque_view_roundtrips_native_pointer_and_reads_native_field
           cargo +nightly miri test -p wslplugins-rs --all-features --lib reads_distribution_prefix_without_newer_fields
